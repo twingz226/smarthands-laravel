@@ -1,0 +1,25 @@
+/* Service Catalog Styles */
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.card {
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1.25rem 1.5rem;
+}
+
+.form-control, .form-select {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+}
+
+.btn-outline-primary {
+    border-width: 1.5px;
+}

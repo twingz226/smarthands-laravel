@@ -1,0 +1,21 @@
+/* Customer Database Table Styles */
+.customer-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+.customer-table th, 
+.customer-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+.customer-table th {
+    background-color: #e0f7fa;
+}
+
+.customer-table tr:hover {
+    background-color: #f9f9f9;
+}

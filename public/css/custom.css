@@ -1,0 +1,110 @@
+/**
+ *
+ * Apply Here your Custom CSS
+ *
+*/
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+/* Style for the sidebar menu */
+#main-menu .main-menu li a {
+    color: #333; /* Change text color */
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+#main-menu .main-menu li a:hover {
+    background-color: #f0f0f0; /* Add hover effect */
+    color: #007bff; /* Change text color on hover */
+}
+
+/* Style for the logout button */
+#logout-button {
+    color: #fff;
+    background-color: #d9534f;
+    padding: 8px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+#logout-button:hover {
+    background-color: #c9302c;
+    text-decoration: none;
+}
+
+/* Logout link hover effect */
+.list-inline.links-list a:hover {
+    color: #2a6496 !important;
+    text-decoration: underline;
+}
+
+/* Logout icon alignment */
+.entypo-logout {
+    margin-left: 5px;
+    vertical-align: middle;
+}
+
+/* Style for the dashboard cards */
+.card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card h6 {
+    font-size: 20px;
+    color: #000000;
+    font-weight: bold;
+    text-align: center;
+}
+
+.card h3 {
+    font-size: 24px;
+    color: #333;
+}
+
+/* Style for the table */
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #f9f9f9;
+}
+
+.table-striped tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Style for badges */
+.status-badge {
+    padding: 5px 10px;
+    font-size: 12px;
+    border-radius: 12px;
+    color: #fff;
+}
+
+.status-badge.bg-success {
+    background-color: #28a745;
+}
+
+.status-badge.bg-primary {
+    background-color: #007bff;
+}
+
+.status-badge.bg-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.status-badge.bg-info {
+    background-color: #17a2b8;
+    color: #fff;
+}
+
+.logo img {
+    width: 150px;
+    height: 150px;
+    border-radius: 80%;
+    
+}

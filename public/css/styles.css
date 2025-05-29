@@ -1,0 +1,123 @@
+/* General Styles */
+body {
+    font-family: 'Poppins', sans-serif;
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative; 
+    overflow: hidden;
+    
+}
+
+body::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('../images/cleaning.jpg') no-repeat center center;
+    background-size: cover;
+    filter: blur(1.5px); /* Adjust the blur level here */
+    z-index: -1; /* Place behind the main content */
+}
+
+ 
+
+/* Login Container */
+.login-container {
+    
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 350px;
+    text-align: center;
+    color: white; /* Change text color for better contrast against the background */
+}
+
+/* Login Header */
+.login-container h2 {
+    margin-bottom: 1rem;
+    color: #fff; /* Change header color to white for better visibility */
+}
+
+/* Input Fields */
+.input-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+    outline: none;
+    transition: 0.3s ease-in-out;
+}
+
+.input-group input:focus {
+    
+    box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
+}
+
+/* Login Button */
+.btn-login {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1rem;
+    transition: 0.3s ease-in-out;
+}
+
+.btn-login:hover {
+    background: #5563c1;
+}
+
+/* Responsive Design */
+@media (max-width: 400px) {
+    .login-container {
+        width: 90%;
+    }
+}
+
+.text-container {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* vertically center if needed */
+    margin-bottom: 300px;
+
+    /* New additions for contrast & readability */
+    background-color: rgba(255, 255, 255, 0.6); /* light semi-transparent bg */
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* optional: adds depth */
+    max-width: 800px; /* keeps layout nice and neat on large screens */
+}
+
+h1 {
+    margin: 100px auto; /* centers horizontally if block */
+    font-size: 2.5rem;
+    color: #F57C00;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3); /* subtle shadow for contrast */
+    font-weight: 700;
+    text-align: center; /* optional: if it's not already centered */
+}
+
+
+p {
+    margin-top: 0px;
+    font-size: 1.5rem; /* New line added to change font size */
+}
+
+
+

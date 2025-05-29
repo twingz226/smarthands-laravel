@@ -1,0 +1,26 @@
+/* Customer Portal Preview */
+.avatar-placeholder {
+    border: 2px solid #dee2e6;
+    font-weight: bold;
+    color: #6c757d;
+}
+
+.list-group-item {
+    border-left: none;
+    border-right: none;
+}
+
+.list-group-item:first-child {
+    border-top: none;
+}
+
+/* Edit Form Styles */
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0,0,0,.125);
+}
+
+.form-control[readonly] {
+    background-color: #f8f9fa;
+    opacity: 1;
+}

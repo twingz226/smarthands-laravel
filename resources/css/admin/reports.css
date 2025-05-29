@@ -1,0 +1,70 @@
+/* Customer Reports Styles */
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.card {
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.input-group {
+    max-width: 300px;
+}
+
+.dropdown-menu {
+    min-width: auto;
+}
+
+
+/* Cleaning History Specific Styles */
+.date-range-picker {
+    background-color: white;
+    cursor: pointer;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.badge {
+    padding: 0.35em 0.65em;
+    font-size: 0.875em;
+    font-weight: 500;
+    border-radius: 4px;
+}
+
+.bg-success {
+    background-color: #198754;
+}
+
+/* Feedback Report Specific Styles */
+.display-4 {
+    font-size: 2rem;
+    font-weight: 500;
+}
+
+.text-warning {
+    color: #ffc107;
+}
+
+.feedback-row:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.date-range-picker {
+    background-color: white;
+    cursor: pointer;
+}
+
+.alert-info {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+    color: #212529;
+}

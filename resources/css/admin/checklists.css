@@ -1,0 +1,23 @@
+/* Checklists Styles */
+.item-row {
+    transition: all 0.3s ease;
+}
+
+.list-unstyled li {
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.list-unstyled li:last-child {
+    border-bottom: none;
+}
+
+.card {
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+}
