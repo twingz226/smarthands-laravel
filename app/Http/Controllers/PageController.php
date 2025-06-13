@@ -51,22 +51,26 @@ class PageController extends Controller
                 'address' => 'required|string|max:500',
                 'service_id' => 'required|exists:services,id',
                 'cleaning_date' => 'required|date|after:now',
-                'booking_token' => 'required|string'
+                'booking_token' => 'required|string',
+                'duration' => 'required|numeric|min:1',
+                'price' => 'required|numeric|min:0'
             ]);
 
             Log::debug('Validated booking data:', $validated);
 
             // Get the service
             $service = Service::findOrFail($validated['service_id']);
+            Log::debug('Service found:', $service->toArray());
 
             // Create or find customer
             $customer = Customer::firstOrCreate(
-                ['email' => $validated['email']],
+                ['Email' => strtolower($validated['email'])],
                 [
-                    'name' => $validated['name'],
-                    'contact' => $validated['contact'],
-                    'address' => $validated['address'],
-                    'Registered_Date' => now()
+                    'Name' => $validated['name'],
+                    'Contact' => $validated['contact'],
+                    'Address' => $validated['address'],
+                    'Registered_Date' => now(),
+                    'Customer_Id' => 'CUST-' . strtoupper(substr(uniqid(), -6))
                 ]
             );
 
@@ -77,24 +81,29 @@ class PageController extends Controller
                 'customer_id' => $customer->id,
                 'service_id' => $validated['service_id'],
                 'cleaning_date' => $validated['cleaning_date'],
-                'duration' => $this->calculateDuration($service),
-                'price' => $this->calculatePrice($service, $validated),
+                'duration' => $validated['duration'],
+                'price' => $validated['price'],
                 'status' => 'pending',
-                'user_id' => null,
                 'booking_token' => $validated['booking_token'],
             ]);
-
-            dd($booking);
 
             Log::debug('Booking created:', $booking->toArray());
 
             // Send emails (if configured)
             if (config('mail.enabled')) {
                 Mail::to(config('mail.admin_email'))->send(new NewBookingAlert($booking));
-                Mail::to($customer->email)->send(new BookingConfirmation($booking));
+                Mail::to($customer->Email)->send(new BookingConfirmation($booking));
             }
 
             DB::commit();
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Booking submitted successfully!',
+                    'booking' => $booking
+                ]);
+            }
 
             return redirect()->route('bookings.success')
                 ->with('success', 'Booking submitted successfully!');
@@ -102,11 +111,23 @@ class PageController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
             Log::error("Booking validation failed: " . json_encode($request->all()));
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $e->errors()
+                ], 422);
+            }
             return back()->withErrors($e->errors())->withInput();
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Booking failed: " . $e->getMessage());
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Booking failed. Please try again.'
+                ], 500);
+            }
             return back()->with('error', 'Booking failed. Please try again.')->withInput();
         }
     }

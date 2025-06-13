@@ -17,12 +17,31 @@
             border-radius: 5px;
             background-color: whitesmoke;
         }
+        .success-message {
+            color: #28a745;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 5px;
+            text-align: center;
+            border: 1px solid #28a745;
+            border-radius: 5px;
+            background-color: whitesmoke;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
     <form method="POST" action="{{ route('login') }}" class="container">
         @csrf
         <h1 class="login-title">Login</h1>
+
+        <!-- Display success message -->
+        @if(session('success'))
+            <div class="success-message">
+                {{ session('success') }}
+            </div>
+        @endif
 
         <!-- Display general errors -->
         @if($errors->any())

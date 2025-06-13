@@ -149,9 +149,9 @@
                                     @foreach($recentBookings as $booking)
                                     <tr>
                                         <td>#{{ $booking->id }}</td>
-                                        <td>{{ $booking->customer->name }}</td>
-                                        <td>{{ $booking->service->name }}</td>
-                                        <td>{{ $booking->preferred_date->format('M d, Y') }}</td>
+                                        <td>{{ $booking->customer->name ?? 'N/A' }}</td>
+                                        <td>{{ $booking->service->name ?? 'N/A' }}</td>
+                                        <td>{{ $booking->cleaning_date ? $booking->cleaning_date->format('M d, Y') : 'N/A' }}</td>
                                     </tr>
                                     @endforeach
                                 </tbody>

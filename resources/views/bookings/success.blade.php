@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Booking Success - Smarthands Cleaning Services</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+  <style>
+    /* Navbar styles */
+    .custom-navbar {
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+      min-height: 80px;
+      background-color: #ffc044 !important;
+    }
+    .navbar-brand img, .logo img {
+      height: 100px;
+      width: auto;
+      border-radius: 80%;
+    }
+    .nav-link {
+      font-weight: 700;
+      color: #333 !important;
+      padding: 0.5rem 1rem !important;
+    }
+    .nav-link:hover {
+      color: #0d6efd !important;
+    }
+    .nav-link.active {
+      color: #0d6efd !important;
+      text-decoration: underline;
+    }
+    .navbar-nav {
+      align-items: center;
+    }
+    .logo {
+      text-align: center;
+      margin: 1rem 0;
+    }
+
+    /* Success section styles */
+    .success-section {
+      min-height: calc(100vh - 80px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 5%;
+      background-color: #f8f9fa;
+    }
+    .success-card {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+      padding: 3rem;
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+    }
+    .success-icon {
+      font-size: 5rem;
+      color: #28a745;
+      margin-bottom: 1.5rem;
+    }
+    .success-title {
+      color: #28a745;
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+    .success-message {
+      color: #666;
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .return-btn {
+      padding: 12px 30px;
+      font-size: 1.1rem;
+      background-color: #ffc044;
+      color: #333;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .return-btn:hover {
+      background-color: #111c5d;
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+      .success-card {
+        padding: 2rem;
+        margin: 1rem;
+      }
+      .success-title {
+        font-size: 2rem;
+      }
+      .success-message {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-light custom-navbar shadow-sm sticky-top">
+    <div class="container">
+      <a class="navbar-brand" href="{{ route('home') }}">
+        <img src="{{ asset('images/Smarthand.png') }}" alt="Logo">
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link @if(Route::currentRouteName() == 'home') active @endif" href="{{ route('home') }}">Home</a></li>
+          <li class="nav-item"><a class="nav-link @if(Route::currentRouteName() == 'services') active @endif" href="{{ route('services') }}">Service</a></li>
+          <li class="nav-item"><a class="nav-link @if(Route::currentRouteName() == 'about') active @endif" href="{{ route('about') }}">About Us</a></li>
+          <li class="nav-item"><a class="nav-link @if(Route::currentRouteName() == 'contact') active @endif" href="{{ route('contact') }}">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Success Section -->
+  <section class="success-section">
+    <div class="success-card">
+      <i class="bi bi-check-circle-fill success-icon"></i>
+      <h1 class="success-title">Booking Successful!</h1>
+      <p class="success-message">Thank you for choosing SmartHands Cleaning Services! We have received your booking request and will send you a confirmation email shortly with all the details.</p>
+      <a href="{{ route('home') }}" class="return-btn">Return to Home</a>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

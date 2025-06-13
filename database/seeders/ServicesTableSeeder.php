@@ -11,22 +11,39 @@ class ServicesTableSeeder extends Seeder
     {
         $services = [
             [
-                'name' => 'Basic Cleaning',
-                'description' => 'Standard cleaning service for homes.',
-                'price' => 50.00,
-                'duration_minutes' => 60
+                'name' => 'Customized Deep Cleaning',
+                'description' => 'Tailored cleaning solutions to meet your specific needs and preferences.',
+                'price' => 299.00,
+                'duration_minutes' => 360, // 6 hours minimum
+                'pricing_type' => 'duration'
             ],
             [
-                'name' => 'Deep Cleaning',
-                'description' => 'Thorough cleaning service for homes.',
-                'price' => 100.00,
-                'duration_minutes' => 120
+                'name' => 'Apartment Deep Cleaning',
+                'description' => 'Thorough cleaning for apartments, covering every corner and surface.',
+                'price' => 299.00,
+                'duration_minutes' => 360, // 6 hours minimum
+                'pricing_type' => 'duration'
             ],
             [
-                'name' => 'Move In/Out Cleaning',
-                'description' => 'Cleaning service for moving in or out.',
-                'price' => 150.00,
-                'duration_minutes' => 180
+                'name' => '2-Story/Bungalow House Cleaning',
+                'description' => 'Comprehensive cleaning for larger homes with attention to all levels.',
+                'price' => 75.00,
+                'duration_minutes' => 480, // 8 hours
+                'pricing_type' => 'sqm'
+            ],
+            [
+                'name' => 'Move-in/Move-out Cleaning',
+                'description' => 'Make your transition smooth with our professional move cleaning services.',
+                'price' => 75.00,
+                'duration_minutes' => 360, // 6 hours minimum
+                'pricing_type' => 'sqm'
+            ],
+            [
+                'name' => 'Post-Construction/Renovation Cleaning',
+                'description' => 'Specialized cleaning to remove construction dust and debris.',
+                'price' => 75.00,
+                'duration_minutes' => 480, // 8 hours
+                'pricing_type' => 'sqm'
             ]
         ];
 

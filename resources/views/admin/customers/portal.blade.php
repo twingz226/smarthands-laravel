@@ -101,7 +101,7 @@
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-body">
-                            <form action="{{ route('public.bookings.store') }}" method="POST">
+                            <form action="/" method="POST">
                                 @csrf
                                 <div class="mb-3">
                                     <label for="service" class="form-label">Service Type</label>

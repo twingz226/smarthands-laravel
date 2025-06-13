@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Smarthands Cleaning Services</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{{ asset('css/style.css') }}">
   <style>
     /* Navbar styles */
     .custom-navbar {
@@ -367,7 +370,7 @@
             </div>
           @endif
 
-          <form action="{{ route('public.bookings.store') }}" method="POST" id="bookingForm">
+          <form action="/" method="POST" id="bookingForm">
             @csrf
             <div class="modal-body px-4">
               <div class="mb-3">
@@ -402,11 +405,11 @@
                 <label for="service_id" class="form-label">Service Type:</label>
                 <select name="service_id" id="service_id" class="form-select @error('service_id') is-invalid @enderror" required>
                   <option value="">Select a service</option>
-                  <option value="1">Customized Deep Cleaning (₱299/hr)</option>
-                  <option value="2">Apartment Deep Cleaning (₱299/hr)</option>
-                  <option value="3">2-Story/Bungalow House Cleaning (₱75/sqm)</option>
-                  <option value="4">Move-in/Move-out Cleaning (₱75/sqm)</option>
-                  <option value="5">Post-Construction/Renovation Cleaning (₱75/sqm)</option>
+                  @foreach($services as $service)
+                    <option value="{{ $service->id }}">
+                      {{ $service->name }} - {{ $service->pricing_type === 'sqm' ? '₱' . number_format($service->price, 2) . '/sqm' : '₱' . number_format($service->price, 2) . ' for ' . $service->duration_minutes . ' mins' }}
+                    </option>
+                  @endforeach
                 </select>
                 @error('service_id')
                   <div class="invalid-feedback">{{ $message }}</div>
@@ -440,57 +443,95 @@
   document.addEventListener('DOMContentLoaded', function () {
     console.log('DOM fully loaded and parsed');
 
+    // Get services data from PHP
+    const services = @json($services);
+    console.log('Services:', services);
+
     document.getElementById('bookingForm').addEventListener('submit', function (event) {
-  event.preventDefault(); // Prevent normal form submission
+      event.preventDefault();
 
-  console.log('Booking form submitted');
+      console.log('Booking form submitted');
 
-  // Generate token and set fields as before
-  const token = Math.random().toString(36).substring(2, 15) +
-                Math.random().toString(36).substring(2, 15);
-  document.getElementById('bookingToken').value = token;
+      // Generate token and set fields
+      const token = Math.random().toString(36).substring(2, 15) +
+                  Math.random().toString(36).substring(2, 15);
+      document.getElementById('bookingToken').value = token;
 
-  const serviceId = document.getElementById('service_id').value;
-  let duration, price;
+      const serviceId = document.getElementById('service_id').value;
+      const service = services.find(s => s.id == serviceId);
+      
+      if (!service) {
+        alert('Please select a service');
+        return;
+      }
 
-  if (serviceId == 1 || serviceId == 2) {
-    duration = 6;
-    price = 299 * duration;
-  } else {
-    duration = 8;
-    const defaultArea = 100;
-    price = 75 * defaultArea;
-  }
+      let duration, price;
 
-  document.getElementById('durationField').value = duration;
-  document.getElementById('priceField').value = price;
+      if (service.pricing_type === 'duration') {
+        duration = service.duration_minutes / 60; // Convert to hours
+        price = service.price;
+      } else {
+        // For sqm pricing, use default area
+        duration = 8; // Default duration for sqm pricing
+        const defaultArea = 100; // Default area in square meters
+        price = service.price * defaultArea;
+      }
 
-  // Gather form data
-  const formData = new FormData(this);
+      document.getElementById('durationField').value = duration;
+      document.getElementById('priceField').value = price;
 
-  // Send data via fetch to your backend endpoint
-  fetch(this.action, {
-    method: this.method,
-    body: formData,
-    headers: {
-      'X-Requested-With': 'XMLHttpRequest'
-    }
-  })
-  .then(response => response.json())
-  .then(data => {
-    console.log('Server response:', data);
-    if(data.success) {
-      alert('Booking saved successfully!');
-    } else {
-      alert('Failed to save booking: ' + (data.message || 'Unknown error'));
-    }
-  })
-  .catch(error => {
-    console.error('Error submitting booking:', error);
-    alert('Error submitting booking, check console.');
-  });
-});
+      // Get the CSRF token from the meta tag
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
+      // Gather form data
+      const formData = new FormData(this);
+
+      // Send data via fetch to your backend endpoint
+      fetch(this.action, {
+        method: this.method,
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'same-origin'
+      })
+      .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+          return response.json().then(json => {
+            console.error('Response error:', json);
+            return Promise.reject(json);
+          });
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Server response:', data);
+        if(data.success) {
+          window.location.href = '/booking/success';
+        } else {
+          alert('Failed to save booking: ' + (data.message || 'Unknown error'));
+        }
+      })
+      .catch(error => {
+        console.error('Error submitting booking:', error);
+        if (error.errors) {
+          // Handle validation errors
+          const errorMessages = Object.values(error.errors).flat().join('\n');
+          alert('Validation errors:\n' + errorMessages);
+        } else {
+          alert('Error submitting booking. Please try again.');
+        }
+      });
+
+      // Log form data for debugging
+      console.log('Form data being sent:');
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+      }
+    });
 
     document.getElementById('cleaning_date').addEventListener('change', function () {
       console.log('Cleaning date changed:', this.value);

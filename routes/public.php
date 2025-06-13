@@ -12,7 +12,7 @@ Route::get('/about', [PageController::class, 'about'])->name('about');
 Route::get('/contact', [PageController::class, 'contact'])->name('contact');
 
 Route::get('/booking', [PublicBookingController::class, 'create'])->name('public.bookings.create');
-Route::post('/booking', [PublicBookingController::class, 'store'])->name('public.bookings.store');
+Route::post('/booking', [PublicBookingController::class, 'store'])->name('public.bookings.store.alt');
 
 Route::post('/book', [BookingController::class, 'store'])->name('bookings.store');
 Route::get('/booking/success', fn() => view('bookings.success'))->name('bookings.success');
