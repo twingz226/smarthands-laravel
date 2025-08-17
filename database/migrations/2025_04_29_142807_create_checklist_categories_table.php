@@ -11,9 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('jobs', function (Blueprint $table) {
-            $table->unsignedBigInteger('customer_id')->nullable()->after('id');
-            $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
+        Schema::create('checklist_categories', function (Blueprint $table) {
+            $table->id();
+            $table->string('name')->unique();
+            $table->text('description')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
         });
     }
 
@@ -22,8 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('jobs', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('checklist_categories');
     }
-};
+}; 

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Carbon\Carbon;
 
 class Booking extends Model
 {
@@ -13,14 +14,17 @@ class Booking extends Model
 
     protected $table = 'bookings';
 
+    const STATUS_PENDING = 'pending';
+    const STATUS_CONFIRMED = 'confirmed';
+    const STATUS_CANCELLED = 'cancelled';
+    const STATUS_COMPLETED = 'completed';
+
     protected $fillable = [
         'customer_id',
         'service_id',
         'user_id',
         'cleaner_id',
         'cleaning_date',
-        'duration',
-        'price',
         'status',
         'special_instructions',
         'admin_notes',
@@ -30,13 +34,8 @@ class Booking extends Model
     protected $casts = [
         'cleaning_date' => 'datetime',
         'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'updated_at' => 'datetime'
     ];
-
-    public const STATUS_PENDING = 'pending';
-    public const STATUS_CONFIRMED = 'confirmed';
-    public const STATUS_CANCELLED = 'cancelled';
-    public const STATUS_COMPLETED = 'completed';
 
     public function customer(): BelongsTo
     {
@@ -66,5 +65,18 @@ class Booking extends Model
     public function scopePending($query)
     {
         return $query->where('status', self::STATUS_PENDING);
+    }
+
+    public static function hasAvailableSlots($date)
+    {
+        $startOfDay = Carbon::parse($date)->startOfDay();
+        $endOfDay = Carbon::parse($date)->endOfDay();
+        
+        $bookingsCount = self::where('cleaning_date', '>=', $startOfDay)
+            ->where('cleaning_date', '<=', $endOfDay)
+            ->whereNotIn('status', ['cancelled'])
+            ->count();
+            
+        return $bookingsCount < 10;
     }
 }

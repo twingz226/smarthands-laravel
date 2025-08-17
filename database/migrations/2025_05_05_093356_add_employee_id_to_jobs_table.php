@@ -12,17 +12,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('jobs', function (Blueprint $table) {
-            $table->unsignedBigInteger('service_id')->nullable()->after('id');
-            $table->foreign('service_id')->references('id')->on('services')->onDelete('cascade');
+            $table->foreignId('employee_id')->nullable()->after('service_id')->constrained('employees');
+            $table->index(['employee_id', 'status']);
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::table('jobs', function (Blueprint $table) {
-            $table->dropForeign(['service_id']);
-            $table->dropColumn('service_id');
+            $table->dropForeign(['employee_id']);
+            $table->dropIndex(['employee_id', 'status']);
+            $table->dropColumn('employee_id');
         });
     }
-
-};
+}; 

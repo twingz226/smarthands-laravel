@@ -1,17 +1,71 @@
 @include('admin.partials.header')
 
-<div class="row">
-    <div class="col-sm-12">
-        <div class="well">
-            <div class="container-fluid py-4 px-5">
-                <h3>Welcome to <strong> Smarthands Cleaning Service Management System</strong></h3>
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+.btn.rounded-circle {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 2px;
+    position: relative;
+    border-radius: 50% !important;
+    transition: all 0.3s ease;
+}
+
+.btn.rounded-circle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.btn.rounded-circle i {
+    margin: 0;
+    font-size: 14px;
+}
+
+[data-tooltip] {
+    position: relative;
+}
+
+[data-tooltip]:before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+}
+
+[data-tooltip]:hover:before {
+    visibility: visible;
+    opacity: 1;
+}
+</style>
+
 <div class="main-content">
     <div class="container">
-        <h3>📋 Customer Database</h3>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>📋 Customer Database</h3>
+            <div>
+                <a href="{{ request()->url() }}?archived={{ !$showArchived }}" 
+                   class="btn {{ $showArchived ? 'btn-success' : 'btn-outline-primary' }} fw-bold"
+                   style="{{ !$showArchived ? 'color:rgb(253, 248, 248) !important; border-color: rgb(5, 51, 100) !important; background-color: #303641 !important;' : '' }}"
+                   onmouseover="if(this.classList.contains('btn-outline-primary')){this.style.setProperty('background-color', '#28a745', 'important'); this.style.setProperty('color', 'white', 'important'); this.style.setProperty('border-color', '#28a745', 'important');}"
+                   onmouseout="if(this.classList.contains('btn-outline-primary')){this.style.setProperty('background-color', '#303641', 'important'); this.style.setProperty('color', 'rgb(246, 239, 239)', 'important'); this.style.setProperty('border-color', 'rgb(5, 51, 100)', 'important');}">
+                    {{ $showArchived ? 'Show Active Customers' : 'Show Archived Customers' }}
+                </a>
+            </div>
+        </div>
         <table class="table table-bordered customer-table">
             <thead>
                 <tr>
@@ -21,6 +75,7 @@
                     <th>Contact</th>
                     <th>Address</th>
                     <th>Registered Date</th>
+                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -28,28 +83,43 @@
                 @forelse($customers as $customer)
                     <tr>
                         <td>{{ $customer->id }}</td>
-                        <td>{{ $customer->Name }}</td>
-                        <td>{{ $customer->Email }}</td>
-                        <td>{{ $customer->Contact }}</td>
-                        <td>{{ $customer->Address }}</td>
-                        <td>{{ $customer->Registered_Date }}</td>
+                        <td>{{ $customer->name }}</td>
+                        <td>{{ $customer->email }}</td>
+                        <td>{{ $customer->contact }}</td>
+                        <td>{{ $customer->address }}</td>
+                        <td>{{ $customer->registered_date ? $customer->registered_date->format('M d, Y') : 'N/A' }}</td>
                         <td>
-                            <a href="{{ route('customers.show', $customer->id) }}" class="btn btn-sm btn-primary">View</a>
-                            <a href="{{ route('customers.edit', $customer->id) }}" class="btn btn-sm btn-warning">Edit</a>
-                            <form action="{{ route('customers.destroy', $customer->id) }}" method="POST" style="display: inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
-                            </form>
+                            @if($customer->is_archived)
+                                <span class="badge bg-secondary">Archived</span>
+                                <small class="d-block text-muted">{{ $customer->archived_at->format('M d, Y') }}</small>
+                            @else
+                                <span class="badge bg-success">Active</span>
+                            @endif
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ route('customers.show', $customer->id) }}" 
+                                   class="btn btn-info rounded-circle" 
+                                   data-tooltip="View">
+                                    <i class="entypo-eye"></i>
+                                </a>
+                                <a href="{{ route('customers.edit', $customer->id) }}" 
+                                   class="btn btn-warning rounded-circle" 
+                                   data-tooltip="Edit">
+                                    <i class="entypo-pencil"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center">No customers found.</td>
+                        <td colspan="8" class="text-center">No customers found.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
+        
+        {{ $customers->appends(['archived' => $showArchived])->links() }}
     </div>
 </div>
 

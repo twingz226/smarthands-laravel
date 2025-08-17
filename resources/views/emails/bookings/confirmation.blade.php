@@ -4,7 +4,7 @@
 Hi {{ $booking->customer->name }},
 
 Your {{ $booking->service->name }} is scheduled for:  
-**{{ $booking->service_date->format('l, F j') }} at {{ $booking->service_time }}**
+**{{ $booking->cleaning_date->format('l, F j') }} at {{ $booking->cleaning_date->format('g:i A') }}**
 
 @component('mail::button', ['url' => route('booking.view', $booking)])
 View Booking Details

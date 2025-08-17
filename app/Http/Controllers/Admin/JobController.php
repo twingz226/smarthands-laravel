@@ -6,81 +6,171 @@ use App\Http\Controllers\Controller;
 use App\Models\Job;
 use App\Models\Employee;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class JobController extends Controller
 {
-    // Job dispatch view - for initial assignments
-    public function dispatch()
+    public function index()
     {
-        $pendingJobs = Job::where('status', 'pending')
-            ->with(['customer', 'service'])
+        $jobs = Job::with(['customer', 'service', 'employees'])
             ->latest()
-            ->get();
+            ->paginate(10);
             
-        $availableCleaners = Employee::whereDoesntHave('jobs', function($query) {
-            $query->whereIn('status', ['assigned', 'in_progress']);
-        })->get();
-        
-        return view('admin.jobs.dispatch', compact('pendingJobs', 'availableCleaners'));
+        return view('admin.jobs.index', compact('jobs'));
     }
 
-    // Assign job to cleaner (initial assignment)
+    // Show job details
+    public function show(Job $job)
+    {
+        $job->load(['customer', 'service', 'employees']);
+        
+        $availableEmployees = Employee::whereDoesntHave('jobs', function($query) {
+            $query->whereIn('status', [Job::STATUS_ASSIGNED, Job::STATUS_IN_PROGRESS]);
+        })->get();
+        
+        return view('admin.jobs.show', compact('job', 'availableEmployees'));
+    }
+
+    // Assign job to cleaners (initial assignment)
     public function assign(Request $request, Job $job)
     {
         $request->validate([
-            'employee_id' => 'required|exists:employees,id',
+            'employee_ids' => 'required|array',
+            'employee_ids.*' => 'exists:employees,id',
         ]);
         
-        $job->update([
-            'employee_id' => $request->employee_id,
-            'status' => 'assigned',
-            'assigned_at' => now(),
-        ]);
-        
-        return redirect()->route('jobs.dispatch')
-            ->with('success', 'Job assigned successfully.');
+        try {
+            DB::beginTransaction();
+
+            $now = now();
+            
+            // Sync the employees with the job
+            $job->employees()->sync(
+                collect($request->employee_ids)->mapWithKeys(function ($id) use ($now) {
+                    return [$id => ['assigned_at' => $now]];
+                })
+            );
+
+            // Update job status
+            $job->update([
+                'status' => Job::STATUS_ASSIGNED,
+                'assigned_at' => $now,
+            ]);
+
+            Log::info('Job assigned successfully', [
+                'job_id' => $job->id,
+                'employee_ids' => $request->employee_ids
+            ]);
+
+            DB::commit();
+            return back()->with('success', 'Job assigned successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to assign job: ' . $e->getMessage());
+            return back()->with('error', 'Failed to assign job. Please try again.');
+        }
     }
 
-    // Active assignments view - for managing assigned jobs
+    // Job assignments view
     public function assignments()
     {
-        $activeJobs = Job::with(['customer', 'service', 'employee'])
+        $activeJobs = Job::with(['employees', 'customer', 'service'])
             ->whereIn('status', ['assigned', 'in_progress'])
-            ->latest()
-            ->get();
-            
+            ->orderBy('scheduled_date')
+            ->paginate(15);
+
         $availableEmployees = Employee::whereDoesntHave('jobs', function($query) {
-            $query->whereIn('status', ['assigned', 'in_progress']);
-        })->get();
-        
+                $query->whereIn('status', ['assigned', 'in_progress']);
+            })
+            ->orWhereHas('jobs', function($query) {
+                $query->whereIn('status', ['assigned', 'in_progress']);
+            }, '<', 3) // Employees with less than 3 active jobs
+            ->orderBy('name')
+            ->get();
+
         return view('admin.employees.assignments', compact('activeJobs', 'availableEmployees'));
     }
 
-    // Reassign job to different cleaner
+    // Reassign job to different cleaners
     public function reassign(Request $request, Job $job)
     {
         $request->validate([
-            'employee_id' => 'required|exists:employees,id',
+            'employee_ids' => 'required|array',
+            'employee_ids.*' => 'exists:employees,id',
         ]);
         
-        $job->update([
-            'employee_id' => $request->employee_id,
-            // Status remains the same (assigned or in_progress)
-            'reassigned_at' => now(),
-        ]);
-        
-        return back()->with('success', 'Job reassigned successfully.');
+        try {
+            DB::beginTransaction();
+            
+            $now = now();
+            
+            // Sync the new employees with the job
+            $job->employees()->sync(
+                collect($request->employee_ids)->mapWithKeys(function ($id) use ($now) {
+                    return [$id => ['assigned_at' => $now]];
+                })
+            );
+            
+            $job->update([
+                'reassigned_at' => $now,
+            ]);
+            
+            Log::info('Job reassigned successfully', [
+                'job_id' => $job->id,
+                'old_employee_ids' => $job->employees()->pluck('employee_id'),
+                'new_employee_ids' => $request->employee_ids
+            ]);
+            
+            DB::commit();
+            
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Job reassigned successfully'
+                ]);
+            }
+            
+            return back()->with('success', 'Job reassigned successfully.');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to reassign job: ' . $e->getMessage());
+            
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to reassign job. Please try again.'
+                ], 500);
+            }
+            
+            return back()->with('error', 'Failed to reassign job. Please try again.');
+        }
     }
 
     // Job tracking view
     public function tracking()
     {
-        $jobs = Job::with(['customer', 'service', 'employee'])
-            ->whereIn('status', ['assigned', 'in_progress', 'completed'])
+        $jobs = Job::with(['customer', 'service', 'employees'])
+            ->whereIn('status', [
+                Job::STATUS_PENDING,
+                Job::STATUS_ASSIGNED,
+                Job::STATUS_IN_PROGRESS,
+                Job::STATUS_COMPLETED
+            ])
             ->latest()
             ->get();
             
-        return view('admin.jobs.tracking', compact('jobs'));
+        $availableEmployees = Employee::whereDoesntHave('jobs', function($query) {
+                $query->whereIn('status', [Job::STATUS_ASSIGNED, Job::STATUS_IN_PROGRESS]);
+            })
+            ->orWhereHas('jobs', function($query) {
+                $query->whereIn('status', [Job::STATUS_ASSIGNED, Job::STATUS_IN_PROGRESS]);
+            }, '<', 3) // Employees with less than 3 active jobs
+            ->orderBy('name')
+            ->get();
+            
+        return view('admin.jobs.tracking', compact('jobs', 'availableEmployees'));
     }
 
     // Update job status
@@ -90,27 +180,95 @@ class JobController extends Controller
             'status' => 'required|in:pending,assigned,in_progress,completed',
         ]);
         
-        $updates = ['status' => $request->status];
-        
-        if ($request->status === 'completed') {
-            $updates['completed_at'] = now();
-        } elseif ($request->status === 'in_progress') {
-            $updates['started_at'] = now();
+        try {
+            DB::beginTransaction();
+
+            if ($request->status === Job::STATUS_COMPLETED) {
+                $job->markAsCompleted();
+            } else {
+                $updates = ['status' => $request->status];
+                
+                if ($request->status === Job::STATUS_IN_PROGRESS) {
+                    $updates['started_at'] = now();
+                }
+                
+                $job->update($updates);
+            }
+
+            Log::info('Job status updated', [
+                'job_id' => $job->id,
+                'old_status' => $job->getOriginal('status'),
+                'new_status' => $request->status
+            ]);
+
+            DB::commit();
+            return back()->with('success', 'Job status updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to update job status: ' . $e->getMessage());
+            return back()->with('error', 'Failed to update job status. Please try again.');
         }
-        
-        $job->update($updates);
-        
-        return back()->with('success', 'Job status updated successfully.');
     }
 
     // Mark job as complete
     public function complete(Job $job)
     {
-        $job->update([
-            'status' => 'completed',
-            'completed_at' => now(),
+        try {
+            DB::beginTransaction();
+
+            $job->markAsCompleted();
+
+            Log::info('Job marked as completed', [
+                'job_id' => $job->id
+            ]);
+
+            DB::commit();
+            return back()->with('success', 'Job marked as completed.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to complete job: ' . $e->getMessage());
+            return back()->with('error', 'Failed to complete job. Please try again.');
+        }
+    }
+
+    // Handle job tracking updates
+    public function updateTracking(Request $request)
+    {
+        $request->validate([
+            'job_id' => 'required|exists:jobs,id',
+            'employee_ids' => 'required|array',
+            'employee_ids.*' => 'exists:employees,id',
         ]);
-        
-        return back()->with('success', 'Job marked as completed.');
+
+        try {
+            DB::beginTransaction();
+
+            $job = Job::findOrFail($request->job_id);
+            $now = now();
+            
+            // Sync the employees with the job
+            $job->employees()->sync(
+                collect($request->employee_ids)->mapWithKeys(function ($id) use ($now) {
+                    return [$id => ['assigned_at' => $now]];
+                })
+            );
+            
+            $job->update([
+                'status' => Job::STATUS_ASSIGNED,
+                'assigned_at' => $now,
+            ]);
+
+            Log::info('Job tracking updated', [
+                'job_id' => $job->id,
+                'employee_ids' => $request->employee_ids
+            ]);
+
+            DB::commit();
+            return back()->with('success', 'Job tracking updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to update job tracking: ' . $e->getMessage());
+            return back()->with('error', 'Failed to update job tracking. Please try again.');
+        }
     }
 }

@@ -19,3 +19,20 @@
 .customer-table tr:hover {
     background-color: #f9f9f9;
 }
+
+/* Archive Toggle Button Hover Styles */
+.btn-outline-primary:hover {
+    background-color: #198754 !important;
+    border-color: #198754 !important;
+    color: white !important;
+}
+
+/* Ensure the styles are applied */
+.btn-outline-primary {
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+    background-color: #157347 !important;
+    border-color: #157347 !important;
+}

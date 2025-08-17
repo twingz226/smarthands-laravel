@@ -15,4 +15,6 @@ Route::get('/booking', [PublicBookingController::class, 'create'])->name('public
 Route::post('/booking', [PublicBookingController::class, 'store'])->name('public.bookings.store.alt');
 
 Route::post('/book', [BookingController::class, 'store'])->name('bookings.store');
-Route::get('/booking/success', fn() => view('bookings.success'))->name('bookings.success');
+Route::get('/booking/success', function() {
+    return view('bookings.success');
+})->name('bookings.success');

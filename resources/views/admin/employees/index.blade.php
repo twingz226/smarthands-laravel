@@ -1,21 +1,63 @@
 @include('admin.partials.header')
 
-<div class="row">
-    <div class="col-sm-12">
-        <div class="well">
-            <div class="container-fluid py-4 px-5">
-                <h3>Welcome to <strong> Smarthands Cleaning Service Management System</strong></h3>
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+.btn.rounded-circle {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 2px;
+    position: relative;
+    border-radius: 50% !important;
+    transition: all 0.3s ease;
+}
+
+.btn.rounded-circle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.btn.rounded-circle i {
+    margin: 0;
+    font-size: 14px;
+}
+
+[data-tooltip] {
+    position: relative;
+}
+
+[data-tooltip]:before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+}
+
+[data-tooltip]:hover:before {
+    visibility: visible;
+    opacity: 1;
+}
+</style>
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">Cleaner Database</h1>
+        <h1 class="h2">Employee Database</h1>
         <div class="btn-toolbar mb-2 mb-md-0">
             <a href="{{ route('employees.create') }}" class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-plus-circle"></i> Add New Cleaner
+                <i class="entypo-plus"></i> Add New Cleaner
             </a>
         </div>
     </div>
@@ -28,7 +70,6 @@
                         <tr>
                             <th>ID</th>
                             <th>Name</th>
-                            <th>Email</th>
                             <th>Phone</th>
                             <th>Hire Date</th>
                             <th>Rating</th>
@@ -40,43 +81,38 @@
                         <tr>
                             <td>{{ $employee->id }}</td>
                             <td>{{ $employee->name }}</td>
-                            <td>{{ $employee->email }}</td>
                             <td>{{ $employee->phone }}</td>
                             <td>{{ $employee->hire_date->format('M d, Y') }}</td>
                             <td>
-                                @if($employee->average_rating)
-                                <div class="d-flex align-items-center">
-                                    <span class="text-warning me-1">
-                                        @for($i = 1; $i <= 5; $i++)
-                                            @if($i <= floor($employee->average_rating))
-                                                <i class="bi bi-star-fill"></i>
-                                            @elseif($i - 0.5 <= $employee->average_rating)
-                                                <i class="bi bi-star-half"></i>
-                                            @else
-                                                <i class="bi bi-star"></i>
-                                            @endif
-                                        @endfor
-                                    </span>
-                                    <span>({{ number_format($employee->average_rating, 1) }})</span>
-                                </div>
+                                @if($employee->ratings_avg_rating)
+                                    {{ number_format($employee->ratings_avg_rating, 1) }} / 5.0
                                 @else
-                                No ratings yet
+                                    No ratings yet
                                 @endif
                             </td>
                             <td>
-                                <a href="{{ route('employees.show', $employee->id) }}" class="btn btn-sm btn-info" title="View">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                <a href="{{ route('employees.edit', $employee->id) }}" class="btn btn-sm btn-primary" title="Edit">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <form action="{{ route('employees.destroy', $employee->id) }}" method="POST" style="display: inline-block;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger" title="Delete" onclick="return confirm('Are you sure?')">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ route('employees.show', $employee->id) }}" 
+                                       class="btn btn-info rounded-circle" 
+                                       data-tooltip="View">
+                                        <i class="entypo-eye"></i>
+                                    </a>
+                                    <a href="{{ route('employees.edit', $employee->id) }}" 
+                                       class="btn btn-warning rounded-circle" 
+                                       data-tooltip="Edit">
+                                        <i class="entypo-pencil"></i>
+                                    </a>
+                                    <form action="{{ route('employees.destroy', $employee->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" 
+                                                class="btn btn-danger rounded-circle" 
+                                                data-tooltip="Delete"
+                                                onclick="return confirm('Are you sure?')">
+                                            <i class="entypo-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                         @endforeach

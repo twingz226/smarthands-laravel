@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Employee extends Model
@@ -12,10 +13,10 @@ class Employee extends Model
 
     protected $fillable = [
         'name',
-        'email',
         'phone',
         'address',
         'hire_date',
+        'status'
     ];
 
     protected $casts = [
@@ -27,9 +28,11 @@ class Employee extends Model
     /**
      * Get all jobs assigned to the employee
      */
-    public function jobs(): HasMany
+    public function jobs(): BelongsToMany
     {
-        return $this->hasMany(Job::class);
+        return $this->belongsToMany(Job::class, 'job_employee')
+            ->withPivot('assigned_at')
+            ->withTimestamps();
     }
 
     /**

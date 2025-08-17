@@ -9,12 +9,12 @@ return new class extends Migration {
     {
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
-            $table->string('Customer_Id')->nullable();
-            $table->string('Name');
-            $table->string('Contact');
-            $table->string('Email')->nullable();
-            $table->text('Address');
-            $table->date('Registered_Date');
+            $table->string('customer_id')->nullable();
+            $table->string('name');
+            $table->string('contact');
+            $table->string('email')->unique()->nullable();
+            $table->text('address');
+            $table->date('registered_date');
             $table->timestamps();
         });
     }
@@ -23,4 +23,4 @@ return new class extends Migration {
     {
         Schema::dropIfExists('customers');
     }
-};
+}; 

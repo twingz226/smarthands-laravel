@@ -5,7 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\JobCompleted;
 
 class Job extends Model
 {
@@ -14,17 +18,23 @@ class Job extends Model
     protected $fillable = [
         'customer_id',
         'service_id',
-        'employee_id',
         'scheduled_date',
         'status',
         'address',
         'special_instructions',
+        'started_at',
         'completed_at',
+        'assigned_at',
+        'reassigned_at',
+        'rating_token'
     ];
 
     protected $casts = [
         'scheduled_date' => 'datetime',
+        'started_at' => 'datetime',
         'completed_at' => 'datetime',
+        'assigned_at' => 'datetime',
+        'reassigned_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -61,11 +71,13 @@ class Job extends Model
     }
 
     /**
-     * Get the employee assigned to this job
+     * Get the employees assigned to this job
      */
-    public function employee(): BelongsTo
+    public function employees(): BelongsToMany
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsToMany(Employee::class, 'job_employee')
+            ->withPivot('assigned_at')
+            ->withTimestamps();
     }
 
     /**
@@ -77,11 +89,19 @@ class Job extends Model
     }
 
     /**
-     * Get the rating for this job
+     * Get the ratings for this job
      */
-    public function rating(): HasMany
+    public function ratings(): HasMany
     {
         return $this->hasMany(Rating::class);
+    }
+
+    /**
+     * Get the rating for this job (for backward compatibility)
+     */
+    public function rating(): HasOne
+    {
+        return $this->hasOne(Rating::class);
     }
 
     /**
@@ -90,5 +110,59 @@ class Job extends Model
     public function isCompleted(): bool
     {
         return $this->status === self::STATUS_COMPLETED;
+    }
+
+    /**
+     * Check if job is pending
+     */
+    public function isPending(): bool
+    {
+        return $this->status === self::STATUS_PENDING;
+    }
+
+    /**
+     * Check if job is assigned
+     */
+    public function isAssigned(): bool
+    {
+        return $this->status === self::STATUS_ASSIGNED;
+    }
+
+    /**
+     * Check if job is in progress
+     */
+    public function isInProgress(): bool
+    {
+        return $this->status === self::STATUS_IN_PROGRESS;
+    }
+
+    /**
+     * Check if job is cancelled
+     */
+    public function isCancelled(): bool
+    {
+        return $this->status === self::STATUS_CANCELLED;
+    }
+
+    /**
+     * Generate a unique rating token
+     */
+    public static function generateRatingToken(): string
+    {
+        return md5(uniqid(rand(), true));
+    }
+
+    /**
+     * Mark job as completed and send rating email
+     */
+    public function markAsCompleted()
+    {
+        $this->status = 'completed';
+        $this->completed_at = now();
+        $this->rating_token = self::generateRatingToken();
+        $this->save();
+
+        // Send completion email with rating link
+        Mail::to($this->customer->email)->send(new JobCompleted($this));
     }
 }

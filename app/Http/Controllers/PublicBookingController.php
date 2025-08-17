@@ -11,6 +11,7 @@ use App\Mail\NewBookingAlert;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class PublicBookingController extends Controller
 {
@@ -40,33 +41,34 @@ class PublicBookingController extends Controller
 
             Log::debug('Validated booking data:', $validated);
 
+            // Parse the date in PHT timezone
+            $cleaningDate = Carbon::parse($validated['cleaning_date'], 'Asia/Manila');
+            
             // Get the service
             $service = Service::findOrFail($validated['service_id']);
             Log::debug('Service found:', $service->toArray());
 
-            // Create or find customer
-            $customer = Customer::firstOrCreate(
-                ['Email' => strtolower($validated['email'])],
+            // Create or update customer
+            $customer = Customer::updateOrCreate(
+                ['email' => strtolower($validated['email'])],
                 [
-                    'Name' => $validated['name'],
-                    'Contact' => $validated['contact'],
-                    'Address' => $validated['address'],
-                    'Registered_Date' => now(),
-                    'Customer_Id' => 'CUST-' . strtoupper(substr(uniqid(), -6))
+                    'name' => $validated['name'],
+                    'contact' => $validated['contact'],
+                    'address' => $validated['address'],
+                    'registered_date' => now()
                 ]
             );
 
-            Log::debug('Customer found/created:', $customer->toArray());
+            Log::debug('Customer found/updated:', $customer->toArray());
 
             // Create booking
             $booking = Booking::create([
                 'customer_id' => $customer->id,
                 'service_id' => $validated['service_id'],
-                'cleaning_date' => $validated['cleaning_date'],
-                'duration' => $request->input('duration', $this->calculateDuration($service)),
-                'price' => $request->input('price', $this->calculatePrice($service, $validated)),
+                'cleaning_date' => $cleaningDate,
                 'status' => 'pending',
                 'booking_token' => $validated['booking_token'],
+                'special_instructions' => $request->input('special_instructions'),
             ]);
 
             Log::debug('Booking created:', $booking->toArray());
@@ -96,15 +98,11 @@ class PublicBookingController extends Controller
 
     private function calculatePrice($service, $data)
     {
-        if (in_array($service->id, [1, 2])) {
-            return 299 * 6; // 6 hour minimum
-        } else {
-            return 75 * 100; // Example 100 sqm default
-        }
+        return 0;
     }
 
     private function calculateDuration($service)
     {
-        return in_array($service->id, [1, 2]) ? 6 : 8; // hours
+        return 0;
     }
 }

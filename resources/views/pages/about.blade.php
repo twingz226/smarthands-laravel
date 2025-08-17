@@ -8,27 +8,32 @@
   <style>
     /* Navbar styles */
     .custom-navbar {
-      padding-top: 0.5rem;
-      padding-bottom: 0.5rem;
-      min-height: 80px;
-      background-color: #ffc044 !important;
+      padding-top: 0.3rem;
+      padding-bottom: 0.3rem;
+      min-height: 70px;
+      background-color: #ff9f1c !important;
     }
     .navbar-brand img, .logo img {
-      height: 100px;
+      height: 80px;
       width: auto;
       border-radius: 80%;
     }
     .nav-link {
       font-weight: 700;
-      color: #333 !important;
+      color: #000000 !important;
       padding: 0.5rem 1rem !important;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     .nav-link:hover {
-      color: #0d6efd !important;
+      color: #ffffff !important;
+      transform: translateY(-2px);
     }
     .nav-link.active {
-      color: #0d6efd !important;
+      color: #ffffff !important;
       text-decoration: underline;
+      text-underline-offset: 5px;
     }
     .navbar-nav {
       align-items: center;
@@ -41,21 +46,21 @@
     /* About Section */
     .about-section {
       padding: 60px 5%;
-      background-color: white;
+      background-color: #cbf3f0;
     }
     .section-title {
-      font-size: 2rem;
+      font-size: 2.5rem;
       font-weight: 700;
       color: #000;
       text-align: center;
       margin-bottom: 40px;
     }
     .info-card {
-      background-color: #f8f9fa;
-      border-radius: 8px;
+      background-color: rgba(254, 254, 254, 0.85);
+      border-radius: 10px;
       padding: 30px;
       margin-bottom: 30px;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
     }
     .info-item {
       margin-bottom: 20px;
@@ -91,7 +96,7 @@
       padding: 60px 5% 40px;
       position: relative;
       z-index: 1;
-      background-color: #f8f9fa;
+      background-color: #2ec4b6;
       text-align: center;
     }
     .main-headline {
@@ -102,7 +107,7 @@
     }
     .tagline {
       font-size: 1.2rem;
-      color: #666;
+      color: #000000;
       line-height: 1.4;
       margin-bottom: 2rem;
     }
@@ -147,7 +152,7 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item"><a class="nav-link @if(Route::currentRouteName() == 'home') active @endif" href="{{ route('home') }}">Home</a></li>
-          <li class="nav-item"><a class="nav-link @if(Route::currentRouteName() == 'services') active @endif" href="{{ route('services') }}">Service</a></li>
+          <li class="nav-item"><a class="nav-link @if(Route::currentRouteName() == 'services') active @endif" href="{{ route('services') }}">Services</a></li>
           <li class="nav-item"><a class="nav-link @if(Route::currentRouteName() == 'about') active @endif" href="{{ route('about') }}">About Us</a></li>
           <li class="nav-item"><a class="nav-link @if(Route::currentRouteName() == 'contact') active @endif" href="{{ route('contact') }}">Contact</a></li>
         </ul>
@@ -163,45 +168,72 @@
 
   <!-- About Content -->
   <section class="about-section">
-    <h2 class="section-title">Our Information</h2>
+    <h2 class="section-title">About Us</h2>
     
     <div class="container">
       <div class="row justify-content-center">
         <div class="col-lg-8">
+          <div class="info-card mb-4">
+            <div class="about-content">
+              {{ $contactInfo->about_content ?? 'Welcome to Smarthands Cleaning Services, your trusted partner in professional cleaning solutions.' }}
+            </div>
+          </div>
+
+          <div class="info-card mb-4">
+            <h3 class="mb-4">Our Mission</h3>
+            <div class="mission-content">
+              {{ $contactInfo->mission ?? 'To provide exceptional cleaning services that enhance the quality of life for our clients while maintaining the highest standards of professionalism and customer satisfaction.' }}
+            </div>
+          </div>
+
+          <div class="info-card mb-4">
+            <h3 class="mb-4">Our Vision</h3>
+            <div class="vision-content">
+              {{ $contactInfo->vision ?? 'To be the leading cleaning service provider in Bacolod City, known for our reliability, quality, and commitment to excellence.' }}
+            </div>
+          </div>
+
+          <div class="info-card mb-4">
+            <h3 class="mb-4">Services We Offer</h3>
+            <div class="services-content">
+              {{ $contactInfo->services_offered ?? 'We offer a comprehensive range of cleaning services including residential cleaning, commercial cleaning, deep cleaning, and specialized cleaning solutions.' }}
+            </div>
+          </div>
+
           <div class="info-card">
+            <h3 class="mb-4">Contact Information</h3>
             <div class="info-item">
               <strong>Address:</strong>
-              Bacolod City, Philippines, 6100
+              {{ $contactInfo->address ?? 'Bacolod City, Philippines, 6100' }}
             </div>
             
             <div class="info-item">
               <strong>Service Area:</strong>
-              Silay City, Philippines · Talisay, Philippines · Bacolod City, Philippines
+              {{ $contactInfo->service_area ?? 'Silay City, Philippines · Talisay, Philippines · Bacolod City, Philippines' }}
             </div>
             
             <div class="info-item">
               <strong>Mobile:</strong>
-              0953 957 4130
+              {{ $contactInfo->phone ?? '0953 957 4130' }}
             </div>
             
             <div class="info-item">
               <strong>Email:</strong>
-              smarthandsbcd@gmail.com
+              {{ $contactInfo->email ?? 'smarthandsbcd@gmail.com' }}
             </div>
             
             <div class="info-item">
               <strong>Hours:</strong>
-              Always open
-            </div>
-            
-            <div class="info-item">
-              <strong>Services:</strong>
-              Online booking available
+              {{ $contactInfo->business_hours ?? 'Always open' }}
             </div>
             
             <div class="social-links">
-              <a href="https://www.google.com/search?kgmid=/g/11lp7h_3j3&hl=en-PH&q=SMARTHANDS+CLEANING+SERVICES-BACOLOD&shndl=30&shem=lsde&source=sh/x/loc/osrp/m5/4&kgs=93c2696209fda06f" target="_blank">Google Business</a>
-              <a href="https://www.facebook.com/share/1APN8G5ArR/" target="_blank">Facebook Page</a>
+              @if($contactInfo && $contactInfo->google_business_url)
+                <a href="{{ $contactInfo->google_business_url }}" target="_blank">Google Business</a>
+              @endif
+              @if($contactInfo && $contactInfo->facebook_url)
+                <a href="{{ $contactInfo->facebook_url }}" target="_blank">Facebook Page</a>
+              @endif
             </div>
           </div>
         </div>

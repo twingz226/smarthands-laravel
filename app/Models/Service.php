@@ -45,6 +45,14 @@ class Service extends Model
      */
     public function formattedPrice(): string
     {
-        return '$' . number_format($this->price, 2);
+        return '₱' . number_format($this->price, 2);
+    }
+
+    /**
+     * Scope for active services.
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 }

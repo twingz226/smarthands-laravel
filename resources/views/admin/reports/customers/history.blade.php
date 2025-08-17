@@ -1,15 +1,5 @@
 @include('admin.partials.header')
 
-<div class="row">
-    <div class="col-sm-12">
-        <div class="well">
-            <div class="container-fluid py-4 px-5">
-                <h3>Welcome to <strong> Smarthands Cleaning Service Management System</strong></h3>
-            </div>
-        </div>
-    </div>
-</div>
-
 <div class="main-content">
     <div class="container">
         <h3>🧼 Cleaning History Report</h3>
@@ -36,7 +26,15 @@
                         <tr>
                             <td>{{ $customer->name }}</td>
                             <td>{{ $job->service->name ?? 'N/A' }}</td>
-                            <td>{{ $job->employee->name ?? 'N/A' }}</td>
+                            <td>
+                                @if($job->employees->count() > 0)
+                                    @foreach($job->employees as $employee)
+                                        <span class="badge bg-info">{{ $employee->name }}</span>
+                                    @endforeach
+                                @else
+                                    <span class="text-muted">Not Assigned</span>
+                                @endif
+                            </td>
                             <td>{{ $job->created_at->format('Y-m-d') }}</td>
                             <td>
                                 <span class="badge bg-success">{{ $job->status }}</span>

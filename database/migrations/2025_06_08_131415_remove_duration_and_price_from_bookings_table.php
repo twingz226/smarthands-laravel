@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('jobs', function (Blueprint $table) {
-            $table->date('scheduled_date')->nullable();
+        Schema::table('bookings', function (Blueprint $table) {
+            $table->dropColumn(['duration', 'price']);
         });
     }
 
@@ -21,8 +21,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('jobs', function (Blueprint $table) {
-            //
+        Schema::table('bookings', function (Blueprint $table) {
+            $table->integer('duration')->nullable()->comment('In hours');
+            $table->decimal('price', 8, 2)->nullable();
         });
     }
 };

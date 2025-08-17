@@ -10,11 +10,12 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('services.update', $service->id) }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ route('services.update', $service->id) }}" method="POST">
                         @csrf
                         @method('PUT')
 
-                        <div class="form-group">
+                        {{-- Service Name --}}
+                        <div class="form-group mb-3">
                             <label for="name">Service Name</label>
                             <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name', $service->name) }}" required>
                             @error('name')
@@ -24,9 +25,10 @@
                             @enderror
                         </div>
 
-                        <div class="form-group">
+                        {{-- Description --}}
+                        <div class="form-group mb-3">
                             <label for="description">Description</label>
-                            <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="3" required>{{ old('description', $service->description) }}</textarea>
+                            <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="3">{{ old('description', $service->description) }}</textarea>
                             @error('description')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>
@@ -34,19 +36,41 @@
                             @enderror
                         </div>
 
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="price">Price (₱)</label>
+                        {{-- Pricing Type --}}
+                        <div class="form-group mb-3">
+                            <label for="pricing_type">Pricing Type</label>
+                            <select name="pricing_type" id="pricing_type" class="form-select @error('pricing_type') is-invalid @enderror" required>
+                                <option value="sqm" {{ old('pricing_type', $service->pricing_type) === 'sqm' ? 'selected' : '' }}>Per Square Meter (₱/sqm)</option>
+                                <option value="duration" {{ old('pricing_type', $service->pricing_type) === 'duration' ? 'selected' : '' }}>Per Time Duration (₱/duration)</option>
+                            </select>
+                            @error('pricing_type')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
+
+                        {{-- Price --}}
+                        <div class="form-group mb-3">
+                            <label for="price">Price</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₱</span>
                                 <input type="number" step="0.01" class="form-control @error('price') is-invalid @enderror" id="price" name="price" value="{{ old('price', $service->price) }}" required>
+                                <span class="input-group-text" id="price-unit">{{ $service->pricing_type === 'sqm' ? '/sqm' : '/duration' }}</span>
                                 @error('price')
                                     <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>
                                     </span>
                                 @enderror
                             </div>
-                            <div class="form-group col-md-6">
-                                <label for="duration_minutes">Duration (minutes)</label>
-                                <input type="number" class="form-control @error('duration_minutes') is-invalid @enderror" id="duration_minutes" name="duration_minutes" value="{{ old('duration_minutes', $service->duration_minutes) }}" required>
+                        </div>
+
+                        {{-- Duration --}}
+                        <div class="form-group mb-3" id="duration-group" style="{{ $service->pricing_type === 'sqm' ? 'display: none;' : '' }}">
+                            <label for="duration_minutes">Duration (minutes)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control @error('duration_minutes') is-invalid @enderror" id="duration_minutes" name="duration_minutes" value="{{ old('duration_minutes', $service->duration_minutes) }}" {{ $service->pricing_type === 'duration' ? 'required' : '' }}>
+                                <span class="input-group-text">minutes</span>
                                 @error('duration_minutes')
                                     <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>
@@ -56,24 +80,9 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="image">Service Image (Leave empty to keep current)</label>
-                            <div class="custom-file">
-                                <input type="file" class="custom-file-input @error('image') is-invalid @enderror" id="image" name="image">
-                                <label class="custom-file-label" for="image">Choose file</label>
-                                @error('image')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
-                            @if($service->image)
-                                <div class="mt-2">
-                                    <img src="{{ asset('storage/'.$service->image) }}" alt="{{ $service->name }}" style="max-height: 100px;">
-                                </div>
-                            @endif
+                            <button type="submit" class="btn btn-primary">Update Service</button>
+                            <a href="{{ route('services.index') }}" class="btn btn-secondary">Cancel</a>
                         </div>
-
-                        <button type="submit" class="btn btn-primary">Update Service</button>
                     </form>
                 </div>
             </div>
@@ -81,14 +90,27 @@
     </div>
 </div>
 
-
-@section('scripts')
+{{-- JavaScript to toggle fields --}}
 <script>
-    // Update file input label
-    document.querySelector('.custom-file-input').addEventListener('change', function(e) {
-        var fileName = document.getElementById("image").files[0].name;
-        var nextSibling = e.target.nextElementSibling;
-        nextSibling.innerText = fileName;
+    document.addEventListener('DOMContentLoaded', function () {
+        const pricingType = document.getElementById('pricing_type');
+        const durationGroup = document.getElementById('duration-group');
+        const priceUnit = document.getElementById('price-unit');
+        const durationInput = document.getElementById('duration_minutes');
+
+        pricingType.addEventListener('change', function () {
+            if (this.value === 'sqm') {
+                durationGroup.style.display = 'none';
+                priceUnit.textContent = '/sqm';
+                durationInput.value = '';
+                durationInput.removeAttribute('required');
+            } else if (this.value === 'duration') {
+                durationGroup.style.display = 'block';
+                priceUnit.textContent = '/duration';
+                durationInput.setAttribute('required', 'required');
+            }
+        });
     });
 </script>
+
 @include('admin.partials.scripts')

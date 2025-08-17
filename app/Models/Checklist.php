@@ -13,13 +13,20 @@ class Checklist extends Model
     protected $fillable = [
         'job_id',
         'name',
+        'description',
+        'is_active',
         'is_completed',
+        'category_id',
+        'due_date',
+        'frequency'
     ];
 
     protected $casts = [
         'is_completed' => 'boolean',
+        'is_active' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'due_date' => 'date',
     ];
 
     /**

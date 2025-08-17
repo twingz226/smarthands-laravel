@@ -9,13 +9,13 @@ use App\Http\Controllers\Admin\JobController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\ChecklistController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\ContactInfoController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::prefix('admin/customers')->name('customers.')->group(function () {
         Route::get('/', [CustomerController::class, 'index'])->name('index');
-        Route::get('/portal', [CustomerController::class, 'portal'])->name('portal');
         Route::get('/create', [CustomerController::class, 'create'])->name('create');
         Route::post('/', [CustomerController::class, 'store'])->name('store');
         Route::get('/{customer}', [CustomerController::class, 'show'])->name('show');
@@ -32,8 +32,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{booking}/edit', [AdminBookingController::class, 'edit'])->name('edit');
         Route::put('/{booking}', [AdminBookingController::class, 'update'])->name('update');
         Route::patch('/{booking}/confirm', [AdminBookingController::class, 'confirm'])->name('confirm');
-        Route::patch('/{booking}/cancel', [AdminBookingController::class, 'cancel'])->name('cancel');
+        Route::patch('/{booking}/cancel', [AdminBookingController::class, 'cancel'])->name('admin.cancel');
         Route::delete('/{booking}', [AdminBookingController::class, 'destroy'])->name('destroy');
+        Route::get('/{booking}/reschedule', [AdminBookingController::class, 'reschedule'])->name('reschedule');
+        Route::get('/time-slots', [AdminBookingController::class, 'getTimeSlots'])->name('time-slots');
     });
 
     Route::prefix('admin/services')->name('services.')->group(function () {
@@ -47,12 +49,13 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::prefix('admin/jobs')->name('jobs.')->group(function () {
-        Route::get('/dispatch', [JobController::class, 'dispatch'])->name('dispatch');
-        Route::post('/{job}/assign', [JobController::class, 'assign'])->name('assign');
         Route::get('/tracking', [JobController::class, 'tracking'])->name('tracking');
+        Route::put('/tracking', [JobController::class, 'updateTracking'])->name('update-tracking');
+        Route::get('/{job}', [JobController::class, 'show'])->name('show');
+        Route::post('/{job}/assign', [JobController::class, 'assign'])->name('assign');
         Route::post('/{job}/complete', [JobController::class, 'complete'])->name('complete');
         Route::put('/{job}/status', [JobController::class, 'updateStatus'])->name('update-status');
-        Route::put('/{job}/reassign', [JobController::class, 'reassign'])->name('reassign');
+        Route::match(['put', 'post'], '/{job}/reassign', [JobController::class, 'reassign'])->name('reassign');
     });
 
     Route::prefix('admin/employees')->name('employees.')->group(function () {
@@ -69,7 +72,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('admin/checklists')->name('checklists.')->group(function () {
         Route::get('/', [ChecklistController::class, 'index'])->name('index');
+        Route::get('/add', [ChecklistController::class, 'create'])->name('add');
         Route::post('/', [ChecklistController::class, 'store'])->name('store');
+        Route::get('/{checklist}/edit', [ChecklistController::class, 'edit'])->name('edit');
         Route::patch('/{checklist}', [ChecklistController::class, 'update'])->name('update');
         Route::delete('/{checklist}', [ChecklistController::class, 'destroy'])->name('destroy');
     });
@@ -90,5 +95,11 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('employees')->name('employees.')->group(function () {
             Route::get('/performance', [ReportController::class, 'employeePerformance'])->name('performance');
         });
+    });
+
+    // Contact Information Management
+    Route::prefix('admin/contact')->name('admin.contact.')->group(function () {
+        Route::get('/edit', [ContactInfoController::class, 'edit'])->name('edit');
+        Route::put('/update', [ContactInfoController::class, 'update'])->name('update');
     });
 });

@@ -44,7 +44,7 @@
                                         <option value="">Select Service</option>
                                         @foreach($services as $service)
                                             <option value="{{ $service->id }}" {{ old('service_id') == $service->id ? 'selected' : '' }}>
-                                                {{ $service->name }} - ${{ number_format($service->price, 2) }}
+                                                {{ $service->name }} - ₱{{ number_format($service->price, 2) }}
                                             </option>
                                         @endforeach
                                     </select>
@@ -65,34 +65,6 @@
                                            class="form-control @error('cleaning_date') is-invalid @enderror" 
                                            value="{{ old('cleaning_date') }}" required>
                                     @error('cleaning_date')
-                                        <span class="invalid-feedback" role="alert">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="duration">Duration (hours) *</label>
-                                    <input type="number" name="duration" id="duration" min="1" 
-                                           class="form-control @error('duration') is-invalid @enderror" 
-                                           value="{{ old('duration', 2) }}" required>
-                                    @error('duration')
-                                        <span class="invalid-feedback" role="alert">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="price">Price ($) *</label>
-                                    <input type="number" step="0.01" name="price" id="price" min="0" 
-                                           class="form-control @error('price') is-invalid @enderror" 
-                                           value="{{ old('price') }}" required>
-                                    @error('price')
                                         <span class="invalid-feedback" role="alert">
                                             <strong>{{ $message }}</strong>
                                         </span>
@@ -143,26 +115,6 @@
     $(document).ready(function() {
         $('.select2').select2({
             theme: 'bootstrap4'
-        });
-
-        // Auto-calculate price when service changes
-        $('#service_id').change(function() {
-            const serviceId = $(this).val();
-            if (serviceId) {
-                // In a real application, you might fetch the price via AJAX
-                // This is just a placeholder implementation
-                const duration = $('#duration').val() || 2;
-                $('#price').val(serviceId * 25 * duration); // Example calculation
-            }
-        });
-
-        // Auto-update price when duration changes
-        $('#duration').change(function() {
-            const serviceId = $('#service_id').val();
-            if (serviceId) {
-                const duration = $(this).val() || 2;
-                $('#price').val(serviceId * 25 * duration); // Example calculation
-            }
         });
     });
 </script>

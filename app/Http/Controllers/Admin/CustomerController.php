@@ -11,10 +11,19 @@ use Illuminate\Http\Request;
 class CustomerController extends Controller
 {
     // Display all customers
-    public function index()
+    public function index(Request $request)
     {
-        $customers = Customer::latest()->paginate(10);
-        return view('admin.customers.index', compact('customers'));
+        $showArchived = $request->query('archived', false);
+        
+        $customers = Customer::when($showArchived, function($query) {
+                return $query->archived();
+            }, function($query) {
+                return $query->active();
+            })
+            ->latest()
+            ->paginate(10);
+
+        return view('admin.customers.index', compact('customers', 'showArchived'));
     }
 
     // Show create customer form
@@ -33,6 +42,9 @@ class CustomerController extends Controller
             'address' => 'required|string',
         ]);
 
+        // Add registered_date
+        $validated['registered_date'] = now();
+
         Customer::create($validated);
 
         return redirect()->route('customers.index')
@@ -43,7 +55,7 @@ class CustomerController extends Controller
     public function show(Customer $customer)
     {
         $jobs = Job::where('customer_id', $customer->id)
-            ->with(['service', 'employee'])
+            ->with(['service', 'employees'])
             ->latest()
             ->paginate(5);
 
@@ -70,58 +82,5 @@ class CustomerController extends Controller
 
         return redirect()->route('customers.index')
             ->with('success', 'Customer updated successfully.');
-    }
-
-    // Delete customer
-    public function destroy(Customer $customer)
-    {
-        $customer->delete();
-        return redirect()->route('customers.index')
-            ->with('success', 'Customer deleted successfully.');
-    }
-
-    // Customer portal view
-    public function portal()
-    {
-        // Get the next upcoming booking for the authenticated customer
-        $nextBooking = auth()->user()->bookings()
-            ->where('cleaning_date', '>=', now())
-            ->orderBy('cleaning_date')
-            ->first();
-
-        // Get all bookings (for the bookings tab)
-        $bookings = auth()->user()->bookings()
-            ->orderBy('cleaning_date', 'desc')
-            ->get();
-
-        // Get recent activities
-        $recentActivities = auth()->user()->activities()
-            ->latest()
-            ->take(5)
-            ->get();
-
-        // Prepare calendar events
-        $calendarEvents = auth()->user()->bookings()
-            ->select('cleaning_date as start', 'service_id')
-            ->with('service')
-            ->get()
-            ->map(function ($booking) {
-                return [
-                    'title' => $booking->service->name,
-                    'start' => $booking->cleaning_date, // Fixed to use cleaning_date
-                    'color' => '#3490dc',
-                ];
-            });
-
-        // Fetch available services
-        $services = Service::all();
-
-        return view('admin.customers.portal', compact(
-            'nextBooking',
-            'bookings',
-            'recentActivities',
-            'calendarEvents',
-            'services'
-        ));
     }
 }

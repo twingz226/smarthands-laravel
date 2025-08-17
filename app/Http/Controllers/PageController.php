@@ -11,6 +11,8 @@ use App\Mail\NewBookingAlert;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use App\Models\ContactInfo;
+use Illuminate\Validation\ValidationException;
 
 class PageController extends Controller
 {
@@ -28,11 +30,14 @@ class PageController extends Controller
 
     public function about()
     {
-        return view('pages.about');
+        $contactInfo = ContactInfo::first();
+        return view('pages.about', compact('contactInfo'));
     }
+
     public function contact()
     {
-        return view('pages.contact');
+        $contactInfo = ContactInfo::first();
+        return view('pages.contact', compact('contactInfo'));
     }
 
     /**
@@ -43,7 +48,6 @@ class PageController extends Controller
         DB::beginTransaction();
         
         try {
-            // Validate the request data
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|max:255',
@@ -51,40 +55,39 @@ class PageController extends Controller
                 'address' => 'required|string|max:500',
                 'service_id' => 'required|exists:services,id',
                 'cleaning_date' => 'required|date|after:now',
-                'booking_token' => 'required|string',
-                'duration' => 'required|numeric|min:1',
-                'price' => 'required|numeric|min:0'
+                'special_instructions' => 'nullable|string',
+                'booking_token' => 'required|string'
             ]);
 
-            Log::debug('Validated booking data:', $validated);
+            // Check if the selected date has available slots
+            if (!Booking::hasAvailableSlots($validated['cleaning_date'])) {
+                throw ValidationException::withMessages([
+                    'cleaning_date' => ['Selected date is fully booked. Please choose another date.']
+                ]);
+            }
 
-            // Get the service
-            $service = Service::findOrFail($validated['service_id']);
-            Log::debug('Service found:', $service->toArray());
-
-            // Create or find customer
-            $customer = Customer::firstOrCreate(
-                ['Email' => strtolower($validated['email'])],
+            // Create or update customer
+            $customer = Customer::updateOrCreate(
+                ['email' => strtolower($validated['email'])],
                 [
-                    'Name' => $validated['name'],
-                    'Contact' => $validated['contact'],
-                    'Address' => $validated['address'],
-                    'Registered_Date' => now(),
-                    'Customer_Id' => 'CUST-' . strtoupper(substr(uniqid(), -6))
+                    'name' => $validated['name'],
+                    'contact' => $validated['contact'],
+                    'address' => $validated['address'],
+                    'registered_date' => now()
                 ]
             );
 
-            Log::debug('Customer found/created:', $customer->toArray());
+            Log::debug('Customer found/updated:', $customer->toArray());
 
             // Create booking
+            $service = Service::findOrFail($validated['service_id']);
             $booking = Booking::create([
                 'customer_id' => $customer->id,
                 'service_id' => $validated['service_id'],
                 'cleaning_date' => $validated['cleaning_date'],
-                'duration' => $validated['duration'],
-                'price' => $validated['price'],
                 'status' => 'pending',
                 'booking_token' => $validated['booking_token'],
+                'special_instructions' => $validated['special_instructions'] ?? null,
             ]);
 
             Log::debug('Booking created:', $booking->toArray());
@@ -92,7 +95,7 @@ class PageController extends Controller
             // Send emails (if configured)
             if (config('mail.enabled')) {
                 Mail::to(config('mail.admin_email'))->send(new NewBookingAlert($booking));
-                Mail::to($customer->Email)->send(new BookingConfirmation($booking));
+                Mail::to($customer->email)->send(new BookingConfirmation($booking));
             }
 
             DB::commit();
@@ -132,15 +135,11 @@ class PageController extends Controller
         }
     }
 
-    private function calculateDuration(Service $service)
+    public function checkSlots(Request $request)
     {
-        // Add your duration calculation logic here
-        return 2; // Default duration in hours
-    }
-
-    private function calculatePrice(Service $service, array $validated)
-    {
-        // Add your price calculation logic here
-        return $service->base_price; // Return base price as default
+        $date = $request->query('date');
+        return response()->json([
+            'available' => Booking::hasAvailableSlots($date)
+        ]);
     }
 }

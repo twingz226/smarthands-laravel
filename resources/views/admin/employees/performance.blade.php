@@ -1,16 +1,5 @@
 @include('admin.partials.header')
 
-<div class="row">
-    <div class="col-sm-12">
-        <div class="well">
-            <div class="container-fluid py-4 px-5">
-                <h3>Welcome to <strong> Smarthands Cleaning Service Management System</strong></h3>
-            </div>
-        </div>
-    </div>
-</div>
-
-
 <div class="container">
     <h2 class="mb-4">Employee Performance</h2>
 

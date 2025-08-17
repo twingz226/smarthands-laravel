@@ -11,17 +11,23 @@ class Customer extends Model
     use HasFactory;
 
     protected $fillable = [
-        'Name',
-        'Email',
-        'Contact',
-        'Address',
-        'Registered_Date',
-        'Customer_Id'
+        'name',
+        'email',
+        'contact',
+        'address',
+        'registered_date',
+        'customer_id',
+        'is_archived',
+        'archived_at',
+        'archive_reason'
     ];
 
     protected $casts = [
+        'registered_date' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'archived_at' => 'datetime',
+        'is_archived' => 'boolean'
     ];
 
     /**
@@ -46,5 +52,25 @@ class Customer extends Model
     public function ratings(): HasMany
     {
         return $this->hasMany(Rating::class);
+    }
+
+    /**
+     * Get all activities for the customer
+     */
+    public function activities(): HasMany
+    {
+        return $this->hasMany(CustomerActivity::class);
+    }
+
+    // Scope for active (non-archived) customers
+    public function scopeActive($query)
+    {
+        return $query->where('is_archived', false);
+    }
+
+    // Scope for archived customers
+    public function scopeArchived($query)
+    {
+        return $query->where('is_archived', true);
     }
 }

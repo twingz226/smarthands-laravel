@@ -3113,8 +3113,8 @@ table > tbody > tr.highlight > th {
   color: #303641;
 }
 .badge {
-  background-color: #ebebeb;
-  color: #373e4a;
+  background-color: #28a745;
+  color: #f1f3f7;
 }
 .badge.badge-primary {
   background-color: #303641;

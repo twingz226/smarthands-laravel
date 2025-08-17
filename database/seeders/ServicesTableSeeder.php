@@ -28,7 +28,7 @@ class ServicesTableSeeder extends Seeder
                 'name' => '2-Story/Bungalow House Cleaning',
                 'description' => 'Comprehensive cleaning for larger homes with attention to all levels.',
                 'price' => 75.00,
-                'duration_minutes' => 480, // 8 hours
+                'duration_minutes' => null,
                 'pricing_type' => 'sqm'
             ],
             [
@@ -42,7 +42,7 @@ class ServicesTableSeeder extends Seeder
                 'name' => 'Post-Construction/Renovation Cleaning',
                 'description' => 'Specialized cleaning to remove construction dust and debris.',
                 'price' => 75.00,
-                'duration_minutes' => 480, // 8 hours
+                'duration_minutes' => null,
                 'pricing_type' => 'sqm'
             ]
         ];

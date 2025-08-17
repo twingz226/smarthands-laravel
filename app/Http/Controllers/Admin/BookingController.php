@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\BookingStatusUpdate;
 
 class BookingController extends Controller
 {
@@ -43,9 +45,7 @@ class BookingController extends Controller
                 'customer_id' => 'required|exists:customers,id',
                 'service_id' => 'required|exists:services,id',
                 'cleaning_date' => 'required|date',
-                'duration' => 'required|integer|min:1',
-                'price' => 'required|numeric|min:0',
-                'special_instructions' => 'nullable|string  ',
+                'special_instructions' => 'nullable|string',
                 'admin_notes' => 'nullable|string',
             ]);
 
@@ -53,8 +53,6 @@ class BookingController extends Controller
                 'customer_id' => $validated['customer_id'],
                 'service_id' => $validated['service_id'],
                 'cleaning_date' => $validated['cleaning_date'],
-                'duration' => $validated['duration'],
-                'price' => $validated['price'],
                 'status' => 'pending',
                 'special_instructions' => $validated['special_instructions'] ?? null,
                 'admin_notes' => $validated['admin_notes'] ?? null,
@@ -93,14 +91,19 @@ class BookingController extends Controller
             'customer_id' => 'required|exists:customers,id',
             'service_id' => 'required|exists:services,id',
             'cleaning_date' => 'required|date',
-            'duration' => 'required|integer|min:1',
-            'price' => 'required|numeric|min:0',
             'status' => 'required|in:pending,confirmed,completed,cancelled',
             'special_instructions' => 'nullable|string',
             'admin_notes' => 'nullable|string',
         ]);
 
+        $oldStatus = $booking->status;
         $booking->update($validated);
+
+        // Send email if status has changed
+        if ($oldStatus !== $validated['status'] && config('mail.enabled')) {
+            Mail::to($booking->customer->email)
+                ->send(new BookingStatusUpdate($booking));
+        }
 
         return redirect()->route('bookings.show', $booking)
             ->with('success', 'Booking updated successfully.');
@@ -108,14 +111,76 @@ class BookingController extends Controller
 
     public function confirm(Booking $booking)
     {
-        $booking->update(['status' => 'confirmed']);
-        return back()->with('success', 'Booking confirmed successfully.');
+        try {
+            DB::beginTransaction();
+
+            Log::info('BookingController: Starting booking confirmation process', [
+                'booking_id' => $booking->id,
+                'old_status' => $booking->status,
+                'customer_id' => $booking->customer_id,
+                'service_id' => $booking->service_id,
+                'cleaning_date' => $booking->cleaning_date
+            ]);
+
+            // Get the original status before update
+            $originalStatus = $booking->status;
+
+            $booking->update(['status' => Booking::STATUS_CONFIRMED]);
+
+            // Reload the model to ensure we have fresh data
+            $booking->refresh();
+
+            Log::info('BookingController: Booking status updated', [
+                'booking_id' => $booking->id,
+                'original_status' => $originalStatus,
+                'new_status' => $booking->status,
+                'was_status_changed' => $originalStatus !== $booking->status,
+                'is_confirmed' => $booking->isConfirmed()
+            ]);
+            
+            if (config('mail.enabled')) {
+                Mail::to($booking->customer->email)
+                    ->send(new BookingStatusUpdate($booking));
+            }
+
+            DB::commit();
+
+            Log::info('BookingController: Booking confirmation completed successfully', [
+                'booking_id' => $booking->id,
+                'final_status' => $booking->status
+            ]);
+
+            return back()->with('success', 'Booking confirmed successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('BookingController: Failed to confirm booking', [
+                'booking_id' => $booking->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->with('error', 'Failed to confirm booking. Please try again.');
+        }
     }
 
     public function cancel(Booking $booking)
     {
-        $booking->update(['status' => 'cancelled']);
-        return back()->with('success', 'Booking cancelled successfully.');
+        try {
+            DB::beginTransaction();
+            
+            $booking->update(['status' => Booking::STATUS_CANCELLED]);
+            
+            if (config('mail.enabled')) {
+                Mail::to($booking->customer->email)
+                    ->send(new BookingStatusUpdate($booking));
+            }
+
+            DB::commit();
+            return back()->with('success', 'Booking cancelled successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Booking cancellation failed: ' . $e->getMessage());
+            return back()->with('error', 'Failed to cancel booking. Please try again.');
+        }
     }
 
     public function destroy(Booking $booking)

@@ -50,7 +50,7 @@ body {
 
 /* Style for the dashboard cards */
 .card {
-    border: 1px solid #ddd;
+    border: 1px solid #0e1a6b;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -107,4 +107,148 @@ body {
     height: 150px;
     border-radius: 80%;
     
+}
+
+/* Custom sidebar color */
+body .page-container .sidebar-menu {
+  width: 250px !important;
+  transition: all 0.3s ease-in-out !important;
+  background: #274c77 !important;
+}
+
+body .page-container .sidebar-menu #main-menu li#search {
+  background-color: #1f3c5f;
+}
+
+body .page-container .sidebar-menu #main-menu li ul > li > a {
+  background-color: #274c77;
+}
+
+body .page-container .sidebar-menu #main-menu li.active > a {
+  background: #1f3c5f;
+}
+
+body .page-container .sidebar-menu #main-menu li ul > li > a {
+  background-color: #1f3c5f;
+}
+
+body .page-container .sidebar-menu #main-menu li a:hover {
+  background-color: #315d8c;
+}
+
+body .page-container .sidebar-menu #main-menu li ul > li > a:hover {
+  background-color: #1a334f;
+}
+
+body .page-container.sidebar-collapsed .sidebar-menu #main-menu > li > a > span:not(.badge) {
+  background: #274c77;
+}
+
+/* Adjust other sidebar elements to match the new color scheme */
+body .page-container .sidebar-menu .sidebar-user-info {
+  border-color: #315d8c;
+}
+
+body .page-container .sidebar-menu #main-menu li {
+  border-color: #315d8c;
+}
+
+body .page-container .sidebar-menu .logo-env > div.sidebar-collapse a,
+body .page-container .sidebar-menu .logo-env > div.sidebar-mobile-menu a {
+  border-color: #315d8c;
+}
+
+body .page-container .sidebar-menu .logo-env > div.sidebar-collapse a:hover {
+  background: #1f3c5f;
+}
+
+body .page-container.sidebar-collapsed .sidebar-menu #main-menu > li > ul li {
+  border-color: #315d8c;
+}
+
+/* New styles for sidebar menu text */
+body .page-container .sidebar-menu #main-menu li a {
+  color: #ffffff !important;
+  font-size: 15px !important;
+  position: relative !important;
+}
+
+body .page-container .sidebar-menu #main-menu li ul > li > a {
+  color: #ffffff !important;
+  font-size: 14px !important;
+}
+
+/* Adjust user info text color */
+body .page-container .sidebar-menu .sidebar-user-info {
+  color: #ffffff !important;
+}
+
+body .page-container .sidebar-menu .sidebar-user-info .user-link {
+  color: #ffffff !important;
+}
+
+/* Make sure collapsed menu text is also white */
+body .page-container.sidebar-collapsed .sidebar-menu #main-menu > li > a > span {
+  color: #ffffff !important;
+}
+
+/* Active menu item styles - using pseudo-element for highlight */
+body .page-container .sidebar-menu #main-menu li.active > a:before {
+  content: none !important;
+}
+
+body .page-container .sidebar-menu #main-menu li.active > a {
+  background-color: #ffb703 !important;
+  color: #000000 !important;
+}
+
+/* Active submenu item styles */
+body .page-container .sidebar-menu #main-menu li ul > li.active > a {
+  background-color: #8ecae6 !important;
+}
+
+/* Active parent menu item with open submenu */
+body .page-container .sidebar-menu #main-menu li.has-sub.expanded > a {
+  background-color: #1f3c5f !important;
+}
+
+/* Collapsed sidebar active states */
+body .page-container.sidebar-collapsed .sidebar-menu #main-menu > li.active > a {
+  background-color: #1a334f !important;
+}
+
+/* Add a subtle transition effect */
+body .page-container .sidebar-menu #main-menu li a {
+  transition: background-color 0.2s ease-in-out !important;
+}
+
+/* Ensure submenu items stay aligned */
+body .page-container .sidebar-menu #main-menu li ul > li > a {
+  padding-left: 40px !important;
+}
+
+body .page-container .sidebar-menu #main-menu li ul > li.active > a:before {
+  content: '' !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 4px !important;
+  background-color: #8FB8DE !important;
+}
+
+body .page-container.sidebar-collapsed .sidebar-menu {
+  width: 50px !important;
+}
+
+/* Main Content Styles */
+body .page-container .main-content {
+  margin-left: 250px !important;
+  transition: all 0.3s ease-in-out !important;
+  width: calc(100% - 250px) !important;
+}
+
+body .page-container.sidebar-collapsed .main-content {
+  margin-left: 50px !important;
+  width: calc(100% - 50px) !important;
 }

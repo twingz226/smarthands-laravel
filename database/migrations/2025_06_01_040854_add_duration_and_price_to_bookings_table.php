@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('jobs', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+        Schema::table('bookings', function (Blueprint $table) {
+            $table->integer('duration')->comment('In hours')->after('cleaning_date');
+            $table->decimal('price', 8, 2)->after('duration');
         });
     }
 
@@ -22,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('jobs');
+        Schema::table('bookings', function (Blueprint $table) {
+            $table->dropColumn(['duration', 'price']);
+        });
     }
 };

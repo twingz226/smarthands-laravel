@@ -1,16 +1,6 @@
 @include('admin.partials.header')
 
-<div class="row">
-    <div class="col-sm-12">
-        <div class="well">
-            <div class="container-fluid py-4 px-5">
-                <h3>Welcome to <strong> Smarthands Cleaning Service Management System</strong></h3>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="page-container">
     <!-- Main Content -->
     <div class="main-content">
         <div class="container">
@@ -138,7 +128,7 @@
             </div>
         </div>
     </div>
-</div>
+
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\Employee;
 use App\Models\Job;
 use App\Models\Rating;
+use App\Models\Booking;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -30,7 +31,7 @@ class ReportController extends Controller
         $customers = Customer::has('jobs')
             ->with(['jobs' => function($query) {
                 $query->where('status', 'completed')
-                    ->with(['service', 'employee']);
+                    ->with(['service', 'employees']);
             }])
             ->paginate(10);
             
@@ -38,13 +39,38 @@ class ReportController extends Controller
     }
     
     // Customer Feedback/Ratings Report
-    public function customerFeedback()
+    public function customerFeedback(Request $request)
     {
-        $ratings = Rating::with(['customer', 'employee', 'job'])
-            ->latest()
-            ->paginate(10);
+        $query = Rating::with(['customer', 'employee', 'job.service'])
+            ->latest();
             
-        return view('admin.reports.customers.feedback', compact('ratings'));
+        // Apply filters
+        if ($request->filled('rating')) {
+            $query->where('rating', '>=', $request->rating);
+        }
+        
+        if ($request->filled('start_date')) {
+            $query->whereDate('created_at', '>=', $request->start_date);
+        }
+        
+        if ($request->filled('end_date')) {
+            $query->whereDate('created_at', '<=', $request->end_date);
+        }
+        
+        // Get paginated results
+        $ratings = $query->paginate(10);
+        
+        // Calculate statistics
+        $averageRating = Rating::avg('rating');
+        $totalFeedback = Rating::count();
+        $recentFeedback = Rating::where('created_at', '>=', now()->subDays(30))->count();
+        
+        return view('admin.reports.customers.feedback', compact(
+            'ratings',
+            'averageRating',
+            'totalFeedback',
+            'recentFeedback'
+        ));
     }
     
     // Customer Retention Report
@@ -93,7 +119,7 @@ class ReportController extends Controller
     public function jobCompletion(Request $request)
     {
         $query = Job::where('status', 'completed')
-            ->with(['customer', 'service', 'employee', 'rating']);
+            ->with(['customer', 'service', 'employees', 'rating']);
             
         // Apply filters
         if ($request->filled('start_date')) {
@@ -104,31 +130,26 @@ class ReportController extends Controller
             $query->where('completed_at', '<=', $request->end_date);
         }
         
-        if ($request->filled('cleaner_id')) {
-            $query->where('employee_id', $request->cleaner_id);
-        }
-        
         $jobs = $query->latest('completed_at')->paginate(15);
-        
-        // Get all cleaners for filter dropdown
-        $employees = Employee::all();
         
         // Completion stats for chart
         $completionStats = [
             'completed' => Job::where('status', 'completed')->count(),
             'pending' => Job::where('status', 'pending')->count(),
-            'cancelled' => Job::where('status', 'cancelled')->count(),
+            'cancelled' => Booking::where('status', 'cancelled')->count(),
         ];
         
         // Cleaner ratings for chart
         $cleanerRatings = Employee::withAvg('ratings', 'rating')
-            ->has('ratings')
-            ->orderBy('ratings_avg_rating', 'desc')
-            ->get();
+            ->orderByDesc('ratings_avg_rating')
+            ->get()
+            ->map(function ($employee) {
+                $employee->ratings_avg_rating = $employee->ratings_avg_rating ?? 0;
+                return $employee;
+            });
         
         return view('admin.reports.jobs.completion', compact(
             'jobs',
-            'employees',
             'completionStats',
             'cleanerRatings',
             'request'

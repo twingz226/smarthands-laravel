@@ -34,7 +34,6 @@ class EmployeeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:employees,email',
             'phone' => 'required|string|max:20',
             'address' => 'required|string',
             'hire_date' => 'required|date',
@@ -49,18 +48,15 @@ class EmployeeController extends Controller
     // Show single employee
     public function show(Employee $employee)
     {
-        $recentJobs = Job::where('employee_id', $employee->id)
+        $recent_jobs = $employee->jobs()
             ->with(['customer', 'service'])
             ->latest()
             ->limit(5)
             ->get();
             
-        $ratings = Rating::where('employee_id', $employee->id)
-            ->with(['customer', 'job'])
-            ->latest()
-            ->paginate(5);
+        $ratings_count = Rating::where('employee_id', $employee->id)->count();
             
-        return view('admin.employees.show', compact('employee', 'recentJobs', 'ratings'));
+        return view('admin.employees.show', compact('employee', 'recent_jobs', 'ratings_count'));
     }
 
     // Show edit form
@@ -74,7 +70,6 @@ class EmployeeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:employees,email,'.$employee->id,
             'phone' => 'required|string|max:20',
             'address' => 'required|string',
             'hire_date' => 'required|date',

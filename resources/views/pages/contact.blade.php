@@ -8,27 +8,32 @@
   <style>
     /* Navbar styles */
     .custom-navbar {
-      padding-top: 0.5rem;
-      padding-bottom: 0.5rem;
-      min-height: 80px;
-      background-color: #ffc044 !important;
+      padding-top: 0.3rem;
+      padding-bottom: 0.3rem;
+      min-height: 70px;
+      background-color: #ff9f1c !important;
     }
     .navbar-brand img, .logo img {
-      height: 100px;
+      height: 80px;
       width: auto;
       border-radius: 80%;
     }
     .nav-link {
       font-weight: 700;
-      color: #333 !important;
+      color: #000000 !important;
       padding: 0.5rem 1rem !important;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     .nav-link:hover {
-      color: #0d6efd !important;
+      color: #ffffff !important;
+      transform: translateY(-2px);
     }
     .nav-link.active {
-      color: #0d6efd !important;
+      color: #ffffff !important;
       text-decoration: underline;
+      text-underline-offset: 5px;
     }
     .navbar-nav {
       align-items: center;
@@ -41,21 +46,21 @@
     /* Contact Section */
     .contact-section {
       padding: 60px 5%;
-      background-color: white;
+      background-color: #cbf3f0;
     }
     .section-title {
-      font-size: 2rem;
+      font-size: 2.5rem;
       font-weight: 700;
       color: #000;
       text-align: center;
       margin-bottom: 40px;
     }
     .contact-card {
-      background-color: #f8f9fa;
-      border-radius: 8px;
+      background-color: rgba(254, 254, 254, 0.85);
+      border-radius: 10px;
       padding: 30px;
       margin-bottom: 30px;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
       max-width: 600px;
       margin-left: auto;
       margin-right: auto;
@@ -101,7 +106,7 @@
       padding: 60px 5% 40px;
       position: relative;
       z-index: 1;
-      background-color: #f8f9fa;
+      background-color: #2ec4b6;
       text-align: center;
     }
     .main-headline {
@@ -112,7 +117,7 @@
     }
     .tagline {
       font-size: 1.2rem;
-      color: #666;
+      color: #000000;
       line-height: 1.4;
       margin-bottom: 2rem;
     }
@@ -157,7 +162,7 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item"><a class="nav-link @if(Route::currentRouteName() == 'home') active @endif" href="{{ route('home') }}">Home</a></li>
-          <li class="nav-item"><a class="nav-link @if(Route::currentRouteName() == 'services') active @endif" href="{{ route('services') }}">Service</a></li>
+          <li class="nav-item"><a class="nav-link @if(Route::currentRouteName() == 'services') active @endif" href="{{ route('services') }}">Services</a></li>
           <li class="nav-item"><a class="nav-link @if(Route::currentRouteName() == 'about') active @endif" href="{{ route('about') }}">About Us</a></li>
           <li class="nav-item"><a class="nav-link @if(Route::currentRouteName() == 'contact') active @endif" href="{{ route('contact') }}">Contact</a></li>
         </ul>
@@ -173,21 +178,41 @@
 
   <!-- Contact Content -->
   <section class="contact-section">
-    <h2 class="section-title">Our Contact Information</h2>
+    <h2 class="section-title">Contact Information</h2>
     
     <div class="contact-card">
       <div class="contact-item">
         <strong>Email:</strong>
-        smarthandsbcd@gmail.com
+        {{ $contactInfo->email ?? 'smarthandsbcd@gmail.com' }}
       </div>
       
       <div class="contact-item">
         <strong>Phone:</strong>
-        0953 957 4130
+        {{ $contactInfo->phone ?? '0953 957 4130' }}
+      </div>
+
+      <div class="contact-item">
+        <strong>Address:</strong>
+        {{ $contactInfo->address ?? 'Bacolod City, Philippines, 6100' }}
+      </div>
+
+      <div class="contact-item">
+        <strong>Service Area:</strong>
+        {{ $contactInfo->service_area ?? 'Silay City, Philippines · Talisay, Philippines · Bacolod City, Philippines' }}
+      </div>
+
+      <div class="contact-item">
+        <strong>Business Hours:</strong>
+        {{ $contactInfo->business_hours ?? 'Always open' }}
       </div>
       
       <div class="social-links">
-        <a href="https://www.facebook.com/share/1APN8G5ArR/" target="_blank">Facebook Page</a>
+        @if($contactInfo && $contactInfo->facebook_url)
+          <a href="{{ $contactInfo->facebook_url }}" target="_blank">Facebook Page</a>
+        @endif
+        @if($contactInfo && $contactInfo->google_business_url)
+          <a href="{{ $contactInfo->google_business_url }}" target="_blank">Google Business</a>
+        @endif
       </div>
     </div>
   </section>
