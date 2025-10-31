@@ -2,14 +2,15 @@
 
 namespace App\Providers;
 
+use App\Models\Rating;
 use App\Models\Booking;
 use App\Models\Job;
-use App\Models\Rating;
 use App\Observers\CustomerActivityObserver;
 use App\Observers\BookingObserver;
 use App\Observers\JobObserver;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Route;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,6 +36,11 @@ class AppServiceProvider extends ServiceProvider
         if(isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') {
             URL::forceScheme('https');
         }
+
+        // Custom binding for booking_token
+        Route::bind('token', function ($value) {
+            return \App\Models\Booking::where('booking_token', $value)->firstOrFail();
+        });
 
         Booking::observe([CustomerActivityObserver::class, BookingObserver::class]);
         Job::observe([CustomerActivityObserver::class, JobObserver::class]);

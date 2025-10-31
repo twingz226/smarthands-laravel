@@ -1,5 +1,6 @@
-@include('admin.partials.header')
+@extends('layouts.admin')
 
+@section('content')
 <div class="container mt-5">
     <h2 class="mb-4">Add New Service</h2>
 
@@ -35,7 +36,7 @@
             <select name="pricing_type" id="pricing_type" class="form-select" required>
                 <option value="" disabled selected>Select pricing type</option>
                 <option value="sqm">Per Square Meter (₱/sqm)</option>
-                <option value="duration">Per Time Duration (₱/duration)</option>
+                <option value="duration">Per Hour (₱/hr)</option>
             </select>
         </div>
 
@@ -63,26 +64,25 @@
         <a href="{{ route('services.index') }}" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
+@endsection
 
-{{-- JavaScript to toggle fields --}}
+@push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const pricingType = document.getElementById('pricing_type');
-        const durationGroup = document.getElementById('duration-group');
-        const priceUnit = document.getElementById('price-unit');
-        const durationInput = document.getElementById('duration_minutes');
+document.addEventListener('DOMContentLoaded', function () {
+    const pricingType = document.getElementById('pricing_type');
+    const durationGroup = document.getElementById('duration-group');
+    const priceUnit = document.getElementById('price-unit');
+    const durationInput = document.getElementById('duration_minutes');
 
-        pricingType.addEventListener('change', function () {
-            if (this.value === 'sqm') {
-                durationGroup.style.display = 'none';
-                priceUnit.textContent = '/sqm';
-                durationInput.value = '';
-            } else if (this.value === 'duration') {
-                durationGroup.style.display = 'block';
-                priceUnit.textContent = '/duration';
-            }
-        });
+    pricingType.addEventListener('change', function () {
+        if (this.value === 'sqm') {
+            durationGroup.style.display = 'none';
+            priceUnit.textContent = '/sqm';
+        } else if (this.value === 'duration') {
+            durationGroup.style.display = 'block';
+            priceUnit.textContent = '/hr';
+        }
     });
+});
 </script>
-
-@include('admin.partials.scripts')
+@endpush

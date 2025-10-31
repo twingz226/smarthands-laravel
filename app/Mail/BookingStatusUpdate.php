@@ -32,7 +32,7 @@ class BookingStatusUpdate extends Mailable
     {
         $status = ucfirst($this->booking->status);
         return $this->markdown('emails.bookings.status_update')
-                    ->subject("Booking #{$this->booking->id} {$status}")
+                    ->subject("Booking {$status}")
                     ->with([
                         'booking' => $this->booking,
                     ]);

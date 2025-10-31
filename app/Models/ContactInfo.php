@@ -15,6 +15,7 @@ class ContactInfo extends Model
         'service_area',
         'business_hours',
         'facebook_url',
+        'instagram_url',
         'google_business_url',
         'about_content',
         'mission',

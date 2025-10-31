@@ -46,7 +46,7 @@ class ReportController extends Controller
             
         // Apply filters
         if ($request->filled('rating')) {
-            $query->where('rating', '>=', $request->rating);
+            $query->where('rating', $request->rating);
         }
         
         if ($request->filled('start_date')) {

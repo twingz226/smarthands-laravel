@@ -1,67 +1,108 @@
-@include('admin.partials.header')
+@extends('layouts.admin')
+
+@section('content')
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Edit Booking</h3>
-                    <p class="mb-0 mt-2">Customer: <strong>{{ $booking->customer->name }}</strong></p>
-                    <p class="mb-0">Service: <strong>{{ $booking->service->name }}</strong></p>
-                    <div class="card-tools">
-                        <a href="{{ route('bookings.index') }}" class="btn btn-sm btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Back
-                        </a>
-                    </div>
+            <div class="card-header">
+                <div class="card-tools">
+                    <a href="{{ route('bookings.index') }}" class="btn btn-sm btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
                 </div>
-                <form action="{{ route('bookings.update', $booking) }}" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="card-body">
-                        <!-- Hidden inputs for customer_id and service_id -->
-                        <input type="hidden" name="customer_id" value="{{ $booking->customer_id }}">
-                        <input type="hidden" name="service_id" value="{{ $booking->service_id }}">
-                        
-                        <div class="row mt-3">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="cleaning_date">Cleaning Date *</label>
-                                    <input type="datetime-local" 
-                                           name="cleaning_date" 
-                                           id="cleaning_date" 
-                                           class="form-control @error('cleaning_date') is-invalid @enderror" 
-                                           value="{{ old('cleaning_date', $booking->cleaning_date->format('Y-m-d\TH:i')) }}"
-                                           required>
-                                    @error('cleaning_date')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
+            </div>
+            </div>
+
+            @if(session('success'))
+                <div class="alert alert-success">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            <!-- Reschedule Card -->
+            <div class="card mt-4">
+                <div class="card-header">Edit Booking</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="user_id">User</label>
+                                <select name="user_id" id="user_id" class="form-control select2 @error('user_id') is-invalid @enderror" style="width: 100%;" required>
+                                    <option value="">Select User</option>
+                                    @foreach($users as $user)
+                                        <option value="{{ $user->id }}" {{ $booking->user_id == $user->id ? 'selected' : '' }}>{{ $user->name }} ({{ $user->email }})</option>
+                                    @endforeach
+                                </select>
+                                @error('user_id')
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
+                                @enderror
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="status">Status *</label>
-                                    <select name="status" id="status" class="form-control @error('status') is-invalid @enderror" required>
-                                        <option value="pending" {{ old('status', $booking->status) === 'pending' ? 'selected' : '' }}>Pending</option>
-                                        <option value="confirmed" {{ old('status', $booking->status) === 'confirmed' ? 'selected' : '' }}>Confirmed</option>
-                                        <option value="completed" {{ old('status', $booking->status) === 'completed' ? 'selected' : '' }}>Completed</option>
-                                        <option value="cancelled" {{ old('status', $booking->status) === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-                                    </select>
-                                    @error('status')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="service_id">Service</label>
+                                <select name="service_id" id="service_id" class="form-control select2 @error('service_id') is-invalid @enderror" style="width: 100%;" required>
+                                    <option value="">Select Service</option>
+                                    @foreach($services as $service)
+                                        <option value="{{ $service->id }}" {{ $booking->service_id == $service->id ? 'selected' : '' }}>{{ $service->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('service_id')
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
+                                @enderror
                             </div>
                         </div>
                     </div>
-                    <div class="card-footer">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Update Booking
-                        </button>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="cleaning_date">Cleaning Date and Time</label>
+                                <input type="datetime-local" name="cleaning_date" id="cleaning_date" class="form-control @error('cleaning_date') is-invalid @enderror" value="{{ old('cleaning_date', $formattedDate) }}" required>
+                                @error('cleaning_date')
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="status">Status</label>
+                                <select name="status" id="status" class="form-control @error('status') is-invalid @enderror" required>
+                                    @foreach(['pending', 'confirmed', 'completed', 'cancelled'] as $status)
+                                        <option value="{{ $status }}" {{ $booking->status == $status ? 'selected' : '' }}>{{ ucfirst($status) }}</option>
+                                    @endforeach
+                                </select>
+                                @error('status')
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
+                                @enderror
+                            </div>
+                        </div>
                     </div>
+
+                    <div class="form-group">
+                        <label for="special_instructions">Special Instructions</label>
+                        <textarea name="special_instructions" id="special_instructions" class="form-control @error('special_instructions') is-invalid @enderror" rows="3">{{ old('special_instructions', $booking->special_instructions) }}</textarea>
+                        @error('special_instructions')
+                            <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label for="admin_notes">Admin Notes</label>
+                        <textarea name="admin_notes" id="admin_notes" class="form-control @error('admin_notes') is-invalid @enderror" rows="3">{{ old('admin_notes', $booking->admin_notes) }}</textarea>
+                        @error('admin_notes')
+                            <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
+                        @enderror
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Update Booking</button>
                 </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
+@endsection
 
 @push('scripts')
 <script>
@@ -73,5 +114,3 @@
     });
 </script>
 @endpush
-
-@include('admin.partials.scripts') 

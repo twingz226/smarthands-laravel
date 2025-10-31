@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\NewCustomerRegistered;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -29,6 +30,32 @@ class Customer extends Model
         'archived_at' => 'datetime',
         'is_archived' => 'boolean'
     ];
+
+    /**
+     * The event map for the model.
+     *
+     * @var array
+     */
+    protected $dispatchesEvents = [
+        'created' => NewCustomerRegistered::class,
+    ];
+
+    /**
+     * The "booting" method of the model.
+     *
+     * @return void
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        
+        // Set default values
+        static::creating(function ($customer) {
+            if (empty($customer->registered_date)) {
+                $customer->registered_date = now();
+            }
+        });
+    }
 
     /**
      * Get all jobs for the customer

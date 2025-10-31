@@ -4,8 +4,11 @@ namespace App\Observers;
 
 use App\Models\Job;
 use App\Models\Booking;
+use App\Mail\JobCompleted;
+use App\Mail\BookingStatusUpdate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class JobObserver
 {
@@ -44,6 +47,16 @@ class JobObserver
                         'status' => Booking::STATUS_COMPLETED
                     ]);
 
+                    // Send email notification for completed booking
+                    if (config('mail.enabled')) {
+                        Mail::to($booking->customer->email)
+                            ->send(new BookingStatusUpdate($booking));
+                        
+                        // Also send job completed email with rating link
+                        Mail::to($booking->customer->email)
+                            ->send(new JobCompleted($job));
+                    }
+
                     Log::info('JobObserver: Booking status updated successfully', [
                         'job_id' => $job->id,
                         'booking_id' => $booking->id,
@@ -70,4 +83,4 @@ class JobObserver
             }
         }
     }
-} 
+}

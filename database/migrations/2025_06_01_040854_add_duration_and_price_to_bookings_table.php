@@ -12,8 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('bookings', function (Blueprint $table) {
-            $table->integer('duration')->comment('In hours')->after('cleaning_date');
-            $table->decimal('price', 8, 2)->after('duration');
+            // Check if columns don't exist before adding them
+            if (!Schema::hasColumn('bookings', 'duration')) {
+                $table->integer('duration')->comment('In hours')->after('cleaning_date');
+            }
+            
+            if (!Schema::hasColumn('bookings', 'price')) {
+                $table->decimal('price', 8, 2)->after('duration');
+            }
         });
     }
 

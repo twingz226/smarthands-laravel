@@ -1,11 +1,13 @@
-@include('admin.partials.header')
+@extends('layouts.admin')
+
+@section('content')
 <div class="container-fluid">
     <!-- Customer Details Card -->
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="m-0">Customer Details</h5>
             <div class="card-tools">
-                <a href="{{ route('customers.index') }}" class="btn btn-sm btn-secondary">
+                <a href="{{ route('admin.customers.index') }}" class="btn btn-sm btn-secondary">
                     <i class="fas fa-arrow-left"></i> Back to List
                 </a>
             </div>
@@ -19,7 +21,6 @@
                 </div>
                 <div class="col-md-6">
                     <p><strong>Contact:</strong> {{ $customer->contact }}</p>
-                    <p><strong>Address:</strong> {{ $customer->address }}</p>
                     <p><strong>Registered Date:</strong> {{ $customer->registered_date->format('M d, Y') }}</p>
                     <p>
                         <strong>Status:</strong>
@@ -87,4 +88,4 @@
         </div>
     </div>
 </div>
-@include('admin.partials.scripts') 
+@endsection 

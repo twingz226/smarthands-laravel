@@ -15,13 +15,23 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+
+        // Create a default admin user if it doesn't exist
+        if (!User::where('email', 'admin@example.com')->exists()) {
+            User::factory()->create([
+                'name' => 'Admin User',
+                'email' => 'admin@example.com',
+                'password' => bcrypt('adminpassword123'), // Change this password after first login
+                'role' => 'admin',
+            ]);
+        }
 
         $this->call([
-            ServicesTableSeeder::class
+            ServicesTableSeeder::class,
+            EmployeeSeeder::class,
+            HomeMediaSeeder::class,
+            ServiceMediaSeeder::class,
+            ContactInfoSeeder::class,
         ]);
     }
 }

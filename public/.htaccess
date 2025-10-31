@@ -18,8 +18,20 @@
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
+    # Handle Storage Directory Access
+    RewriteCond %{REQUEST_URI} ^/storage/(.+)\.(gif|jpg|jpeg|png|svg|ico|css|js|woff|woff2|ttf|eot)$ [NC]
+    RewriteCond %{DOCUMENT_ROOT}/storage/%1.%2 -f
+    RewriteRule ^storage/(.+)\.(gif|jpg|jpeg|png|svg|ico|css|js|woff|woff2|ttf|eot)$ /storage/$1.$2 [L,NC]
+
     # Send Requests To Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# Enable directory listing for storage/app/public
+<Directory "/opt/lampp/htdocs/cleaning_service_management_system/storage/app/public">
+    Options Indexes FollowSymLinks
+    AllowOverride All
+    Require all granted
+</Directory>

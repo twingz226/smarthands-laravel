@@ -30,7 +30,7 @@ class BookingConfirmation extends Mailable
     public function build()
     {
         return $this->markdown('emails.bookings.confirmation')
-                    ->subject('Your Cleaning Booking #' . $this->booking->id)
+                    ->subject('Your Cleaning Booking Confirmed')
                     ->with([
                         'booking' => $this->booking,
                     ]);

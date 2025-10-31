@@ -1,4 +1,6 @@
-@include('admin.partials.header')
+@extends('layouts.admin')
+
+@section('content')
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -29,11 +31,23 @@
                                 </tr>
                                 <tr>
                                     <th>Price</th>
-                                    <td>₱{{ number_format($service->price, 2) }}</td>
+                                    <td>
+                                        @if ($service->pricing_type === 'sqm')
+                                            ₱{{ number_format($service->price, 2) }} / sqm
+                                        @else
+                                            ₱{{ number_format($service->price, 2) }} / hr (min {{ $service->duration_minutes / 60 }} hrs)
+                                        @endif
+                                    </td>
                                 </tr>
                                 <tr>
                                     <th>Duration</th>
-                                    <td>{{ $service->duration_minutes }} minutes</td>
+                                    <td>
+                                        @if ($service->pricing_type === 'duration')
+                                            min {{ $service->duration_minutes / 60 }} hrs
+                                        @else
+                                            —
+                                        @endif
+                                    </td>
                                 </tr>
                                 <tr>
                                     <th>Status</th>
@@ -61,4 +75,4 @@
         </div>
     </div>
 </div>
-@include('admin.partials.scripts')
+@endsection

@@ -11,6 +11,11 @@ class ContactInfoController extends Controller
     public function edit()
     {
         $contactInfo = ContactInfo::first();
+
+        if (!$contactInfo) {
+            return redirect()->back()->with('error', 'Contact information not found. Please run the ContactInfoSeeder first.');
+        }
+
         return view('admin.contact.edit', compact('contactInfo'));
     }
 
@@ -23,6 +28,9 @@ class ContactInfoController extends Controller
             'service_area' => 'required|string',
             'business_hours' => 'required|string',
             'facebook_url' => 'nullable|url',
+            'instagram_url' => 'nullable|url',
+            'twitter_url' => 'nullable|url',
+            'linkedin_url' => 'nullable|url',
             'google_business_url' => 'nullable|url',
             'about_content' => 'nullable|string',
             'mission' => 'nullable|string',

@@ -1,5 +1,6 @@
-@include('admin.partials.header')
+@extends('layouts.admin')
 
+@section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 class="h2">Edit Contact & About Information</h1>
@@ -68,6 +69,14 @@
                 </div>
 
                 <div class="mb-3">
+                    <label for="instagram_url" class="form-label">Instagram URL</label>
+                    <input type="url" class="form-control @error('instagram_url') is-invalid @enderror" id="instagram_url" name="instagram_url" value="{{ old('instagram_url', $contactInfo->instagram_url ?? '') }}">
+                    @error('instagram_url')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="mb-3">
                     <label for="google_business_url" class="form-label">Google Business URL</label>
                     <input type="url" class="form-control @error('google_business_url') is-invalid @enderror" id="google_business_url" name="google_business_url" value="{{ old('google_business_url', $contactInfo->google_business_url ?? '') }}">
                     @error('google_business_url')
@@ -114,5 +123,4 @@
         </div>
     </div>
 </div>
-
-@include('admin.partials.scripts') 
+@endsection 

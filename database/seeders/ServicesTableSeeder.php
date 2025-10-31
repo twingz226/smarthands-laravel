@@ -33,10 +33,10 @@ class ServicesTableSeeder extends Seeder
             ],
             [
                 'name' => 'Move-in/Move-out Cleaning',
-                'description' => 'Make your transition smooth with our professional move cleaning services.',
-                'price' => 75.00,
+                'description' => 'Make your transition smooth with our professional move cleaning services. Pricing: Up to 25 sqm is charged hourly at ₱299/hr (minimum of 6 hours). For 26 sqm and above, pricing is ₱75 per sqm.',
+                'price' => 299.00,
                 'duration_minutes' => 360, // 6 hours minimum
-                'pricing_type' => 'sqm'
+                'pricing_type' => 'duration'
             ],
             [
                 'name' => 'Post-Construction/Renovation Cleaning',

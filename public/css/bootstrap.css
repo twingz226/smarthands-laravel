@@ -1327,7 +1327,7 @@ mark,
   text-transform: capitalize;
 }
 .text-muted {
-  color: #999999;
+  color: black;
 }
 .text-primary {
   color: #949494;
@@ -2265,11 +2265,11 @@ th {
   padding: 8px;
   line-height: 1.42857143;
   vertical-align: top;
-  border-top: 1px solid #ebebeb;
+  border-top: 1px solid #141212;
 }
 .table > thead > tr > th {
   vertical-align: bottom;
-  border-bottom: 2px solid #ebebeb;
+  border-bottom: 2px solid #080808;
 }
 .table > caption + thead > tr:first-child > th,
 .table > colgroup + thead > tr:first-child > th,

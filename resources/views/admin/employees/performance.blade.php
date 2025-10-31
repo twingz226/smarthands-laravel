@@ -1,5 +1,6 @@
-@include('admin.partials.header')
+@extends('layouts.admin')
 
+@section('content')
 <div class="container">
     <h2 class="mb-4">Employee Performance</h2>
 
@@ -53,6 +54,4 @@
 
     {{ $employees->links() }}
 </div>
-
-
-@include('admin.partials.scripts')
+@endsection

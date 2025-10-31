@@ -1,19 +1,19 @@
 /* Navbar styles */
 .custom-navbar {
-  padding-top: 0.3rem;
-  padding-bottom: 0.3rem;
-  min-height: 70px;
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
+  min-height: 40px;
   background-color: #ff9f1c !important;
 }
 .navbar-brand img, .logo img {
-  height: 80px;
+  height: 60px;
   width: auto;
   border-radius: 80%;
 }
 .nav-link {
   font-weight: 700;
   color: #000000 !important;
-  padding: 0.5rem 1rem !important;
+  padding: 0.3rem 1rem !important;
   font-size: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -52,15 +52,14 @@
   margin-bottom: 40px;
   margin-top: 0;
 }
-.hero-image {
+.hero-video {
   width: 100%;
   height: 50vh;
   min-height: 300px;
-  background-image: url('https://plus.unsplash.com/premium_photo-1678980766527-b33a383238ae?q=80&w=1479&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
-  background-size: cover;
-  background-position: center;
+  object-fit: cover;
   border-radius: 8px;
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+  display: block;
 }
 .main-headline {
   font-size: 2.5rem;
@@ -174,10 +173,11 @@
   align-self: center;
   width: fit-content;
   min-width: 120px;
+  text-decoration: none;
 }
 .service-content .book-btn:hover {
-  background-color: rgb(238, 181, 59);
-  color: rgb(249, 252, 247);
+  background-color: #ff9f1c;
+  color: white;
   transform: translateY(-2px);
 }
 
@@ -198,6 +198,15 @@
 }
 
 /* Modal Styles */
+.btn-success {
+  background-color: white !important;
+  color: #ff9f1c !important;
+  border: 1px solid gray !important;
+}
+.btn-success:hover {
+  background-color: #ff9f1c !important;
+  color: white !important;
+}
 .modal-header {
   position: relative;
 }
@@ -283,10 +292,10 @@
     margin-bottom: 0;
     margin-top: -100px;
   }
-  .hero-image {
-    width: 55%;
+  .hero-video {
     height: 60vh;
     margin-left: 5%;
+    width: 55%;
   }
   .main-headline {
     font-size: 3rem;
@@ -308,7 +317,7 @@
   .hero-content {
     width: 30%;
   }
-  .hero-image {
+  .hero-video {
     width: 60%;
     height: 70vh;
   }

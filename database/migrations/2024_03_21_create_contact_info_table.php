@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('service_area');
             $table->string('business_hours');
             $table->string('facebook_url')->nullable();
-            $table->string('google_business_url')->nullable();
+            $table->text('google_business_url')->nullable();
             $table->text('about_content')->nullable();
             $table->text('mission')->nullable();
             $table->text('vision')->nullable();

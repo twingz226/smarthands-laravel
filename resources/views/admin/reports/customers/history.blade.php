@@ -1,5 +1,6 @@
-@include('admin.partials.header')
+@extends('layouts.admin')
 
+@section('content')
 <div class="main-content">
     <div class="container">
         <h3>🧼 Cleaning History Report</h3>
@@ -10,7 +11,7 @@
             </div>
         @endif
 
-        <table class="table table-bordered">
+        <table class="table table-hover">
             <thead>
                 <tr>
                     <th>Customer</th>
@@ -56,5 +57,4 @@
         @endif
     </div>
 </div>
-
-@include('admin.partials.scripts')
+@endsection

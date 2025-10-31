@@ -20,16 +20,16 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="customer_id">Customer *</label>
-                                    <select name="customer_id" id="customer_id" class="form-control select2 @error('customer_id') is-invalid @enderror" required>
-                                        <option value="">Select Customer</option>
-                                        @foreach($customers as $customer)
-                                            <option value="{{ $customer->id }}" {{ old('customer_id') == $customer->id ? 'selected' : '' }}>
-                                                {{ $customer->name }} ({{ $customer->email }})
+                                    <label for="user_id">User *</label>
+                                    <select name="user_id" id="user_id" class="form-control select2 @error('user_id') is-invalid @enderror" required>
+                                        <option value="">Select User</option>
+                                        @foreach($users as $user)
+                                            <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>
+                                                {{ $user->name }} ({{ $user->email }})
                                             </option>
                                         @endforeach
                                     </select>
-                                    @error('customer_id')
+                                    @error('user_id')
                                         <span class="invalid-feedback" role="alert">
                                             <strong>{{ $message }}</strong>
                                         </span>
@@ -63,7 +63,8 @@
                                     <label for="cleaning_date">Cleaning Date *</label>
                                     <input type="datetime-local" name="cleaning_date" id="cleaning_date" 
                                            class="form-control @error('cleaning_date') is-invalid @enderror" 
-                                           value="{{ old('cleaning_date') }}" required>
+                                           value="{{ old('cleaning_date') }}" 
+                                           min="{{ date('Y-m-d\TH:i') }}" required>
                                     @error('cleaning_date')
                                         <span class="invalid-feedback" role="alert">
                                             <strong>{{ $message }}</strong>

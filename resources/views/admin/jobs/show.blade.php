@@ -1,5 +1,6 @@
-@include('admin.partials.header')
+@extends('layouts.admin')
 
+@section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 class="h2">Job Details #{{ $job->id }}</h1>
@@ -28,11 +29,11 @@
                         </div>
                         <div class="col-md-4">
                             <strong>Scheduled Date:</strong><br>
-                            {{ $job->scheduled_date->format('M d, Y H:i') }}
+                            {{ $job->scheduled_date->format('M d, Y h:i A') }}
                         </div>
                         <div class="col-md-4">
                             <strong>Created:</strong><br>
-                            {{ $job->created_at->format('M d, Y H:i') }}
+                            {{ $job->created_at->format('M d, Y h:i A') }}
                         </div>
                     </div>
 
@@ -86,13 +87,13 @@
                         <div class="col-md-6">
                             <strong>Timeline:</strong><br>
                             @if($job->assigned_at)
-                                Assigned: {{ $job->assigned_at->format('M d, Y H:i') }}<br>
+                                Assigned: {{ $job->assigned_at->format('M d, Y h:i A') }}<br>
                             @endif
                             @if($job->started_at)
-                                Started: {{ $job->started_at->format('M d, Y H:i') }}<br>
+                                Started: {{ $job->started_at->format('M d, Y h:i A') }}<br>
                             @endif
                             @if($job->completed_at)
-                                Completed: {{ $job->completed_at->format('M d, Y H:i') }}
+                                Completed: {{ $job->completed_at->format('M d, Y h:i A') }}
                             @endif
                         </div>
                     </div>
@@ -173,5 +174,4 @@
     </div>
 </div>
 @endif
-
-@include('admin.partials.scripts')
+@endsection

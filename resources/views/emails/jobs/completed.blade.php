@@ -22,7 +22,7 @@
         <p>We value your feedback! Please take a moment to rate our service by clicking the button below:</p>
         
         <div style="text-align: center; margin: 30px 0;">
-            <a href="{{ route('public.rating.form', ['token' => $job->rating_token]) }}" 
+            <a href="{{ route('public.rating.form', ['ratingToken' => $job->rating_token]) }}" 
                style="background: #ffc107; color: #000; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
                 Rate Our Service
             </a>

@@ -1,68 +1,70 @@
-@include('admin.partials.header')
+@extends('layouts.admin')
 
-<div class="row">
-    <div class="col-sm-12">
-        <div class="well">
-            <div class="container-fluid py-4 px-5">
-                <h3>Welcome to <strong> Smarthands Cleaning Service Management System</strong></h3>
+@section('content')
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="well">
+                <div class="container-fluid py-4 px-5">
+                    <h3>Welcome to <strong>Smarthands Cleaning Service Management System</strong></h3>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
 <div class="row">
     <div class="col-sm-12">
         <!-- Summary Cards -->
         <div class="row g-3 mb-4">
             <div class="col-lg-3 col-md-6">
-                <div class="card text-white bg-primary dashboard-card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6>Total Customers</h6>
-                                <h3>{{ $customerCount }}</h3>
+                <div class="card text-white h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0"><i class="fas fa-users me-2"></i>Total Customers</h5>
+                            <div class="bg-white-20 p-2 rounded-circle">
+                                <i class="fas fa-users"></i>
                             </div>
-                            <i class="bi bi-people fs-1"></i>
                         </div>
+                        <h2 class="display-5 fw-bold mb-0">{{ number_format($customerCount) }}</h2>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card text-white bg-success dashboard-card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6>Active Jobs</h6>
-                                <h3>{{ $activeJobCount }}</h3>
+                <div class="card text-white h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #10B981 0%, #34D399 100%);">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0"><i class="fas fa-briefcase me-2"></i>Active Jobs</h5>
+                            <div class="bg-white-20 p-2 rounded-circle">
+                                <i class="fas fa-briefcase"></i>
                             </div>
-                            <i class="bi bi-briefcase fs-1"></i>
                         </div>
+                        <h2 class="display-5 fw-bold mb-0">{{ number_format($activeJobCount) }}</h2>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card text-white bg-info dashboard-card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6>Total Cleaners</h6>
-                                <h3>{{ $cleanerCount }}</h3>
+                <div class="card text-white h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0"><i class="fas fa-user-shield me-2"></i>Total Cleaners</h5>
+                            <div class="bg-white-20 p-2 rounded-circle">
+                                <i class="fas fa-user-shield"></i>
                             </div>
-                            <i class="bi bi-person-badge fs-1"></i>
                         </div>
+                        <h2 class="display-5 fw-bold mb-0">{{ number_format($cleanerCount) }}</h2>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card text-white bg-warning dashboard-card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6>Pending Bookings</h6>
-                                <h3>{{ $pendingBookingCount }}</h3>
+                <div class="card text-white h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0"><i class="fas fa-calendar-alt me-2"></i>Pending Bookings</h5>
+                            <div class="bg-white-20 p-2 rounded-circle">
+                                <i class="fas fa-calendar-alt"></i>
                             </div>
-                            <i class="bi bi-calendar-check fs-1"></i>
                         </div>
+                        <h2 class="display-5 fw-bold mb-0">{{ number_format($pendingBookingCount) }}</h2>
                     </div>
                 </div>
             </div>
@@ -163,14 +165,45 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Top Customers by Jobs Chart -->
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6>Top Customers by Jobs</h6>
+                            </div>
+                            <div class="card-body" style="height: 400px;">
+                                <canvas id="topCustomersChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cleaning History Chart -->
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6>Completed Jobs by Customer</h6>
+                            </div>
+                            <div class="card-body" style="height: 400px;">
+                                <canvas id="cleaningHistoryChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Right Column - Jobs Status Chart -->
+            <!-- Right Column - Booking & Jobs Status Charts -->
             <div class="col-md-4">
-                <!-- Add invisible card with same height as Recent Jobs to push Job Status down -->
-                <div class="card mb-4 invisible" style="height: 265px;">
+                <!-- Online Booking Status Chart -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6>Online Booking Status</h6>
+                    </div>
+                    <div class="card-body d-flex align-items-center" style="height: 300px;">
+                        <canvas id="bookingStatusChart"></canvas>
+                    </div>
                 </div>
+                <!-- Jobs Status Chart -->
                 <div class="card">
                     <div class="card-header">
                         <h6>Jobs Status</h6>
@@ -184,40 +217,120 @@
     </div>
 </div>
 
-@include('admin.partials.scripts')
+</div> <!-- Close container-fluid -->
+@endsection
 
+@push('scripts')
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Job Status Chart
-        const jobStatusCtx = document.getElementById('jobStatusChart').getContext('2d');
-        new Chart(jobStatusCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Pending', 'Assigned', 'In Progress', 'Completed', 'Cancelled'],
-                datasets: [{
-                    data: [
-                        {{ $jobStatusCounts['pending'] }},
-                        {{ $jobStatusCounts['assigned'] }},
-                        {{ $jobStatusCounts['in_progress'] }},
-                        {{ $jobStatusCounts['completed'] }},
-                        {{ $jobStatusCounts['cancelled'] }}
-                    ],
-                    backgroundColor: [
-                        '#ffc107',  // Warning - Pending
-                        '#17a2b8',  // Info - Assigned
-                        '#007bff',  // Primary - In Progress
-                        '#28a745',  // Success - Completed
-                        '#dc3545'   // Danger - Cancelled
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
+        // Debug: Check if data is available
+        console.log('Job Status Counts:', {
+            pending: '{{ $jobStatusCounts['pending'] }}',
+            assigned: '{{ $jobStatusCounts['assigned'] }}',
+            in_progress: '{{ $jobStatusCounts['in_progress'] }}',
+            completed: '{{ $jobStatusCounts['completed'] }}',
+            cancelled: '{{ $jobStatusCounts['cancelled'] }}'
         });
+
+        console.log('Cleaner Ratings Data:', {!! json_encode($cleanerRatings->pluck('name', 'ratings_avg_rating')->toArray()) !!});
+        
+        console.log('Booking Status Counts:', {
+            pending: '{{ $bookingStatusCounts['pending'] }}',
+            confirmed: '{{ $bookingStatusCounts['confirmed'] }}',
+            rescheduled: '{{ $bookingStatusCounts['rescheduled'] }}',
+            completed: '{{ $bookingStatusCounts['completed'] }}',
+            cancelled: '{{ $bookingStatusCounts['cancelled'] }}'
+        });
+
+        // Online Booking Status Chart
+        const bookingStatusCtx = document.getElementById('bookingStatusChart');
+        if (bookingStatusCtx) {
+            const bookingStatusChart = new Chart(bookingStatusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pending', 'Confirmed', 'Rescheduled', 'Completed', 'Cancelled'],
+                    datasets: [{
+                        data: [
+                            parseInt('{{ $bookingStatusCounts['pending'] }}') || 0,
+                            parseInt('{{ $bookingStatusCounts['confirmed'] }}') || 0,
+                            parseInt('{{ $bookingStatusCounts['rescheduled'] }}') || 0,
+                            parseInt('{{ $bookingStatusCounts['completed'] }}') || 0,
+                            parseInt('{{ $bookingStatusCounts['cancelled'] }}') || 0
+                        ],
+                        backgroundColor: [
+                            '#ffc107',  // Pending
+                            '#17a2b8',  // Confirmed
+                            '#6f42c1',  // Rescheduled
+                            '#28a745',  // Completed
+                            '#dc3545'   // Cancelled
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Job Status Chart
+        const jobStatusCtx = document.getElementById('jobStatusChart');
+        if (jobStatusCtx) {
+            const jobStatusChart = new Chart(jobStatusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pending', 'Assigned', 'In Progress', 'Completed', 'Cancelled'],
+                    datasets: [{
+                        data: [
+                            parseInt('{{ $jobStatusCounts['pending'] }}') || 0,
+                            parseInt('{{ $jobStatusCounts['assigned'] }}') || 0,
+                            parseInt('{{ $jobStatusCounts['in_progress'] }}') || 0,
+                            parseInt('{{ $jobStatusCounts['completed'] }}') || 0,
+                            parseInt('{{ $jobStatusCounts['cancelled'] }}') || 0
+                        ],
+                        backgroundColor: [
+                            '#ffc107',  // Warning - Pending
+                            '#17a2b8',  // Info - Assigned
+                            '#007bff',  // Primary - In Progress
+                            '#28a745',  // Success - Completed
+                            '#dc3545'   // Danger - Cancelled
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
         // Cleaner Ratings Chart
         const cleanerRatingsCtx = document.getElementById('cleanerRatingsChart');
@@ -225,79 +338,302 @@
             const names = {!! json_encode($cleanerRatings->pluck('name')->toArray()) !!};
             const ratings = {!! json_encode($cleanerRatings->pluck('ratings_avg_rating')->toArray()) !!};
 
-            new Chart(cleanerRatingsCtx, {
-                type: 'bar',
-                data: {
-                    labels: names,
-                    datasets: [{
-                        label: 'Average Rating',
-                        data: ratings,
-                        backgroundColor: names.map((_, index) => {
-                            const colors = [
-                                'rgba(255, 99, 132, 0.7)',   // Red
-                                'rgba(54, 162, 235, 0.7)',   // Blue
-                                'rgba(255, 206, 86, 0.7)',   // Yellow
-                                'rgba(75, 192, 192, 0.7)',   // Teal
-                                'rgba(153, 102, 255, 0.7)',  // Purple
-                                'rgba(255, 159, 64, 0.7)',   // Orange
-                                'rgba(56, 193, 114, 0.7)',   // Green
-                                'rgba(232, 62, 140, 0.7)',   // Pink
-                                'rgba(96, 165, 250, 0.7)',   // Light Blue
-                                'rgba(107, 114, 128, 0.7)'   // Gray
-                            ];
-                            return colors[index % colors.length];
-                        }),
-                        borderColor: names.map((_, index) => {
-                            const colors = [
-                                'rgba(255, 99, 132, 1)',   // Red
-                                'rgba(54, 162, 235, 1)',   // Blue
-                                'rgba(255, 206, 86, 1)',   // Yellow
-                                'rgba(75, 192, 192, 1)',   // Teal
-                                'rgba(153, 102, 255, 1)',  // Purple
-                                'rgba(255, 159, 64, 1)',   // Orange
-                                'rgba(56, 193, 114, 1)',   // Green
-                                'rgba(232, 62, 140, 1)',   // Pink
-                                'rgba(96, 165, 250, 1)',   // Light Blue
-                                'rgba(107, 114, 128, 1)'   // Gray
-                            ];
-                            return colors[index % colors.length];
-                        }),
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 5,
-                            ticks: {
-                                stepSize: 0.5,
-                                font: {
-                                    size: 12
-                                }
+            console.log('Chart Names:', names);
+            console.log('Chart Ratings:', ratings);
+
+            // Filter out employees with no ratings or zero ratings
+            const validData = names.map((name, index) => ({
+                name,
+                rating: parseFloat(ratings[index]) || 0
+            })).filter(item => item.rating > 0);
+
+            if (validData.length > 0) {
+                const filteredNames = validData.map(item => item.name);
+                const filteredRatings = validData.map(item => item.rating);
+
+                const cleanerRatingsChart = new Chart(cleanerRatingsCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: filteredNames,
+                        datasets: [{
+                            label: 'Average Rating',
+                            data: filteredRatings,
+                            backgroundColor: filteredNames.map((_, index) => {
+                                const colors = [
+                                    'rgba(16, 185, 129, 0.8)',  // Green from Active Jobs
+                                    'rgba(59, 130, 246, 0.8)',  // Blue from Total Cleaners
+                                    'rgba(245, 158, 11, 0.8)',  // Orange from Pending Bookings
+                                    'rgba(79, 70, 229, 0.8)',   // Purple from Total Customers
+                                    'rgba(52, 211, 153, 0.8)',  // Light Green from Active Jobs
+                                    'rgba(96, 165, 250, 0.8)',  // Light Blue from Total Cleaners
+                                    'rgba(251, 191, 36, 0.8)',  // Light Orange from Pending Bookings
+                                    'rgba(124, 58, 237, 0.8)',  // Light Purple from Total Customers
+                                    'rgba(34, 197, 94, 0.8)',   // Medium Green
+                                    'rgba(37, 99, 235, 0.8)'    // Medium Blue
+                                ];
+                                return colors[index % colors.length];
+                            }),
+                            borderColor: filteredNames.map((_, index) => {
+                                const colors = [
+                                    'rgba(16, 185, 129, 1)',  // Green from Active Jobs
+                                    'rgba(59, 130, 246, 1)',  // Blue from Total Cleaners
+                                    'rgba(245, 158, 11, 1)',  // Orange from Pending Bookings
+                                    'rgba(79, 70, 229, 1)',   // Purple from Total Customers
+                                    'rgba(52, 211, 153, 1)',  // Light Green from Active Jobs
+                                    'rgba(96, 165, 250, 1)',  // Light Blue from Total Cleaners
+                                    'rgba(251, 191, 36, 1)',  // Light Orange from Pending Bookings
+                                    'rgba(124, 58, 237, 1)',  // Light Purple from Total Customers
+                                    'rgba(34, 197, 94, 1)',   // Medium Green
+                                    'rgba(37, 99, 235, 1)'    // Medium Blue
+                                ];
+                                return colors[index % colors.length];
+                            }),
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            borderSkipped: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
                             }
                         },
-                        x: {
-                            ticks: {
-                                font: {
-                                    size: 12
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 5,
+                                grid: {
+                                    display: true,
+                                    color: 'rgba(0, 0, 0, 0.1)'
+                                },
+                                ticks: {
+                                    stepSize: 0.5,
+                                    font: {
+                                        size: 11
+                                    }
                                 }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            labels: {
-                                font: {
-                                    size: 14
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    font: {
+                                        size: 11
+                                    },
+                                    maxRotation: 45,
+                                    minRotation: 0
                                 }
                             }
                         }
                     }
-                }
-            });
+                });
+            } else {
+                // No valid ratings data, show a message
+                cleanerRatingsCtx.getContext('2d').fillStyle = '#6c757d';
+                cleanerRatingsCtx.getContext('2d').font = '16px Arial';
+                cleanerRatingsCtx.getContext('2d').textAlign = 'center';
+                cleanerRatingsCtx.getContext('2d').fillText('No ratings data available', cleanerRatingsCtx.width / 2, cleanerRatingsCtx.height / 2);
+            }
+        }
+
+        // Top Customers by Jobs Chart
+        const topCustomersCtx = document.getElementById('topCustomersChart');
+        if (topCustomersCtx) {
+            const customerNames = {!! json_encode($topCustomersByJobs->pluck('name')->toArray()) !!};
+            const jobCounts = {!! json_encode($topCustomersByJobs->pluck('jobs_count')->toArray()) !!};
+
+            console.log('Top Customers:', customerNames);
+            console.log('Job Counts:', jobCounts);
+
+            if (customerNames.length > 0) {
+                const topCustomersChart = new Chart(topCustomersCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: customerNames,
+                        datasets: [{
+                            label: 'Number of Jobs',
+                            data: jobCounts,
+                            backgroundColor: customerNames.map((_, index) => {
+                                const colors = [
+                                    'rgba(79, 70, 229, 0.8)',   // Purple
+                                    'rgba(16, 185, 129, 0.8)',  // Green
+                                    'rgba(59, 130, 246, 0.8)',  // Blue
+                                    'rgba(245, 158, 11, 0.8)',  // Orange
+                                    'rgba(236, 72, 153, 0.8)',  // Pink
+                                    'rgba(124, 58, 237, 0.8)',  // Light Purple
+                                    'rgba(52, 211, 153, 0.8)',  // Light Green
+                                    'rgba(96, 165, 250, 0.8)',  // Light Blue
+                                    'rgba(251, 191, 36, 0.8)',  // Light Orange
+                                    'rgba(244, 114, 182, 0.8)'  // Light Pink
+                                ];
+                                return colors[index % colors.length];
+                            }),
+                            borderColor: customerNames.map((_, index) => {
+                                const colors = [
+                                    'rgba(79, 70, 229, 1)',
+                                    'rgba(16, 185, 129, 1)',
+                                    'rgba(59, 130, 246, 1)',
+                                    'rgba(245, 158, 11, 1)',
+                                    'rgba(236, 72, 153, 1)',
+                                    'rgba(124, 58, 237, 1)',
+                                    'rgba(52, 211, 153, 1)',
+                                    'rgba(96, 165, 250, 1)',
+                                    'rgba(251, 191, 36, 1)',
+                                    'rgba(244, 114, 182, 1)'
+                                ];
+                                return colors[index % colors.length];
+                            }),
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            borderSkipped: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    display: true,
+                                    color: 'rgba(0, 0, 0, 0.1)'
+                                },
+                                ticks: {
+                                    stepSize: 1,
+                                    font: {
+                                        size: 11
+                                    }
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    font: {
+                                        size: 11
+                                    },
+                                    maxRotation: 45,
+                                    minRotation: 0
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                // No customer data, show a message
+                topCustomersCtx.getContext('2d').fillStyle = '#6c757d';
+                topCustomersCtx.getContext('2d').font = '16px Arial';
+                topCustomersCtx.getContext('2d').textAlign = 'center';
+                topCustomersCtx.getContext('2d').fillText('No customer data available', topCustomersCtx.width / 2, topCustomersCtx.height / 2);
+            }
+        }
+
+        // Cleaning History Chart (Completed Jobs by Customer)
+        const cleaningHistoryCtx = document.getElementById('cleaningHistoryChart');
+        if (cleaningHistoryCtx) {
+            const historyCustomerNames = {!! json_encode($completedJobsByCustomer->pluck('name')->toArray()) !!};
+            const completedJobCounts = {!! json_encode($completedJobsByCustomer->pluck('jobs_count')->toArray()) !!};
+
+            console.log('Cleaning History Customers:', historyCustomerNames);
+            console.log('Completed Job Counts:', completedJobCounts);
+
+            if (historyCustomerNames.length > 0) {
+                const cleaningHistoryChart = new Chart(cleaningHistoryCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: historyCustomerNames,
+                        datasets: [{
+                            label: 'Completed Jobs',
+                            data: completedJobCounts,
+                            backgroundColor: historyCustomerNames.map((_, index) => {
+                                const colors = [
+                                    'rgba(16, 185, 129, 0.8)',  // Green
+                                    'rgba(59, 130, 246, 0.8)',  // Blue
+                                    'rgba(245, 158, 11, 0.8)',  // Orange
+                                    'rgba(139, 92, 246, 0.8)',  // Violet
+                                    'rgba(236, 72, 153, 0.8)',  // Pink
+                                    'rgba(20, 184, 166, 0.8)',  // Teal
+                                    'rgba(251, 146, 60, 0.8)',  // Light Orange
+                                    'rgba(168, 85, 247, 0.8)',  // Purple
+                                    'rgba(244, 114, 182, 0.8)',  // Light Pink
+                                    'rgba(14, 165, 233, 0.8)'   // Sky Blue
+                                ];
+                                return colors[index % colors.length];
+                            }),
+                            borderColor: historyCustomerNames.map((_, index) => {
+                                const colors = [
+                                    'rgba(16, 185, 129, 1)',
+                                    'rgba(59, 130, 246, 1)',
+                                    'rgba(245, 158, 11, 1)',
+                                    'rgba(139, 92, 246, 1)',
+                                    'rgba(236, 72, 153, 1)',
+                                    'rgba(20, 184, 166, 1)',
+                                    'rgba(251, 146, 60, 1)',
+                                    'rgba(168, 85, 247, 1)',
+                                    'rgba(244, 114, 182, 1)',
+                                    'rgba(14, 165, 233, 1)'
+                                ];
+                                return colors[index % colors.length];
+                            }),
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            borderSkipped: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    display: true,
+                                    color: 'rgba(0, 0, 0, 0.1)'
+                                },
+                                ticks: {
+                                    stepSize: 1,
+                                    font: {
+                                        size: 11
+                                    }
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    font: {
+                                        size: 11
+                                    },
+                                    maxRotation: 45,
+                                    minRotation: 0
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                // No cleaning history data, show a message
+                cleaningHistoryCtx.getContext('2d').fillStyle = '#6c757d';
+                cleaningHistoryCtx.getContext('2d').font = '16px Arial';
+                cleaningHistoryCtx.getContext('2d').textAlign = 'center';
+                cleaningHistoryCtx.getContext('2d').fillText('No cleaning history data available', cleaningHistoryCtx.width / 2, cleaningHistoryCtx.height / 2);
+            }
         }
     });
 </script>

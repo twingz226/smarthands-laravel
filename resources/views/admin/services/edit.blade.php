@@ -1,4 +1,6 @@
-@include('admin.partials.header')
+@extends('layouts.admin')
+
+@section('content')
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-12">
@@ -41,7 +43,7 @@
                             <label for="pricing_type">Pricing Type</label>
                             <select name="pricing_type" id="pricing_type" class="form-select @error('pricing_type') is-invalid @enderror" required>
                                 <option value="sqm" {{ old('pricing_type', $service->pricing_type) === 'sqm' ? 'selected' : '' }}>Per Square Meter (₱/sqm)</option>
-                                <option value="duration" {{ old('pricing_type', $service->pricing_type) === 'duration' ? 'selected' : '' }}>Per Time Duration (₱/duration)</option>
+                                <option value="duration" {{ old('pricing_type', $service->pricing_type) === 'duration' ? 'selected' : '' }}>Per Hour (₱/hr)</option>
                             </select>
                             @error('pricing_type')
                                 <span class="invalid-feedback" role="alert">
@@ -56,7 +58,7 @@
                             <div class="input-group">
                                 <span class="input-group-text">₱</span>
                                 <input type="number" step="0.01" class="form-control @error('price') is-invalid @enderror" id="price" name="price" value="{{ old('price', $service->price) }}" required>
-                                <span class="input-group-text" id="price-unit">{{ $service->pricing_type === 'sqm' ? '/sqm' : '/duration' }}</span>
+                                <span class="input-group-text" id="price-unit">{{ $service->pricing_type === 'sqm' ? '/sqm' : '/hr' }}</span>
                                 @error('price')
                                     <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>
@@ -104,13 +106,16 @@
                 priceUnit.textContent = '/sqm';
                 durationInput.value = '';
                 durationInput.removeAttribute('required');
-            } else if (this.value === 'duration') {
-                durationGroup.style.display = 'block';
-                priceUnit.textContent = '/duration';
+                durationInput.value = '';
+            }
+        } else if (this.value === 'duration') {
+            durationGroup.style.display = 'block';
+            priceUnit.textContent = '/hr';
+            if (durationInput) {
                 durationInput.setAttribute('required', 'required');
             }
-        });
+        }
     });
+});
 </script>
-
-@include('admin.partials.scripts')
+@endsection

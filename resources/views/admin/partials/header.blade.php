@@ -7,7 +7,7 @@
     <meta name="description" content="House Cleaning Service Management System Panel" />
     <meta name="author" content="" />
 
-    <link rel="icon" href="{{ asset('images/favicon.ico') }}">
+    <link rel="icon" href="{{ asset('images/Smarthands.png') }}">
 
     <title>Smarthands Cleaning Services Management System | Dashboard</title>
 
@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="{{ asset('js/jvectormap/jquery-jvectormap-1.2.2.css') }}">
     <link rel="stylesheet" href="{{ asset('js/rickshaw/rickshaw.min.css') }}">
 
-    <script src="{{ asset('js/jquery-1.11.3.min.js') }}"></script>
+
 </head>
 <body class="page-body page-left-in" data-url="http://neon.dev">
 
@@ -30,35 +30,6 @@
     @include('admin.partials.sidebar')
 
     <div class="main-content">
-        <div class="row">
-            <!-- Profile Info and Notifications -->
-            <div class="col-md-6 col-sm-8 clearfix">
-                <ul class="user-info pull-left pull-none-xsm">
-                    <!-- User info can be added here -->
-                </ul>
-            </div>
-
-            <div class="col-md-6 col-sm-4 clearfix hidden-xs">
-                <ul class="list-inline links-list pull-right">
-                    <li class="dropdown language-switcher">
-                        <!-- Language selector if needed -->
-                    </li>
-                    <li>
-                        <a href="{{ route('logout') }}" 
-                        onclick="event.preventDefault(); 
-                                    if(confirm('Are you sure you want to log out?')) { 
-                                        document.getElementById('logout-form').submit(); 
-                                    }" 
-                        style="color: blue;">
-                            Log Out <i class="entypo-logout right"></i>
-                        </a>
-                        
-                        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                            @csrf
-                        </form>
-                    </li>
-                </ul>
-            </div>
-        </div>
+        @include('admin.partials.topbar')
 
         <hr />

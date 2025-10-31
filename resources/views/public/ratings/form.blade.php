@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Rate Our Service</title>
+    <link rel="icon" href="{{ asset('images/Smarthand.png') }}" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
@@ -51,6 +52,15 @@
                                 {{ session('success') }}
                                 <p class="mt-3 mb-0">You can now close this window.</p>
                             </div>
+                        @elseif(session('error'))
+                            <div class="alert alert-danger">
+                                {{ session('error') }}
+                            </div>
+                        @elseif(isset($alreadyRated) && $alreadyRated)
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> This job has already been rated. Thank you for your feedback!
+                                <p class="mt-3 mb-0">You can now close this window.</p>
+                            </div>
                         @else
                             <div class="mb-4">
                                 <h5>Job Details</h5>
@@ -58,11 +68,30 @@
                                 <p><strong>Date:</strong> {{ $job->completed_at->format('M d, Y') }}</p>
                             </div>
 
-                            <form action="{{ route('public.rating.submit', ['token' => $job->rating_token]) }}" method="POST">
+                            @if($errors->any())
+                                <div class="alert alert-danger">
+                                    <strong>Please fix the following errors:</strong>
+                                    <ul class="mb-0 mt-2">
+                                        @foreach($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+
+                            <form action="{{ route('public.rating.submit', ['ratingToken' => $job->rating_token]) }}" method="POST" id="ratingForm">
                                 @csrf
                                 
                                 @foreach($job->employees as $employee)
-                                <div class="mb-4">
+                                <div class="mb-4 text-center">
+                                    @php
+                                        $photoUrl = $employee->getPrimaryPhotoUrl();
+                                    @endphp
+                                    @if($photoUrl)
+                                        <img src="{{ $photoUrl }}" alt="{{ $employee->name }}" class="img-thumbnail mb-2" style="max-height: 140px; max-width: 140px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                                    @else
+                                        <img src="{{ asset('images/default-avatar.png') }}" alt="No Photo" class="img-thumbnail mb-2" style="max-height: 140px; max-width: 140px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                                    @endif
                                     <h5>Rate {{ $employee->name }}</h5>
                                     <div class="star-rating">
                                         @for($i = 5; $i >= 1; $i--)
@@ -91,7 +120,9 @@
                                     @enderror
                                 </div>
 
-                                <button type="submit" class="btn btn-primary">Submit Ratings</button>
+                                <button type="submit" class="btn btn-primary btn-lg w-100" id="submitBtn">
+                                    <i class="fas fa-paper-plane"></i> Submit Ratings
+                                </button>
                             </form>
                         @endif
                     </div>
@@ -99,5 +130,45 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('ratingForm');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (form && submitBtn) {
+                form.addEventListener('submit', function(e) {
+                    // Check if at least one rating is selected for each employee
+                    const employees = document.querySelectorAll('[name^="ratings["]');
+                    const employeeIds = new Set();
+                    
+                    employees.forEach(input => {
+                        const match = input.name.match(/ratings\[(\d+)\]/);
+                        if (match) {
+                            employeeIds.add(match[1]);
+                        }
+                    });
+                    
+                    let allRated = true;
+                    employeeIds.forEach(employeeId => {
+                        const selected = document.querySelector(`input[name="ratings[${employeeId}]"]:checked`);
+                        if (!selected) {
+                            allRated = false;
+                        }
+                    });
+                    
+                    if (!allRated) {
+                        e.preventDefault();
+                        alert('Please rate all cleaners before submitting.');
+                        return false;
+                    }
+                    
+                    // Disable button and show loading state
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+                });
+            }
+        });
+    </script>
 </body>
 </html> 

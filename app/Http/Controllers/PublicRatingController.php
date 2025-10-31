@@ -12,9 +12,9 @@ class PublicRatingController extends Controller
     /**
      * Show the rating form
      */
-    public function showForm($token)
+    public function showForm($ratingToken)
     {
-        $job = Job::where('rating_token', $token)
+        $job = Job::where('rating_token', $ratingToken)
             ->where('status', 'completed')
             ->firstOrFail();
 
@@ -32,9 +32,9 @@ class PublicRatingController extends Controller
     /**
      * Handle the rating submission
      */
-    public function submitRating(Request $request, $token)
+    public function submitRating(Request $request, $ratingToken)
     {
-        $job = Job::where('rating_token', $token)
+        $job = Job::where('rating_token', $ratingToken)
             ->where('status', 'completed')
             ->firstOrFail();
 
@@ -54,21 +54,22 @@ class PublicRatingController extends Controller
             DB::beginTransaction();
 
             // Create ratings for each employee
-            foreach ($validated['ratings'] as $employeeId => $rating) {
-                $rating = new Rating([
-                    'rating' => $rating,
-                    'comments' => $validated['comments'],
+            foreach ($validated['ratings'] as $employeeId => $ratingValue) {
+                $ratingRecord = new Rating([
+                    'rating' => $ratingValue,
+                    'comments' => $validated['comments'] ?? null,
                     'customer_id' => $job->customer_id,
                     'employee_id' => $employeeId
                 ]);
 
-                $job->ratings()->save($rating);
+                $job->ratings()->save($ratingRecord);
             }
 
             DB::commit();
             return back()->with('success', 'Thank you for your feedback!');
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Rating submission failed: ' . $e->getMessage());
             return back()->with('error', 'An error occurred while saving your ratings. Please try again.');
         }
     }

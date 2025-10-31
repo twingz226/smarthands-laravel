@@ -1,10 +1,11 @@
 <!-- Bottom scripts (common) -->
+<script src="{{ asset('js/jquery-1.11.3.min.js') }}"></script>
+<script src="{{ asset('js/bootstrap.min.js') }}"></script>
 <script src="{{ asset('js/gsap/TweenMax.min.js') }}"></script>
-<script src="{{ asset('js/jquery-ui/js/jquery-ui-1.10.3.minimal.min.js') }}"></script>
-<script src="{{ asset('js/bootstrap.js') }}"></script>
+
 <script src="{{ asset('js/joinable.js') }}"></script>
 <script src="{{ asset('js/resizeable.js') }}"></script>
-<script src="{{ asset('js/neon-api.js') }}"></script>
+
 <script src="{{ asset('js/jvectormap/jquery-jvectormap-1.2.2.min.js') }}"></script>
 
 <!-- Imported scripts on this page -->
@@ -15,12 +16,19 @@
 <script src="{{ asset('js/rickshaw/rickshaw.min.js') }}"></script>
 <script src="{{ asset('js/neon-chat.js') }}"></script>
 
-<!-- JavaScripts initializations and stuff -->
-<script src="{{ asset('js/neon-custom.js') }}"></script>
+
 
 <!-- Demo Settings -->
 <script src="{{ asset('js/neon-demo.js') }}"></script>
 
+
+<!-- JavaScripts initializations and stuff -->
+<script src="{{ asset('js/neon-api.js') }}"></script>
+<script src="{{ asset('js/neon-custom.js') }}"></script>
+<!-- Notifications (bell) -->
+<script src="{{ asset('js/notifications.js') }}"></script>
+<!-- Messages -->
+<script src="{{ asset('js/admin-messages.js') }}"></script>
 
 </div>
 </div>

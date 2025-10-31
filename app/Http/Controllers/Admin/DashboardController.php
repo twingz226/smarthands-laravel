@@ -30,6 +30,15 @@ class DashboardController extends Controller
             'cancelled' => Job::where('status', 'cancelled')->count() + Booking::where('status', 'cancelled')->count(),
         ];
 
+        // Online Booking status counts
+        $bookingStatusCounts = [
+            'pending' => Booking::where('status', Booking::STATUS_PENDING)->count(),
+            'confirmed' => Booking::where('status', Booking::STATUS_CONFIRMED)->count(),
+            'rescheduled' => Booking::where('status', Booking::STATUS_RESCHEDULED)->count(),
+            'completed' => Booking::where('status', Booking::STATUS_COMPLETED)->count(),
+            'cancelled' => Booking::where('status', Booking::STATUS_CANCELLED)->count(),
+        ];
+
         // Recent jobs (limit to latest 5)
         $recentJobs = Job::with(['customer', 'service'])
             ->latest()
@@ -51,15 +60,33 @@ class DashboardController extends Controller
                 return $employee;
             });
 
+        // Customer statistics for chart (from Customer List Report)
+        $topCustomersByJobs = Customer::withCount('jobs')
+            ->orderBy('jobs_count', 'desc')
+            ->take(10)
+            ->get();
+
+        // Cleaning History statistics (from Cleaning History Report)
+        $completedJobsByCustomer = Customer::has('jobs')
+            ->withCount(['jobs' => function($query) {
+                $query->where('status', 'completed');
+            }])
+            ->orderBy('jobs_count', 'desc')
+            ->take(10)
+            ->get();
+
         return view('admin.dashboard', compact(
             'customerCount',
             'activeJobCount',
             'cleanerCount',
             'pendingBookingCount',
             'jobStatusCounts',
+            'bookingStatusCounts',
             'recentJobs',
             'recentBookings',
-            'cleanerRatings'
+            'cleanerRatings',
+            'topCustomersByJobs',
+            'completedJobsByCustomer'
         ));
     }
 

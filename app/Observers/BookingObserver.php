@@ -38,8 +38,9 @@ class BookingObserver
                     'service_id' => $booking->service_id,
                     'scheduled_date' => $booking->cleaning_date,
                     'status' => Job::STATUS_PENDING,
-                    'address' => $booking->customer->address,
-                    'special_instructions' => $booking->special_instructions
+                    'address' => $booking->customer_address,
+                    'special_instructions' => $booking->special_instructions,
+                    'booking_id' => $booking->id
                 ]);
 
                 Log::info('BookingObserver: Job created successfully', [
@@ -58,4 +59,4 @@ class BookingObserver
             }
         }
     }
-} 
+}

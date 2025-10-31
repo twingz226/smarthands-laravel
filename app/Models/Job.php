@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\JobCompleted;
+use Carbon\Carbon;
 
 class Job extends Model
 {
@@ -26,7 +27,8 @@ class Job extends Model
         'completed_at',
         'assigned_at',
         'reassigned_at',
-        'rating_token'
+        'rating_token',
+        'booking_id'
     ];
 
     protected $casts = [
@@ -42,7 +44,8 @@ class Job extends Model
     protected $dates = [
         'completed_at',
         'created_at',
-        'updated_at'
+        'updated_at',
+        'scheduled_date'
     ];
 
     /**
@@ -94,6 +97,59 @@ class Job extends Model
     public function ratings(): HasMany
     {
         return $this->hasMany(Rating::class);
+    }
+
+    /**
+     * Always format scheduled_date in application timezone when retrieved
+     */
+    public function getScheduledDateAttribute($value)
+    {
+        // Always parse from UTC and convert to application timezone
+        return Carbon::parse($value, 'UTC')->timezone(config('app.timezone'));
+    }
+
+    /**
+     * Always set scheduled_date in UTC before saving to database
+     */
+    public function setScheduledDateAttribute($value)
+    {
+        // If $value is already a Carbon instance, assume it's in the app timezone
+        // and convert it to UTC for storage.
+        $this->attributes['scheduled_date'] = Carbon::parse($value, config('app.timezone'))
+            ->setTimezone('UTC')
+            ->format('Y-m-d H:i:s');
+    }
+
+    /**
+     * Format scheduled_date in application timezone
+     */
+    public function getFormattedScheduledDate($format = 'M d, Y h:i A')
+    {
+        return $this->scheduled_date->timezone(config('app.timezone'))->format($format);
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::updating(function ($job) {
+            // Only proceed if status is being changed
+            if ($job->isDirty('status')) {
+                // If job is cancelled, update the related booking status to cancelled
+                if ($job->status === self::STATUS_CANCELLED && $job->booking) {
+                    $job->booking->update(['status' => \App\Models\Booking::STATUS_CANCELLED]);
+                }
+                // If job is completed, update the related booking status to completed
+                elseif ($job->status === self::STATUS_COMPLETED && $job->booking) {
+                    $job->booking->update(['status' => \App\Models\Booking::STATUS_COMPLETED]);
+                }
+            }
+        });
+    }
+
+    public function booking(): BelongsTo
+    {
+        return $this->belongsTo(Booking::class);
     }
 
     /**
@@ -162,7 +218,7 @@ class Job extends Model
         $this->rating_token = self::generateRatingToken();
         $this->save();
 
-        // Send completion email with rating link
-        Mail::to($this->customer->email)->send(new JobCompleted($this));
+        // Send completion email with rating link (queued for better performance)
+        Mail::to($this->customer->email)->queue(new JobCompleted($this));
     }
 }
