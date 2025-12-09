@@ -1,10 +1,10 @@
 
 
 
-@extends('layouts.app')
 
-@section('content')
-<link rel="stylesheet" href="{{ asset('css/login.css') }}" />
+
+<?php $__env->startSection('content'); ?>
+<link rel="stylesheet" href="<?php echo e(asset('css/login.css')); ?>" />
 <div class="container" style="height: auto; padding: 48px; background: white; border-radius: 20px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); border: 1px solid rgba(0, 0, 0, 0.05);">
     <h1 class="login-title" style="color: #1a1a1a; margin-bottom: 12px;">Forgot Your Password?</h1>
     <p class="text-center mb-6" style="color: #6b7280; font-size: 16px; line-height: 1.5;">Enter your email address below and we'll send you a link to reset your password.</p>
@@ -25,5 +25,7 @@
                         </button>
                     </form>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /opt/lampp/htdocs/cleaning_service_management_system/resources/views/auth/passwords/email.blade.php ENDPATH**/ ?>

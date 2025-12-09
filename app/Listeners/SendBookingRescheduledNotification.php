@@ -53,7 +53,7 @@ class SendBookingRescheduledNotification
             if ($recentDuplicate) {
                 continue;
             }
-            $admin->notify(
+            $admin->createNotification(
                 Notification::TYPE_BOOKING_RESCHEDULED,
                 $message,
                 route('bookings.show', $booking->id),

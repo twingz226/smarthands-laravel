@@ -6,7 +6,7 @@
 }
 
 body {
-	background: url('../images/background.jpg');
+	background: white;
 	width: 100%;
 	min-height: 100dvh;
 	background-attachment: fixed;
@@ -27,7 +27,7 @@ body {
 	border: solid 5px rgba(255, 255, 255, 0.1);
 	backdrop-filter: blur(37px);
 	box-shadow: 0px 0px 30px 20px rgba(0, 0, 0, 0.1);
-	color: white;
+	color: black;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -52,8 +52,8 @@ body {
 	border: solid 3px transparent;
 	background: rgba(255, 255, 255, 0.1);
 	outline: none;
-	caret-color: white;
-	color: white;
+	caret-color: black;
+	color: black;
 	font-weight: 500;
 	transition: 0.25s;
 }
@@ -63,7 +63,7 @@ body {
 }
 
 .input-box input::placeholder {
-	color: rgba(255, 255, 255, 0.75);
+	color: rgba(0, 0, 0, 0.75);
 }
 
 .input-box input::-ms-reveal {
@@ -82,7 +82,7 @@ body {
 }
 
 .input-box input:focus ~ i {
-	color: white;
+	color: black;
 }
 
 /* Position the left icon (lock or user) */
@@ -115,7 +115,7 @@ body {
 }
 
 .forgot-password {
-	color: white;
+	color: black;
 	text-decoration: none;
 }
 
@@ -131,7 +131,7 @@ body {
 	background: #2351a9;
 	border: none;
 	border-radius: 99px;
-	color: white;
+	color: black;
 	font-weight: bold;
 	font-size: 15px;
 	cursor: pointer;
@@ -151,7 +151,7 @@ body {
 
 .dont-have-an-account a {
 	text-decoration: none;
-	color: white;
+	color: black;
 }
 
 

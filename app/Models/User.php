@@ -16,10 +16,10 @@ use App\Traits\HasNotifications;
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasNotifications {
-        // Use our custom notify signature by default
-        HasNotifications::notify insteadof Notifiable;
-        // Keep access to Laravel's notify if needed
-        Notifiable::notify as laravelNotify;
+        // Keep Laravel's original notify method for password reset and other Laravel features
+        Notifiable::notify insteadof HasNotifications;
+        // Use our custom notify method with a different name
+        HasNotifications::notify as createNotification;
     }
 
     protected $fillable = [
@@ -233,6 +233,15 @@ class User extends Authenticatable
     public function feedbacks()
     {
         return $this->hasMany(CustomerFeedback::class);
+    }
+
+    /**
+     * Laravel's notify method alias for use in notification listeners
+     * This method uses Laravel's built-in Notifiable trait notify method
+     */
+    public function laravelNotify($notification)
+    {
+        return $this->notify($notification);
     }
 
     /**

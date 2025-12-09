@@ -52,7 +52,7 @@ class SendBookingCancelledNotification
                 continue;
             }
 
-            $admin->notify(
+            $admin->createNotification(
                 Notification::TYPE_BOOKING_CANCELLED,
                 $message,
                 route('bookings.show', $booking->id),
