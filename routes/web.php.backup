@@ -72,32 +72,14 @@ Route::get('/', function () {
 // Contact Message Us form submission
 Route::post('/contact/message', [\App\Http\Controllers\ContactMessageController::class, 'store'])->name('contact.message.store');
 
-// Authentication routes (excluding password reset routes to define them manually)
-Auth::routes(['reset' => false, 'verify' => false]);
+// Authentication routes
+Auth::routes();
 
-// Custom Password Reset Routes
-Route::prefix('password')->name('password.')->group(function () {
-    // Show the password reset request form
-    Route::get('/reset', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'showLinkRequestForm'])
-        ->name('request')
-        ->middleware('guest');
-        
-    // Handle password reset link email
-    Route::post('/email', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])
-        ->name('email')
-        ->middleware('guest');
-        
-    // Show the password reset form (with token and email)
-    Route::get('/reset/{token}', [App\Http\Controllers\Auth\ResetPasswordController::class, 'showResetForm'])
-        ->name('reset')
-        ->middleware('guest')
-        ->where('token', '.*');
-        
-    // Handle the password reset form submission
-    Route::post('/reset', [App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])
-        ->name('update')
-        ->middleware('guest');
-});
+// Password reset routes
+Route::get('password/reset', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request')->middleware('guest');
+Route::post('password/email', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email')->middleware('guest');
+Route::get('password/reset/{token}', [App\Http\Controllers\Auth\ResetPasswordController::class, 'showResetForm'])->name('password.reset')->middleware('guest');
+Route::post('password/reset', [App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])->name('password.update')->middleware('guest');
 
 // Custom registration route with throttling
 Route::get('/register', [App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])

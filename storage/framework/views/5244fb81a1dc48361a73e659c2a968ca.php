@@ -9,12 +9,15 @@
     <h1 class="login-title" style="color: #1a1a1a; margin-bottom: 12px;">Forgot Your Password?</h1>
     <p class="text-center mb-6" style="color: #6b7280; font-size: 16px; line-height: 1.5;">Enter your email address below and we'll send you a link to reset your password.</p>
 
-            <div class="success-message" style="background: #10b981; color: white; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
-            We have emailed your password reset link.
-        </div>
+            <?php if(session('status')): ?>
+                <div class="success-message" style="background: #10b981; color: white; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                    <?php echo e(session('status')); ?>
+
+                </div>
+            <?php endif; ?>
     
-    <form method="POST" action="http://127.0.0.1:8000/password/email">
-        <input type="hidden" name="_token" value="PDFGr858uj2X9Jw67k9ckYEwkMZwQztGZoLBDcT5" autocomplete="off">
+    <form method="POST" action="<?php echo e(route('password.email')); ?>">
+        <?php echo csrf_field(); ?>
                         <section class="input-box" style="margin-bottom: 24px;">
                             <input id="email" type="email" class="" name="email" value="" required="" autocomplete="email" autofocus="" placeholder="Email Address" style="background: #f9fafb; border: 1px solid #e5e7eb; color: #1a1a1a;">
                             <i class="bx bxs-user" style="color: #6b7280;"></i>

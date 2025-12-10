@@ -28,10 +28,3 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
-
-# Enable directory listing for storage/app/public
-<Directory "/opt/lampp/htdocs/cleaning_service_management_system/storage/app/public">
-    Options Indexes FollowSymLinks
-    AllowOverride All
-    Require all granted
-</Directory>
