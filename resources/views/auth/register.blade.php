@@ -541,7 +541,7 @@
             if (/[A-Z]/.test(password)) strength += 15; // Uppercase
             if (/[a-z]/.test(password)) strength += 15; // Lowercase
             if (/[0-9]/.test(password)) strength += 20;  // Numbers
-            if (/[^A-Za-z0-9]/.test(password)) strength += 20; // Special chars (optional bonus)
+            if (/[^A-Za-z0-9]/.test(password)) strength += 10; // Special chars (optional bonus)
             
             // Deduct points for common patterns
             if (/(.)\1{2,}/.test(password)) strength -= 15; // Repeated chars

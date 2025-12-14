@@ -158,7 +158,7 @@
                                 <td>{{ $booking->service->name ?? 'N/A' }}</td>
                                 <td><span class="badge bg-warning">Pending</span></td>
                                 <td>
-                                    @if (!$booking->rescheduled_at)
+                                    @if ($booking->customer_reschedule_count < 3)
                                          <button type="button" class="btn btn-sm btn-outline-info me-2 reschedule-btn" 
                                                  data-booking-id="{{ $booking->id }}" 
                                                  data-booking-token="{{ $booking->booking_token }}" 
@@ -168,7 +168,7 @@
                                              <i class="bi bi-calendar-event me-1"></i>Reschedule
                                           </button>
                                      @else
-                                         <span class="text-muted">Rescheduled (1 time)</span>
+                                         <span class="text-muted">Reschedule limit reached ({{ $booking->customer_reschedule_count }} times)</span>
                                      @endif
                                      <button type="button" class="btn btn-sm btn-outline-danger cancel-btn" 
                                               data-booking-id="{{ $booking->id }}" 
@@ -202,7 +202,7 @@
                                 <td>{{ $booking->service->name ?? 'N/A' }}</td>
                                 <td><span class="badge bg-success">Confirmed</span></td>
                                 <td>
-                                    @if (!$booking->rescheduled_at)
+                                    @if ($booking->customer_reschedule_count < 3)
                                          <button type="button" class="btn btn-sm btn-outline-info me-2 reschedule-btn" 
                                                  data-booking-id="{{ $booking->id }}" 
                                                  data-booking-token="{{ $booking->booking_token }}" 
@@ -212,7 +212,7 @@
                                              <i class="bi bi-calendar-event me-1"></i>Reschedule
                                          </button>
                                      @else
-                                         <span class="text-muted">Rescheduled (1 time)</span>
+                                         <span class="text-muted">Reschedule limit reached ({{ $booking->customer_reschedule_count }} times)</span>
                                      @endif
                                      <button type="button" class="btn btn-sm btn-outline-danger cancel-btn" 
                                               data-booking-id="{{ $booking->id }}" 
@@ -246,7 +246,34 @@
                                 <td>{{ $booking->service->name ?? 'N/A' }}</td>
                                 <td><span class="badge bg-primary">Rescheduled</span></td>
                                 <td>
-                                    <span class="text-muted">Rescheduled (1 time)</span>
+                                    @if ($booking->customer_reschedule_count < 3)
+                                         <button type="button" class="btn btn-sm btn-outline-info me-2 reschedule-btn" 
+                                                 data-booking-id="{{ $booking->id }}" 
+                                                 data-booking-token="{{ $booking->booking_token }}" 
+                                                 data-current-date="{{ $booking->cleaning_date->format('Y-m-d') }}" 
+                                                 data-current-time="{{ $booking->cleaning_date->format('H:i') }}" 
+                                                 data-service-name="{{ $booking->service->name ?? 'N/A' }}">
+                                             <i class="bi bi-calendar-event me-1"></i>Reschedule
+                                         </button>
+                                         <span class="text-muted ms-2">Customer rescheduled ({{ $booking->customer_reschedule_count }} {{ Str::plural('time', $booking->customer_reschedule_count) }})</span>
+                                     @else
+                                         <span class="text-muted">Reschedule limit reached ({{ $booking->customer_reschedule_count }} times)</span>
+                                     @endif
+                                    @if($booking->reschedule_reason)
+                                        <div class="mt-1">
+                                            <small class="text-info">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                <strong>Reason:</strong> {{ $booking->reschedule_reason }}
+                                            </small>
+                                        </div>
+                                    @else
+                                        <div class="mt-1">
+                                            <small class="text-muted">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                No reason provided
+                                            </small>
+                                        </div>
+                                    @endif
                                     <button type="button" class="btn btn-sm btn-outline-danger cancel-btn" 
                                             data-booking-id="{{ $booking->id }}" 
                                             data-booking-token="{{ $booking->booking_token }}" 
@@ -715,6 +742,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 const formData = new FormData(form);
                 const bookingToken = form.action.split('/').pop(); // Extract booking token from action URL
 
+                // Debug logging - log all form data
+                console.log('Form data before submission:');
+                for (let pair of formData.entries()) {
+                    console.log(pair[0] + ': ' + pair[1]);
+                }
+
                 // Get new date and time values
                 const newDate = document.getElementById('reschedule_cleaning_date').value;
                 const newTime = document.getElementById('reschedule_cleaning_time').value;
@@ -722,6 +755,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Combine date and time into a single field for the backend
                 formData.set('new_cleaning_date', `${newDate} ${newTime}`);
                 // No need to delete new_date or new_time as they are not separate inputs now
+
+                // Debug logging - log form data after date/time combination
+                console.log('Form data after date/time combination:');
+                for (let pair of formData.entries()) {
+                    console.log(pair[0] + ': ' + pair[1]);
+                }
 
                 // Remove _method field if it exists, as we are explicitly setting method to POST
                 if (formData.has('_method')) {

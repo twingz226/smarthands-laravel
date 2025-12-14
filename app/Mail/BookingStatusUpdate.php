@@ -12,15 +12,18 @@ class BookingStatusUpdate extends Mailable
     use Queueable, SerializesModels;
 
     public $booking;
+    public $rescheduleReason;
 
     /**
      * Create a new message instance.
      *
      * @param Booking $booking
+     * @param string|null $rescheduleReason
      */
-    public function __construct(Booking $booking)
+    public function __construct(Booking $booking, $rescheduleReason = null)
     {
         $this->booking = $booking;
+        $this->rescheduleReason = $rescheduleReason;
     }
 
     /**
@@ -35,6 +38,7 @@ class BookingStatusUpdate extends Mailable
                     ->subject("Booking {$status}")
                     ->with([
                         'booking' => $this->booking,
+                        'rescheduleReason' => $this->rescheduleReason,
                     ]);
     }
 } 

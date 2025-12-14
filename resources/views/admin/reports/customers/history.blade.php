@@ -3,7 +3,32 @@
 @section('content')
 <div class="main-content">
     <div class="container">
-        <h3>🧼 Cleaning History Report</h3>
+        <div class="row">
+            <div class="col-md-12 text-center">
+                <h1 class="h2 pt-3 pb-2 mb-3 border-bottom">Cleaning History Report</h1>
+            </div>
+            <div class="col-md-12 text-right">
+                <div class="dropdown">
+                    <button class="btn btn-lg btn-secondary dropdown-toggle" type="button" id="exportDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-print"></i> Export
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="exportDropdown">
+                        <li><a href="#" onclick="window.print(); return false;">
+                            <i class="fas fa-print text-secondary"></i> Print
+                        </a></li>
+                        <li><a href="{{ route('reports.customers.export.cleaning-history.pdf') }}">
+                            <i class="fas fa-file-pdf text-danger"></i> PDF
+                        </a></li>
+                        <li><a href="{{ route('reports.customers.export.cleaning-history.excel') }}">
+                            <i class="fas fa-file-excel text-success"></i> Excel
+                        </a></li>
+                        <li><a href="{{ route('reports.customers.export.cleaning-history.csv') }}">
+                            <i class="fas fa-file-csv text-primary"></i> CSV
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
 
         @if(session('success'))
             <div class="alert alert-success">

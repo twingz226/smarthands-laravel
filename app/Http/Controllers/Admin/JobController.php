@@ -30,9 +30,7 @@ class JobController extends Controller
     {
         $job->load(['customer', 'service', 'employees']);
         
-        $availableEmployees = Employee::whereDoesntHave('jobs', function($query) {
-            $query->whereIn('status', [Job::STATUS_ASSIGNED, Job::STATUS_IN_PROGRESS]);
-        })->get();
+        $availableEmployees = Employee::get();
         
         return view('admin.jobs.show', compact('job', 'availableEmployees'));
     }
@@ -214,9 +212,7 @@ class JobController extends Controller
             ->orderBy('scheduled_date', 'asc')
             ->get();
 
-        $availableEmployees = Employee::whereDoesntHave('jobs', function($query) {
-            $query->whereIn('status', [Job::STATUS_ASSIGNED, Job::STATUS_IN_PROGRESS]);
-        })->get();
+        $availableEmployees = Employee::get();
 
         return view('admin.jobs.tracking', compact('jobs', 'availableEmployees'));
     }
@@ -269,9 +265,13 @@ class JobController extends Controller
         $request->validate([
             'new_cleaning_date' => 'required|date|after_or_equal:today',
             'new_cleaning_time' => 'required|date_format:H:i',
+            'reason' => 'nullable|string|max:500',
         ]);
 
         try {
+            // Capture the reschedule reason
+            $rescheduleReason = $request->input('reason');
+            
             // Combine date and time using app timezone, then convert to UTC for storage
             $scheduledDateTime = Carbon::parse(
                 $request->input('new_cleaning_date') . ' ' . $request->input('new_cleaning_time'),
@@ -295,13 +295,14 @@ class JobController extends Controller
                 $job->booking->update([
                     'cleaning_date' => $scheduledDateTime,
                     'status' => \App\Models\Booking::STATUS_RESCHEDULED,
+                    'reschedule_reason' => $rescheduleReason,
                 ]);
             }
 
             // Send reschedule email notification to customer
             if ($job->booking && $job->customer) {
                 try {
-                    Mail::to($job->customer->email)->queue(new BookingStatusUpdate($job->booking));
+                    Mail::to($job->customer->email)->queue(new BookingStatusUpdate($job->booking, $rescheduleReason));
                     Log::info('Job reschedule email sent successfully', [
                         'job_id' => $job->id,
                         'booking_id' => $job->booking->id,

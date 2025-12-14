@@ -64,6 +64,8 @@ Route::middleware(['web','auth', 'role:admin'])->group(function () {
         // Static endpoints must come BEFORE parameterized routes to avoid being captured by /{booking}
         Route::get('/time-slots', [AdminBookingController::class, 'getTimeSlots'])->name('time-slots');
         Route::get('/fully-booked-dates', [AdminBookingController::class, 'fullyBookedDates'])->name('fully.booked.dates');
+        Route::get('/fully-booked-dates-json', [AdminBookingController::class, 'getFullyBookedDatesJson'])->name('fully.booked.dates.json');
+        Route::get('/booked-time-slots', [AdminBookingController::class, 'getBookedTimeSlots'])->name('booked.time.slots');
         Route::get('/{booking}', [AdminBookingController::class, 'show'])->name('show');
         Route::get('/{booking}/edit', [AdminBookingController::class, 'edit'])->name('edit');
         Route::put('/{booking}', [AdminBookingController::class, 'update'])->name('update');
@@ -128,11 +130,41 @@ Route::middleware(['web','auth', 'role:admin'])->group(function () {
             Route::get('/history', [ReportController::class, 'customerHistory'])->name('history');
             Route::get('/feedback', [ReportController::class, 'customerFeedback'])->name('feedback');
             Route::get('/retention', [ReportController::class, 'customerRetention'])->name('retention');
+            
+            // Export routes
+            Route::prefix('export')->name('export.')->group(function () {
+                // Customer list exports
+                Route::get('/pdf', [ReportController::class, 'exportCustomerListPDF'])->name('pdf');
+                Route::get('/csv', [ReportController::class, 'exportCustomerListCSV'])->name('csv');
+                Route::get('/excel', [ReportController::class, 'exportCustomerListExcel'])->name('excel');
+                
+                // Cleaning history exports
+                Route::get('/cleaning-history/pdf', [ReportController::class, 'exportCleaningHistoryPDF'])->name('cleaning-history.pdf');
+                Route::get('/cleaning-history/csv', [ReportController::class, 'exportCleaningHistoryCSV'])->name('cleaning-history.csv');
+                Route::get('/cleaning-history/excel', [ReportController::class, 'exportCleaningHistoryExcel'])->name('cleaning-history.excel');
+                
+                // Customer feedback exports
+                Route::get('/feedback/pdf', [ReportController::class, 'exportCustomerFeedbackPDF'])->name('feedback.pdf');
+                Route::get('/feedback/csv', [ReportController::class, 'exportCustomerFeedbackCSV'])->name('feedback.csv');
+                Route::get('/feedback/excel', [ReportController::class, 'exportCustomerFeedbackExcel'])->name('feedback.excel');
+                
+                // Customer retention exports
+                Route::get('/retention/pdf', [ReportController::class, 'exportCustomerRetentionPDF'])->name('retention.pdf');
+                Route::get('/retention/csv', [ReportController::class, 'exportCustomerRetentionCSV'])->name('retention.csv');
+                Route::get('/retention/excel', [ReportController::class, 'exportCustomerRetentionExcel'])->name('retention.excel');
+            });
         });
 
         Route::prefix('jobs')->name('jobs.')->group(function () {
             Route::get('/completion', [ReportController::class, 'jobCompletion'])->name('completion');
             Route::get('/assignments', [ReportController::class, 'jobAssignments'])->name('assignments');
+            
+            // Job completion exports
+            Route::prefix('export')->name('export.')->group(function () {
+                Route::get('/completion/pdf', [ReportController::class, 'exportJobCompletionPDF'])->name('completion.pdf');
+                Route::get('/completion/csv', [ReportController::class, 'exportJobCompletionCSV'])->name('completion.csv');
+                Route::get('/completion/excel', [ReportController::class, 'exportJobCompletionExcel'])->name('completion.excel');
+            });
         });
 
         Route::prefix('employees')->name('employees.')->group(function () {

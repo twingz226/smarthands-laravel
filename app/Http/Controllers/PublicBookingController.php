@@ -108,10 +108,8 @@ class PublicBookingController extends Controller
                 ]
             );
 
-            // Dispatch NewCustomerRegistered event if this is a new customer
-            if ($customer->wasRecentlyCreated) {
-                event(new NewCustomerRegistered($customer));
-            }
+            // Customer model automatically dispatches NewCustomerRegistered event
+            // No need for manual event dispatch here
 
             Log::debug('Customer found/updated:', $customer->toArray());
             

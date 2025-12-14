@@ -192,6 +192,26 @@ class BookingController extends Controller
                 'new_cleaning_date' => 'required|date_format:Y-m-d H:i|after_or_equal:today',
                 'reason' => 'nullable|string|max:1000',
             ]);
+            
+            // Check if customer has reached reschedule limit (default 3)
+            $rescheduleLimit = 3;
+            if ($booking->hasReachedRescheduleLimit($rescheduleLimit)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "You have reached the maximum number of reschedules ({$rescheduleLimit}) for this booking."
+                ], 422);
+            }
+            
+            // Debug logging
+            Log::info('Reschedule request data:', [
+                'all_request_data' => $request->all(),
+                'validated_data' => $validated,
+                'reason_value' => $request->input('reason'),
+                'reason_in_validated' => $validated['reason'] ?? 'NOT_SET',
+                'current_reschedule_count' => $booking->customer_reschedule_count,
+                'reschedule_limit' => $rescheduleLimit,
+                'remaining_reschedules' => $booking->getRemainingReschedules($rescheduleLimit)
+            ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -227,11 +247,59 @@ class BookingController extends Controller
                 ], 422);
             }
 
+            // Log current booking state before update
+            Log::info('Before customer reschedule update:', [
+                'booking_id' => $booking->id,
+                'current_status' => $booking->status,
+                'current_reschedule_count' => $booking->customer_reschedule_count,
+                'intended_status' => Booking::STATUS_PENDING,
+                'new_date' => $newDateTime->toDateTimeString()
+            ]);
+
             $booking->update([
                 'cleaning_date' => $newDateTime,
                 'rescheduled_at' => now(),
-                'status' => ($booking->status === Booking::STATUS_CONFIRMED) ? Booking::STATUS_CONFIRMED : Booking::STATUS_RESCHEDULED,
-                'special_instructions' => $booking->special_instructions . "\n\nReschedule Reason: " . ($validated['reason'] ?? 'No reason provided'),
+                'status' => Booking::STATUS_PENDING, // Set back to pending when customer reschedules
+                'reschedule_reason' => $validated['reason'] ?? null,
+                'customer_reschedule_count' => $booking->customer_reschedule_count + 1,
+                'rescheduled_by' => Auth::id(),
+                'is_admin_reschedule' => false, // This is a customer-initiated reschedule
+            ]);
+
+            // Log immediately after update
+            Log::info('After customer reschedule update:', [
+                'booking_id' => $booking->id,
+                'updated_status' => $booking->status,
+                'updated_reschedule_count' => $booking->customer_reschedule_count,
+                'was_status_changed' => $booking->wasChanged('status'),
+                'original_status' => $booking->getOriginal('status'),
+                'fresh_status' => $booking->fresh()->status
+            ]);
+
+            // If there's an associated job, delete it because it needs to be reconfirmed through Online Bookings
+            if ($booking->job) {
+                $job = $booking->job;
+                $jobId = $job->id;
+                $job->delete(); // Delete the job tracking entry
+                Log::info('Job tracking entry deleted due to customer reschedule:', [
+                    'deleted_job_id' => $jobId,
+                    'booking_id' => $booking->id,
+                    'reason' => 'Customer rescheduled - needs reconfirmation through Online Bookings'
+                ]);
+            }
+            
+            // Debug logging after update
+            Log::info('Booking updated with customer reschedule:', [
+                'booking_id' => $booking->id,
+                'reschedule_reason_saved' => $booking->fresh()->reschedule_reason,
+                'rescheduled_at_saved' => $booking->fresh()->rescheduled_at,
+                'status_saved' => $booking->fresh()->status,
+                'status_intended' => Booking::STATUS_PENDING,
+                'customer_reschedule_count' => $booking->fresh()->customer_reschedule_count,
+                'is_admin_reschedule' => $booking->fresh()->is_admin_reschedule,
+                'rescheduled_by' => $booking->fresh()->rescheduled_by,
+                'job_deleted' => isset($jobId) ? true : false,
+                'deleted_job_id' => $jobId ?? null,
             ]);
 
             // Log the activity

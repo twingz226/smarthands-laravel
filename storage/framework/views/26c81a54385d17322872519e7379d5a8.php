@@ -1,17 +1,16 @@
-@extends('layouts.admin')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="container-fluid">
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 class="h2">Customer Feedback & Ratings Report</h1>
     </div>
 
-    @if(session('success'))
+    <?php if(session('success')): ?>
         <div class="alert alert-success alert-dismissible fade show">
-            {{ session('success') }}
+            <?php echo e(session('success')); ?>
+
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-    @endif
+    <?php endif; ?>
 
     <!-- Filters Section -->
     <div class="card mb-4">
@@ -26,14 +25,14 @@
                         <label for="rating" class="form-label">Star Rating</label>
                         <select class="form-select" id="rating" name="rating">
                             <option value="">All Ratings</option>
-                            @for($i = 5; $i >= 1; $i--)
-                                <option value="{{ $i }}" {{ request('rating') == $i ? 'selected' : '' }}>
-                                    @for($j = 1; $j <= $i; $j++) ★ @endfor
-                                    @if($i < 5)
-                                        @for($j = $i + 1; $j <= 5; $j++) ☆ @endfor
-                                    @endif
+                            <?php for($i = 5; $i >= 1; $i--): ?>
+                                <option value="<?php echo e($i); ?>" <?php echo e(request('rating') == $i ? 'selected' : ''); ?>>
+                                    <?php for($j = 1; $j <= $i; $j++): ?> ★ <?php endfor; ?>
+                                    <?php if($i < 5): ?>
+                                        <?php for($j = $i + 1; $j <= 5; $j++): ?> ☆ <?php endfor; ?>
+                                    <?php endif; ?>
                                 </option>
-                            @endfor
+                            <?php endfor; ?>
                         </select>
                     </div>
 
@@ -42,10 +41,10 @@
                         <label class="form-label">Date Range</label>
                         <div class="input-group">
                             <input type="date" class="form-control" id="start_date" name="start_date"
-                                value="{{ request('start_date') }}" placeholder="From">
+                                value="<?php echo e(request('start_date')); ?>" placeholder="From">
                             <span class="input-group-text">to</span>
                             <input type="date" class="form-control" id="end_date" name="end_date"
-                                value="{{ request('end_date') }}" placeholder="To">
+                                value="<?php echo e(request('end_date')); ?>" placeholder="To">
                         </div>
                     </div>
 
@@ -55,7 +54,7 @@
                             <button type="submit" class="btn btn-primary flex-fill">
                                 <i class="fas fa-filter me-2"></i> Apply Filters
                             </button>
-                            <a href="{{ request()->url() }}" class="btn btn-outline-secondary flex-fill">
+                            <a href="<?php echo e(request()->url()); ?>" class="btn btn-outline-secondary flex-fill">
                                 <i class="fas fa-undo me-2"></i> Reset Filters
                             </a>
                         </div>
@@ -77,18 +76,18 @@
                             <i class="fas fa-chart-line"></i>
                         </div>
                     </div>
-                    <h2 class="display-6 fw-bold mb-2">{{ number_format($averageRating, 1) }}<small class="fs-6 fw-normal">/5.0</small></h2>
+                    <h2 class="display-6 fw-bold mb-2"><?php echo e(number_format($averageRating, 1)); ?><small class="fs-6 fw-normal">/5.0</small></h2>
                     <div class="d-flex align-items-center">
-                        @for($i = 1; $i <= 5; $i++)
-                            @if($i <= floor($averageRating))
+                        <?php for($i = 1; $i <= 5; $i++): ?>
+                            <?php if($i <= floor($averageRating)): ?>
                                 <i class="fas fa-star text-warning me-1"></i>
-                            @elseif($i - 0.5 <= $averageRating)
+                            <?php elseif($i - 0.5 <= $averageRating): ?>
                                 <i class="fas fa-star-half-alt text-warning me-1"></i>
-                            @else
+                            <?php else: ?>
                                 <i class="far fa-star me-1" style="color: rgba(255, 255, 255, 0.5);"></i>
-                            @endif
-                        @endfor
-                        <span class="ms-2 small">({{ $ratings->count() }} ratings)</span>
+                            <?php endif; ?>
+                        <?php endfor; ?>
+                        <span class="ms-2 small">(<?php echo e($ratings->count()); ?> ratings)</span>
                     </div>
                 </div>
             </div>
@@ -104,15 +103,15 @@
                             <i class="fas fa-comments"></i>
                         </div>
                     </div>
-                    <h2 class="display-6 fw-bold mb-2">{{ number_format($totalFeedback) }}</h2>
+                    <h2 class="display-6 fw-bold mb-2"><?php echo e(number_format($totalFeedback)); ?></h2>
                     <div class="progress" style="height: 6px; background-color: rgba(255, 255, 255, 0.2);">
                         <div class="progress-bar" style="background-color: rgba(255, 255, 255, 0.8);" role="progressbar"
-                             style="width: {{ ($recentFeedback / max($totalFeedback, 1)) * 100 }}%"
-                             aria-valuenow="{{ $recentFeedback }}" aria-valuemin="0" aria-valuemax="{{ $totalFeedback }}">
+                             style="width: <?php echo e(($recentFeedback / max($totalFeedback, 1)) * 100); ?>%"
+                             aria-valuenow="<?php echo e($recentFeedback); ?>" aria-valuemin="0" aria-valuemax="<?php echo e($totalFeedback); ?>">
                         </div>
                     </div>
                     <div class="d-flex justify-content-between mt-2">
-                        <small style="color: rgba(255, 255, 255, 0.8);">{{ round(($recentFeedback / max($totalFeedback, 1)) * 100) }}% recent</small>
+                        <small style="color: rgba(255, 255, 255, 0.8);"><?php echo e(round(($recentFeedback / max($totalFeedback, 1)) * 100)); ?>% recent</small>
                         <small style="color: rgba(255, 255, 255, 0.8);">Last 30 days</small>
                     </div>
                 </div>
@@ -129,16 +128,16 @@
                             <i class="fas fa-bolt"></i>
                         </div>
                     </div>
-                    <h2 class="display-6 fw-bold mb-2">{{ number_format($recentFeedback) }}</h2>
+                    <h2 class="display-6 fw-bold mb-2"><?php echo e(number_format($recentFeedback)); ?></h2>
                     <p class="mb-2" style="color: rgba(255, 255, 255, 0.9);">New feedback in last 30 days</p>
-                    @php
+                    <?php
                         $trend = $recentFeedback > 0 ? (($recentFeedback / max($totalFeedback - $recentFeedback, 1)) * 100) : 0;
                         $isPositive = $trend >= 0;
-                    @endphp
+                    ?>
                     <div class="d-flex align-items-center">
                         <span class="badge me-2" style="background-color: rgba(255, 255, 255, 0.2); color: white;">
-                            <i class="fas {{ $isPositive ? 'fa-arrow-up' : 'fa-arrow-down' }} me-1"></i>
-                            {{ abs(round($trend)) }}%
+                            <i class="fas <?php echo e($isPositive ? 'fa-arrow-up' : 'fa-arrow-down'); ?> me-1"></i>
+                            <?php echo e(abs(round($trend))); ?>%
                         </span>
                         <small style="color: rgba(255, 255, 255, 0.8);">vs previous period</small>
                     </div>
@@ -158,13 +157,13 @@
                     <li><a href="#" onclick="window.print(); return false;">
                         <i class="fas fa-print text-secondary"></i> Print
                     </a></li>
-                    <li><a href="{{ route('reports.customers.export.feedback.pdf', request()->query()) }}">
+                    <li><a href="<?php echo e(route('reports.customers.export.feedback.pdf', request()->query())); ?>">
                         <i class="fas fa-file-pdf text-danger"></i> PDF
                     </a></li>
-                    <li><a href="{{ route('reports.customers.export.feedback.excel', request()->query()) }}">
+                    <li><a href="<?php echo e(route('reports.customers.export.feedback.excel', request()->query())); ?>">
                         <i class="fas fa-file-excel text-success"></i> Excel
                     </a></li>
-                    <li><a href="{{ route('reports.customers.export.feedback.csv', request()->query()) }}">
+                    <li><a href="<?php echo e(route('reports.customers.export.feedback.csv', request()->query())); ?>">
                         <i class="fas fa-file-csv text-primary"></i> CSV
                     </a></li>
                 </ul>
@@ -176,7 +175,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Customer Feedback</h5>
-            <span class="badge badge-primary">{{ $ratings->total() }} Reviews</span>
+            <span class="badge badge-primary"><?php echo e($ratings->total()); ?> Reviews</span>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -192,59 +191,60 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($ratings as $rating)
+                        <?php $__empty_1 = true; $__currentLoopData = $ratings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $rating): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                             <tr>
-                                <td>{{ $rating->created_at->format('M d, Y') }}</td>
-                                <td>{{ $rating->customer->name ?? 'N/A' }}</td>
-                                <td>{{ $rating->job->service->name ?? 'N/A' }}</td>
+                                <td><?php echo e($rating->created_at->format('M d, Y')); ?></td>
+                                <td><?php echo e($rating->customer->name ?? 'N/A'); ?></td>
+                                <td><?php echo e($rating->job->service->name ?? 'N/A'); ?></td>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        @php
+                                        <?php
                                             $photoUrl = $rating->employee ? $rating->employee->getPrimaryPhotoUrl() : null;
-                                        @endphp
-                                        @if($photoUrl)
-                                            <img src="{{ $photoUrl }}" alt="{{ $rating->employee->name }}" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
-                                        @else
-                                            <img src="{{ asset('images/default-avatar.png') }}" alt="No Photo" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
-                                        @endif
-                                        <span>{{ $rating->employee->name ?? 'N/A' }}</span>
+                                        ?>
+                                        <?php if($photoUrl): ?>
+                                            <img src="<?php echo e($photoUrl); ?>" alt="<?php echo e($rating->employee->name); ?>" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                        <?php else: ?>
+                                            <img src="<?php echo e(asset('images/default-avatar.png')); ?>" alt="No Photo" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                        <?php endif; ?>
+                                        <span><?php echo e($rating->employee->name ?? 'N/A'); ?></span>
                                     </div>
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        @for($i = 1; $i <= 5; $i++)
-                                            @if($i <= $rating->rating)
+                                        <?php for($i = 1; $i <= 5; $i++): ?>
+                                            <?php if($i <= $rating->rating): ?>
                                                 <i class="fas fa-star text-warning me-1"></i>
-                                            @else
+                                            <?php else: ?>
                                                 <i class="far fa-star text-muted me-1"></i>
-                                            @endif
-                                        @endfor
-                                        <span class="ms-2 fw-bold">{{ number_format($rating->rating, 1) }}</span>
+                                            <?php endif; ?>
+                                        <?php endfor; ?>
+                                        <span class="ms-2 fw-bold"><?php echo e(number_format($rating->rating, 1)); ?></span>
                                     </div>
                                 </td>
-                                <td>{{ $rating->comments ?? 'No feedback provided' }}</td>
+                                <td><?php echo e($rating->comments ?? 'No feedback provided'); ?></td>
                             </tr>
-                        @empty
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
                                 <td colspan="6" class="text-center text-muted">No feedback records found</td>
                             </tr>
-                        @endforelse
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
 
             <!-- Pagination -->
-            @if($ratings->hasPages())
+            <?php if($ratings->hasPages()): ?>
                 <div class="d-flex justify-content-center mt-4">
-                    {{ $ratings->appends(request()->query())->links() }}
+                    <?php echo e($ratings->appends(request()->query())->links()); ?>
+
                 </div>
-            @endif
+            <?php endif; ?>
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@push('styles')
+<?php $__env->startPush('styles'); ?>
 <style>
     .card {
         border-radius: 0.75rem;
@@ -341,9 +341,9 @@
         }
     }
 </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Form submission handler (can be extended if needed)
@@ -352,4 +352,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-@endpush
+<?php $__env->stopPush(); ?>
+<?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /opt/lampp/htdocs/cleaning_service_management_system/resources/views/admin/reports/customers/feedback.blade.php ENDPATH**/ ?>

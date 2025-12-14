@@ -423,8 +423,8 @@
                             const rateLabel = formatCurrency(hourlyRate);
                             const totalLabel = formatCurrency(totalInitialPrice);
                             const hoursLabel = minimumHours + ' hour' + (minimumHours === 1 ? '' : 's');
-                            totalInitialPriceAlert.innerHTML = '<strong>Total Initial Price:</strong> ' + totalLabel + ' (' + rateLabel + '/hr × ' + hoursLabel + ' minimum)';
-                            totalInitialPriceAlert.classList.remove('d-none');
+                            totalInitialPriceAlert.innerHTML = '';
+                            totalInitialPriceAlert.classList.add('d-none');
                         } else {
                             totalInitialPriceAlert.classList.add('d-none');
                             totalInitialPriceAlert.innerHTML = '';

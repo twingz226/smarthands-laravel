@@ -1,17 +1,16 @@
-@extends('layouts.admin')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="container-fluid">
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 class="h2">Customer Retention Report</h1>
     </div>
 
-    @if(session('success'))
+    <?php if(session('success')): ?>
         <div class="alert alert-success alert-dismissible fade show">
-            {{ session('success') }}
+            <?php echo e(session('success')); ?>
+
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-    @endif
+    <?php endif; ?>
 
     <!-- Retention Metrics Cards -->
     <div class="row mb-4">
@@ -24,7 +23,7 @@
                             <i class="fas fa-users"></i>
                         </div>
                     </div>
-                    <h2 class="display-5 fw-bold mb-0">{{ number_format($totalCustomers) }}</h2>
+                    <h2 class="display-5 fw-bold mb-0"><?php echo e(number_format($totalCustomers)); ?></h2>
                 </div>
             </div>
         </div>
@@ -38,9 +37,9 @@
                             <i class="fas fa-redo"></i>
                         </div>
                     </div>
-                    <h2 class="display-5 fw-bold mb-1">{{ number_format($repeatCustomers) }}</h2>
+                    <h2 class="display-5 fw-bold mb-1"><?php echo e(number_format($repeatCustomers)); ?></h2>
                     <p class="mb-0" style="color: rgba(255, 255, 255, 0.8);">
-                        {{ $totalCustomers > 0 ? number_format(($repeatCustomers/$totalCustomers)*100, 1) : 0 }}% of total customers
+                        <?php echo e($totalCustomers > 0 ? number_format(($repeatCustomers/$totalCustomers)*100, 1) : 0); ?>% of total customers
                     </p>
                 </div>
             </div>
@@ -55,7 +54,7 @@
                             <i class="fas fa-user-plus"></i>
                         </div>
                     </div>
-                    <h2 class="display-5 fw-bold mb-0">{{ number_format($newCustomersLastMonth) }}</h2>
+                    <h2 class="display-5 fw-bold mb-0"><?php echo e(number_format($newCustomersLastMonth)); ?></h2>
                     <p class="mb-0" style="color: rgba(255, 255, 255, 0.8);">Last 30 days</p>
                 </div>
             </div>
@@ -80,15 +79,15 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($customersByJobCount as $range => $count)
+                                <?php $__currentLoopData = $customersByJobCount; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $range => $count): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <tr>
-                                        <td>{{ $range }}</td>
-                                        <td>{{ number_format($count) }}</td>
+                                        <td><?php echo e($range); ?></td>
+                                        <td><?php echo e(number_format($count)); ?></td>
                                         <td>
-                                            {{ $totalCustomers > 0 ? number_format(($count/$totalCustomers)*100, 1) : 0 }}%
+                                            <?php echo e($totalCustomers > 0 ? number_format(($count/$totalCustomers)*100, 1) : 0); ?>%
                                         </td>
                                     </tr>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </tbody>
                         </table>
                     </div>
@@ -111,13 +110,13 @@
                     <li><a href="#" onclick="window.print(); return false;">
                         <i class="fas fa-print text-secondary"></i> Print
                     </a></li>
-                    <li><a href="{{ route('reports.customers.export.retention.pdf') }}">
+                    <li><a href="<?php echo e(route('reports.customers.export.retention.pdf')); ?>">
                         <i class="fas fa-file-pdf text-danger"></i> PDF
                     </a></li>
-                    <li><a href="{{ route('reports.customers.export.retention.excel') }}">
+                    <li><a href="<?php echo e(route('reports.customers.export.retention.excel')); ?>">
                         <i class="fas fa-file-excel text-success"></i> Excel
                     </a></li>
-                    <li><a href="{{ route('reports.customers.export.retention.csv') }}">
+                    <li><a href="<?php echo e(route('reports.customers.export.retention.csv')); ?>">
                         <i class="fas fa-file-csv text-primary"></i> CSV
                     </a></li>
                 </ul>
@@ -144,40 +143,40 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($topCustomers as $customer)
+                        <?php $__empty_1 = true; $__currentLoopData = $topCustomers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $customer): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                             <tr>
-                                <td>{{ $customer->name }}</td>
-                                <td><span class="badge bg-primary">{{ $customer->jobs_count }}</span></td>
-                                <td>{{ $customer->first_booking }}</td>
-                                <td>{{ $customer->last_booking }}</td>
+                                <td><?php echo e($customer->name); ?></td>
+                                <td><span class="badge bg-primary"><?php echo e($customer->jobs_count); ?></span></td>
+                                <td><?php echo e($customer->first_booking); ?></td>
+                                <td><?php echo e($customer->last_booking); ?></td>
                                 <td>
-                                    @if($customer->first_booking != 'N/A' && $customer->last_booking != 'N/A')
-                                        @php
+                                    <?php if($customer->first_booking != 'N/A' && $customer->last_booking != 'N/A'): ?>
+                                        <?php
                                             $first = \Carbon\Carbon::parse($customer->first_booking);
                                             $last = \Carbon\Carbon::parse($customer->last_booking);
                                             $daysBetween = $first->diffInDays($last);
                                             $frequency = $daysBetween > 0 ? round($customer->jobs_count / ($daysBetween/30), 1) : $customer->jobs_count;
-                                        @endphp
-                                        <span class="badge bg-info">{{ $frequency }} jobs/month</span>
-                                    @else
+                                        ?>
+                                        <span class="badge bg-info"><?php echo e($frequency); ?> jobs/month</span>
+                                    <?php else: ?>
                                         <span class="text-muted">N/A</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
                             </tr>
-                        @empty
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
                                 <td colspan="5" class="text-center text-muted">No repeat customers found</td>
                             </tr>
-                        @endforelse
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@push('styles')
+<?php $__env->startPush('styles'); ?>
 <style>
     .card {
         border-radius: 0.75rem;
@@ -259,9 +258,9 @@
         }
     }
 </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -270,9 +269,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const jobCountChart = new Chart(jobCountCtx, {
         type: 'doughnut',
         data: {
-            labels: {!! json_encode(array_keys($customersByJobCount)) !!},
+            labels: <?php echo json_encode(array_keys($customersByJobCount)); ?>,
             datasets: [{
-                data: {!! json_encode(array_values($customersByJobCount)) !!},
+                data: <?php echo json_encode(array_values($customersByJobCount)); ?>,
                 backgroundColor: [
                     'rgba(79, 70, 229, 0.7)',
                     'rgba(8, 145, 178, 0.7)',
@@ -320,4 +319,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-@endpush
+<?php $__env->stopPush(); ?>
+<?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /opt/lampp/htdocs/cleaning_service_management_system/resources/views/admin/reports/customers/retention.blade.php ENDPATH**/ ?>

@@ -54,23 +54,13 @@ Route::get('/test-db', function () {
     }
 });
 
-// Test reCAPTCHA setup
-Route::get('/test-recaptcha', function () {
-    return [
-        'recaptcha_configured' => config('services.recaptcha.key') ? true : false,
-        'site_key' => config('services.recaptcha.key') ? substr(config('services.recaptcha.key'), 0, 10) . '...' : null,
-        'secret_key' => config('services.recaptcha.secret') ? substr(config('services.recaptcha.secret'), 0, 10) . '...' : null,
-        'test_url' => url('/register'),
-    ];
-});
-
 // Home route
 Route::get('/', function () {
     return view('home');
 })->name('home');
 
 // Contact Message Us form submission
-Route::post('/contact/message', [\App\Http\Controllers\ContactMessageController::class, 'store'])->name('contact.message.store');
+Route::post('/contact/message', [\App\Http\Controllers\ContactMessageController::class, 'store'])->middleware('recaptcha')->name('contact.message.store');
 
 // Authentication routes (excluding password reset routes to define them manually)
 Auth::routes(['reset' => false, 'verify' => false]);

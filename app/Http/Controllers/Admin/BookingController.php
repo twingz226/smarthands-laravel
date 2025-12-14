@@ -227,11 +227,50 @@ class BookingController extends Controller
         return view('admin.bookings.fully.booked.dates', compact('fullyBookedDates'));
     }
 
+    public function getFullyBookedDatesJson()
+    {
+        $fullyBookedThreshold = 3;
+        $start = now()->timezone(config('app.timezone'))->startOfDay();
+        $end = now()->timezone(config('app.timezone'))->addDays(60)->endOfDay();
+        $fullyBookedDates = Booking::getFullyBookedDatesWithCountsByAppTimezone($start, $end, $fullyBookedThreshold);
+        
+        // Return just the dates as array for calendar disable functionality
+        $dates = $fullyBookedDates->pluck('booking_date')->toArray();
+        
+        return response()->json($dates);
+    }
+
+    public function getBookedTimeSlots(Request $request)
+    {
+        $request->validate([
+            'date' => 'required|date'
+        ]);
+
+        $date = $request->input('date');
+        
+        // Get all bookings for the specified date (excluding cancelled)
+        $startOfDay = Carbon::parse($date)->timezone(config('app.timezone'))->startOfDay();
+        $endOfDay = Carbon::parse($date)->timezone(config('app.timezone'))->endOfDay();
+
+        $bookings = Booking::where('cleaning_date', '>=', $startOfDay->setTimezone('UTC'))
+            ->where('cleaning_date', '<=', $endOfDay->setTimezone('UTC'))
+            ->whereNotIn('status', [Booking::STATUS_CANCELLED])
+            ->get();
+
+        // Extract the hour part from each booking's cleaning_date
+        $bookedTimeSlots = $bookings->map(function ($booking) {
+            return $booking->cleaning_date->timezone(config('app.timezone'))->format('H:i');
+        })->unique()->values()->toArray();
+
+        return response()->json($bookedTimeSlots);
+    }
+
     public function updateReschedule(Request $request, Booking $booking)
     {
         $request->validate([
             'new_cleaning_date' => 'required|date|after_or_equal:today',
             'new_cleaning_time' => 'required|date_format:H:i',
+            'reason' => 'nullable|string|max:1000',
         ]);
 
         DB::beginTransaction();
@@ -256,6 +295,18 @@ class BookingController extends Controller
             if (Schema::hasColumn('bookings', 'rescheduled_at')) {
                 $booking->rescheduled_at = now('UTC');
             }
+            // Store reschedule reason if provided
+            if (Schema::hasColumn('bookings', 'reschedule_reason')) {
+                $booking->reschedule_reason = $request->input('reason');
+            }
+            // Track admin reschedule - don't increment customer reschedule count
+            if (Schema::hasColumn('bookings', 'rescheduled_by')) {
+                $booking->rescheduled_by = Auth::id();
+            }
+            if (Schema::hasColumn('bookings', 'is_admin_reschedule')) {
+                $booking->is_admin_reschedule = true; // Mark as admin-initiated reschedule
+            }
+            // Note: We DON'T increment customer_reschedule_count for admin reschedules
             $booking->save();
 
             // If there's an associated job, update its scheduled date and status
@@ -276,8 +327,10 @@ class BookingController extends Controller
                         'old_date' => $booking->getOriginal('cleaning_date'),
                         'new_date' => $booking->cleaning_date,
                         'actor_id' => Auth::id(),
+                        'is_admin_reschedule' => true,
+                        'customer_reschedule_count' => $booking->customer_reschedule_count, // Should remain unchanged
                     ])
-                    ->log('Booking rescheduled by admin');
+                    ->log('Booking rescheduled by admin (does not affect customer reschedule limit)');
             } catch (\Throwable $logEx) {
                 Log::warning('Activity log failed during booking reschedule', [
                     'booking_id' => $booking->id,
@@ -292,10 +345,13 @@ class BookingController extends Controller
 
             DB::commit();
 
-            Log::info('Booking rescheduled successfully', [
+            Log::info('Booking rescheduled successfully by admin', [
                 'booking_id' => $booking->id,
                 'new_cleaning_date_app_tz' => $newCleaningDateTimeAppTz->toDateTimeString(),
                 'new_cleaning_date_utc' => $newCleaningDateTimeAppTz->copy()->setTimezone('UTC')->toDateTimeString(),
+                'is_admin_reschedule' => $booking->is_admin_reschedule,
+                'customer_reschedule_count' => $booking->customer_reschedule_count, // Should remain unchanged
+                'rescheduled_by' => $booking->rescheduled_by,
             ]);
 
             return redirect()->route('bookings.index')->with('success', 'Booking rescheduled successfully.');

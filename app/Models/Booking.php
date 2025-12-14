@@ -38,6 +38,10 @@ class Booking extends Model
         'admin_notes',
         'booking_token',
         'rescheduled_at',
+        'reschedule_reason',
+        'customer_reschedule_count',
+        'rescheduled_by',
+        'is_admin_reschedule',
         'customer_name',
         'customer_email',
         'customer_contact',
@@ -50,7 +54,8 @@ class Booking extends Model
         'updated_at' => 'datetime',
         'rescheduled_at' => 'datetime',
         'deleted_at' => 'datetime',
-        'price' => 'decimal:2'
+        'price' => 'decimal:2',
+        'is_admin_reschedule' => 'boolean'
     ];
 
     /**
@@ -162,6 +167,11 @@ class Booking extends Model
     public function cleaner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'cleaner_id');
+    }
+
+    public function rescheduledBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rescheduled_by');
     }
 
     public function isConfirmed(): bool
@@ -282,6 +292,31 @@ class Booking extends Model
             ->count();
 
         return $bookingsCount < 1; // Limit to 1 bookings per hour per service
+    }
+
+    /**
+     * Check if customer has reached their reschedule limit for this booking
+     * Default limit is 3 reschedules per booking
+     */
+    public function hasReachedRescheduleLimit(int $limit = 3): bool
+    {
+        return $this->customer_reschedule_count >= $limit;
+    }
+
+    /**
+     * Get the remaining reschedule attempts for this booking
+     */
+    public function getRemainingReschedules(int $limit = 3): int
+    {
+        return max(0, $limit - $this->customer_reschedule_count);
+    }
+
+    /**
+     * Increment customer reschedule count (only for customer-initiated reschedules)
+     */
+    public function incrementCustomerRescheduleCount(): void
+    {
+        $this->increment('customer_reschedule_count');
     }
     
 }

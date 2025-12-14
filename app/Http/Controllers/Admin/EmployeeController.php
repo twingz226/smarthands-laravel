@@ -314,14 +314,7 @@ class EmployeeController extends Controller
             ->orderBy('scheduled_date')
             ->paginate(15);
 
-        $availableEmployees = Employee::whereDoesntHave('jobs', function($query) {
-                $query->whereIn('status', ['assigned', 'in_progress']);
-            })
-            ->orWhereHas('jobs', function($query) {
-                $query->whereIn('status', ['assigned', 'in_progress']);
-            }, '<', 3) // Employees with less than 3 active jobs
-            ->orderBy('name')
-            ->get();
+        $availableEmployees = Employee::orderBy('name')->get();
 
         return view('admin.employees.assignments', compact('activeJobs', 'availableEmployees'));
     }

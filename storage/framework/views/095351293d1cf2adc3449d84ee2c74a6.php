@@ -6,23 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="House Cleaning Service Management System Panel" />
     <meta name="author" content="" />
-    <meta name="csrf-token" content="{{ csrf_token() }}" />
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>" />
 
-    <link rel="icon" href="{{ asset('images/Smarthands.png') }}">
+    <link rel="icon" href="<?php echo e(asset('images/Smarthands.png')); ?>">
     <title>Smarthands Cleaning Services Management System | Dashboard</title>
 
     <!-- Core CSS -->
-    <link rel="stylesheet" href="{{ mix('css/app.css') }}">
-    <link rel="stylesheet" href="{{ asset('js/jquery-ui/css/no-theme/jquery-ui-1.10.3.custom.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/font-icons/entypo/css/entypo.css') }}">
+    <link rel="stylesheet" href="<?php echo e(mix('css/app.css')); ?>">
+    <link rel="stylesheet" href="<?php echo e(asset('js/jquery-ui/css/no-theme/jquery-ui-1.10.3.custom.min.css')); ?>">
+    <link rel="stylesheet" href="<?php echo e(asset('css/font-icons/entypo/css/entypo.css')); ?>">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Noto+Sans:400,700,400italic">
-    <link rel="stylesheet" href="{{ asset('css/bootstrap.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/neon-core.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/neon-theme.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/neon-forms.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
-    <link rel="stylesheet" href="{{ asset('js/jvectormap/jquery-jvectormap-1.2.2.css') }}">
-    <link rel="stylesheet" href="{{ asset('js/rickshaw/rickshaw.min.css') }}">
+    <link rel="stylesheet" href="<?php echo e(asset('css/bootstrap.css')); ?>">
+    <link rel="stylesheet" href="<?php echo e(asset('css/neon-core.css')); ?>">
+    <link rel="stylesheet" href="<?php echo e(asset('css/neon-theme.css')); ?>">
+    <link rel="stylesheet" href="<?php echo e(asset('css/neon-forms.css')); ?>">
+    <link rel="stylesheet" href="<?php echo e(asset('css/custom.css')); ?>">
+    <link rel="stylesheet" href="<?php echo e(asset('js/jvectormap/jquery-jvectormap-1.2.2.css')); ?>">
+    <link rel="stylesheet" href="<?php echo e(asset('js/rickshaw/rickshaw.min.css')); ?>">
     
     <!-- Flatpickr CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -209,8 +209,8 @@
 </style>
 
     <!-- Core Scripts (load jQuery first; app.js moved to bottom) -->
-    <script src="{{ asset('js/jquery-1.11.3.min.js') }}"></script>
-    <script src="{{ asset('js/notifications.js') }}"></script>
+    <script src="<?php echo e(asset('js/jquery-1.11.3.min.js')); ?>"></script>
+    <script src="<?php echo e(asset('js/notifications.js')); ?>"></script>
     
     <script>
         // Add CSRF token to all AJAX requests
@@ -221,45 +221,45 @@
         });
         
         // Make CSRF token available to JavaScript
-        window.Laravel = {!! json_encode([
+        window.Laravel = <?php echo json_encode([
             'csrfToken' => csrf_token(),
-        ]) !!};
+        ]); ?>;
     </script>
 
-    @stack('styles')
+    <?php echo $__env->yieldPushContent('styles'); ?>
 </head>
 <body class="page-body page-left-in" data-url="http://neon.dev">
 
 <div class="page-container">
-    @include('admin.partials.sidebar')
+    <?php echo $__env->make('admin.partials.sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <div class="main-content">
-        @include('admin.partials.topbar')
+        <?php echo $__env->make('admin.partials.topbar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
         <hr />
 
-        @yield('content')
+        <?php echo $__env->yieldContent('content'); ?>
     </div>
 </div>
 
 <!-- Scripts -->
-<script src="{{ asset('js/gsap/TweenMax.min.js') }}"></script>
-<script src="{{ asset('js/jquery-ui/js/jquery-ui-1.10.3.minimal.min.js') }}"></script>
-<script src="{{ asset('js/bootstrap.min.js') }}"></script>
-<script src="{{ asset('js/joinable.js') }}"></script>
-<script src="{{ asset('js/resizeable.js') }}"></script>
-<script src="{{ asset('js/neon-api.js') }}"></script>
-<script src="{{ asset('js/jvectormap/jquery-jvectormap-1.2.2.min.js') }}"></script>
-<script src="{{ asset('js/jvectormap/jquery-jvectormap-europe-merc-en.js') }}"></script>
-<script src="{{ asset('js/jquery.sparkline.min.js') }}"></script>
-<script src="{{ asset('js/rickshaw/vendor/d3.v3.js') }}"></script>
-<script src="{{ asset('js/rickshaw/rickshaw.min.js') }}"></script>
-<script src="{{ asset('js/neon-chat.js') }}"></script>
-<script src="{{ asset('js/neon-custom.js') }}"></script>
-<script src="{{ asset('js/neon-demo.js') }}"></script>
+<script src="<?php echo e(asset('js/gsap/TweenMax.min.js')); ?>"></script>
+<script src="<?php echo e(asset('js/jquery-ui/js/jquery-ui-1.10.3.minimal.min.js')); ?>"></script>
+<script src="<?php echo e(asset('js/bootstrap.min.js')); ?>"></script>
+<script src="<?php echo e(asset('js/joinable.js')); ?>"></script>
+<script src="<?php echo e(asset('js/resizeable.js')); ?>"></script>
+<script src="<?php echo e(asset('js/neon-api.js')); ?>"></script>
+<script src="<?php echo e(asset('js/jvectormap/jquery-jvectormap-1.2.2.min.js')); ?>"></script>
+<script src="<?php echo e(asset('js/jvectormap/jquery-jvectormap-europe-merc-en.js')); ?>"></script>
+<script src="<?php echo e(asset('js/jquery.sparkline.min.js')); ?>"></script>
+<script src="<?php echo e(asset('js/rickshaw/vendor/d3.v3.js')); ?>"></script>
+<script src="<?php echo e(asset('js/rickshaw/rickshaw.min.js')); ?>"></script>
+<script src="<?php echo e(asset('js/neon-chat.js')); ?>"></script>
+<script src="<?php echo e(asset('js/neon-custom.js')); ?>"></script>
+<script src="<?php echo e(asset('js/neon-demo.js')); ?>"></script>
 <!-- Load compiled app scripts after jQuery and Bootstrap to avoid plugin conflicts -->
-<script src="{{ mix('js/app.js') }}"></script>
-<script src="{{ asset('js/admin-messages.js') }}"></script>
+<script src="<?php echo e(mix('js/app.js')); ?>"></script>
+<script src="<?php echo e(asset('js/admin-messages.js')); ?>"></script>
 
 <!-- Flatpickr JS -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -317,7 +317,7 @@ $(document).ready(function() {
 });
 </script>
 
-@stack('scripts')
+<?php echo $__env->yieldPushContent('scripts'); ?>
 
 </body>
-</html> 
+</html> <?php /**PATH /opt/lampp/htdocs/cleaning_service_management_system/resources/views/layouts/admin.blade.php ENDPATH**/ ?>

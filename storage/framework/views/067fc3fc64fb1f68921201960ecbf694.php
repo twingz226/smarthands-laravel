@@ -1,20 +1,19 @@
-@extends('layouts.admin')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="container-fluid">
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 class="h2">Job Tracking & Assignments</h1>
         <div class="btn-toolbar mb-2 mb-md-0"></div>
     </div>
 
-    @if(session('success'))
+    <?php if(session('success')): ?>
         <div class="alert alert-success alert-dismissible fade in">
-            {{ session('success') }}
+            <?php echo e(session('success')); ?>
+
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                 <span aria-hidden="true">×</span>
             </button>
         </div>
-    @endif
+    <?php endif; ?>
 
     <div class="card">
         <div class="card-body">
@@ -32,69 +31,70 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($jobs as $job)
+                        <?php $__empty_1 = true; $__currentLoopData = $jobs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $job): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                             <tr>
-                                <td>{{ $job->customer ? $job->customer->name : 'N/A' }}</td>
-                                <td>{{ $job->address }}</td>
-                                <td>{{ $job->service ? $job->service->name : 'N/A' }}</td>
+                                <td><?php echo e($job->customer ? $job->customer->name : 'N/A'); ?></td>
+                                <td><?php echo e($job->address); ?></td>
+                                <td><?php echo e($job->service ? $job->service->name : 'N/A'); ?></td>
                                 <td>
-                                    @if($job->employees->count() > 0)
-                                        @foreach($job->employees as $employee)
-                                            <span class="badge bg-info">{{ $employee->name }}</span>
-                                        @endforeach
-                                    @else
+                                    <?php if($job->employees->count() > 0): ?>
+                                        <?php $__currentLoopData = $job->employees; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $employee): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <span class="badge bg-info"><?php echo e($employee->name); ?></span>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                    <?php else: ?>
                                         <span class="text-warning">Unassigned</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
                                 <td>
-                                    <span class="badge status-badge bg-{{ $job->status === 'pending' ? 'warning' : ($job->status === 'assigned' ? 'primary' : ($job->status === 'in_progress' ? 'info' : ($job->status === 'cancelled' ? 'danger' : 'success'))) }}">
-                                        {{ ucfirst($job->status) }}
+                                    <span class="badge status-badge bg-<?php echo e($job->status === 'pending' ? 'warning' : ($job->status === 'assigned' ? 'primary' : ($job->status === 'in_progress' ? 'info' : ($job->status === 'cancelled' ? 'danger' : 'success')))); ?>">
+                                        <?php echo e(ucfirst($job->status)); ?>
+
                                     </span>
                                 </td>
-                                <td>{{ $job->scheduled_date ? $job->scheduled_date->format('M d, Y h:i A') : 'N/A' }}</td>
+                                <td><?php echo e($job->scheduled_date ? $job->scheduled_date->format('M d, Y h:i A') : 'N/A'); ?></td>
                                 <td>
                                     <div class="d-flex flex-column" style="gap: 5px">
                                         <div class="d-flex" style="gap: 5px">
-                                            <a href="{{ route('jobs.show', $job->id) }}" class="btn btn-info btn-circle" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;" data-toggle="tooltip" title="View Details">
+                                            <a href="<?php echo e(route('jobs.show', $job->id)); ?>" class="btn btn-info btn-circle" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;" data-toggle="tooltip" title="View Details">
                                                 <i class="entypo-eye" style="font-size: 16px; line-height: 1;"></i>
                                             </a>
-                                            @if($job->status === 'pending')
-                                                <button type="button" class="btn btn-primary btn-circle" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;" data-toggle="modal" data-target="#assignModal{{ $job->id }}" title="Assign Cleaners">
+                                            <?php if($job->status === 'pending'): ?>
+                                                <button type="button" class="btn btn-primary btn-circle" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;" data-toggle="modal" data-target="#assignModal<?php echo e($job->id); ?>" title="Assign Cleaners">
                                                     <i class="entypo-user-add" style="font-size: 16px; line-height: 1;"></i>
                                                 </button>
-                                            @elseif(in_array($job->status, ['assigned', 'in_progress']))
-                                                <form action="{{ route('jobs.update-status', $job) }}" method="POST" style="display: inline-block;" id="statusForm{{ $job->id }}">
-                                                    @csrf @method('PUT')
-                                                    <input type="hidden" name="status" value="{{ $job->status === 'assigned' ? 'in_progress' : 'completed' }}">
-                                                    <button type="submit" class="btn {{ $job->status === 'assigned' ? 'btn-success' : 'btn-primary' }} btn-circle" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;" data-toggle="tooltip" title="{{ $job->status === 'assigned' ? 'Start Job' : 'Mark as Complete' }}">
-                                                        <i class="entypo-{{ $job->status === 'assigned' ? 'play' : 'check' }}" style="font-size: 16px; line-height: 1;"></i>
+                                            <?php elseif(in_array($job->status, ['assigned', 'in_progress'])): ?>
+                                                <form action="<?php echo e(route('jobs.update-status', $job)); ?>" method="POST" style="display: inline-block;" id="statusForm<?php echo e($job->id); ?>">
+                                                    <?php echo csrf_field(); ?> <?php echo method_field('PUT'); ?>
+                                                    <input type="hidden" name="status" value="<?php echo e($job->status === 'assigned' ? 'in_progress' : 'completed'); ?>">
+                                                    <button type="submit" class="btn <?php echo e($job->status === 'assigned' ? 'btn-success' : 'btn-primary'); ?> btn-circle" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;" data-toggle="tooltip" title="<?php echo e($job->status === 'assigned' ? 'Start Job' : 'Mark as Complete'); ?>">
+                                                        <i class="entypo-<?php echo e($job->status === 'assigned' ? 'play' : 'check'); ?>" style="font-size: 16px; line-height: 1;"></i>
                                                     </button>
                                                 </form>
-                                            @else
+                                            <?php else: ?>
                                                 <div style="width: 32px; height: 32px;"></div>
-                                            @endif
+                                            <?php endif; ?>
                                         </div>
-                                        @if($job->status != 'completed' && $job->status != 'cancelled')
+                                        <?php if($job->status != 'completed' && $job->status != 'cancelled'): ?>
                                             <div class="d-flex" style="gap: 5px">
-                                                <a href="{{ route('jobs.reschedule', $job->id) }}" class="btn btn-warning btn-circle" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;" data-toggle="tooltip" title="Reschedule">
+                                                <a href="<?php echo e(route('jobs.reschedule', $job->id)); ?>" class="btn btn-warning btn-circle" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;" data-toggle="tooltip" title="Reschedule">
                                                     <i class="entypo-back-in-time" style="font-size: 16px; line-height: 1;"></i>
                                                 </a>
-                                                <form action="{{ route('jobs.cancel', $job) }}" method="POST" style="display: inline-block;" id="cancelForm{{ $job->id }}">
-                                                    @csrf @method('PATCH')
-                                                    <button type="button" class="btn btn-danger btn-circle cancel-job-btn" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;" data-toggle="tooltip" title="Cancel" data-job-id="{{ $job->id }}" data-form-id="cancelForm{{ $job->id }}">
+                                                <form action="<?php echo e(route('jobs.cancel', $job)); ?>" method="POST" style="display: inline-block;" id="cancelForm<?php echo e($job->id); ?>">
+                                                    <?php echo csrf_field(); ?> <?php echo method_field('PATCH'); ?>
+                                                    <button type="button" class="btn btn-danger btn-circle cancel-job-btn" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;" data-toggle="tooltip" title="Cancel" data-job-id="<?php echo e($job->id); ?>" data-form-id="cancelForm<?php echo e($job->id); ?>">
                                                         <i class="entypo-block" style="font-size: 16px; line-height: 1;"></i>
                                                     </button>
                                                 </form>
                                             </div>
-                                        @endif
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>
-                        @empty
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
                                 <td colspan="8" class="text-center">No jobs found</td>
                             </tr>
-                        @endforelse
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -102,17 +102,18 @@
     </div>
 
     <!-- Assignment Modals -->
-    @foreach($jobs as $job)
-        @if($job->status === 'pending')
-            <div class="modal fade" id="assignModal{{ $job->id }}" tabindex="-1" role="dialog" aria-labelledby="assignModalLabel{{ $job->id }}" aria-hidden="true">
+    <?php $__currentLoopData = $jobs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $job): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <?php if($job->status === 'pending'): ?>
+            <div class="modal fade" id="assignModal<?php echo e($job->id); ?>" tabindex="-1" role="dialog" aria-labelledby="assignModalLabel<?php echo e($job->id); ?>" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
-                        <form action="{{ route('jobs.assign', $job) }}" method="POST" id="assignForm{{ $job->id }}">
-                            @csrf
-                            <input type="hidden" name="job_id" value="{{ $job->id }}">
+                        <form action="<?php echo e(route('jobs.assign', $job)); ?>" method="POST" id="assignForm<?php echo e($job->id); ?>">
+                            <?php echo csrf_field(); ?>
+                            <input type="hidden" name="job_id" value="<?php echo e($job->id); ?>">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="assignModalLabel{{ $job->id }}">
-                                    <i class="entypo-users"></i> Assign Cleaners to Job #{{ $job->id }}
+                                <h5 class="modal-title" id="assignModalLabel<?php echo e($job->id); ?>">
+                                    <i class="entypo-users"></i> Assign Cleaners to Job #<?php echo e($job->id); ?>
+
                                 </h5>
                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
@@ -124,24 +125,25 @@
                                         <i class="entypo-user"></i> Select Cleaners
                                     </label>
                                     <div class="cleaner-list" style="max-height: 300px; overflow-y: auto;">
-                                        @foreach($availableEmployees ?? [] as $employee)
+                                        <?php $__currentLoopData = $availableEmployees ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $employee): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                             <div class="form-check mb-2">
                                                 <input type="checkbox" 
                                                     class="form-check-input cleaner-checkbox" 
                                                     name="employee_ids[]" 
-                                                    value="{{ $employee->id ?? '' }}"
-                                                    id="employee{{ $job->id ?? '' }}_{{ $employee->id ?? '' }}"
-                                                    data-form-id="assignForm{{ $job->id }}">
-                                                <label class="form-check-label" for="employee{{ $job->id ?? '' }}_{{ $employee->id ?? '' }}">
-                                                    {{ $employee ? $employee->name : 'N/A' }} - {{ $employee ? $employee->phone : 'N/A' }}
+                                                    value="<?php echo e($employee->id ?? ''); ?>"
+                                                    id="employee<?php echo e($job->id ?? ''); ?>_<?php echo e($employee->id ?? ''); ?>"
+                                                    data-form-id="assignForm<?php echo e($job->id); ?>">
+                                                <label class="form-check-label" for="employee<?php echo e($job->id ?? ''); ?>_<?php echo e($employee->id ?? ''); ?>">
+                                                    <?php echo e($employee ? $employee->name : 'N/A'); ?> - <?php echo e($employee ? $employee->phone : 'N/A'); ?>
+
                                                 </label>
                                             </div>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </div>
                                     <div class="form-text text-muted mt-2">
                                         <i class="entypo-info-circled"></i> Check the boxes to select multiple cleaners
                                     </div>
-                                    <div class="alert alert-danger mt-2" id="assignError{{ $job->id }}" style="display: none;">
+                                    <div class="alert alert-danger mt-2" id="assignError<?php echo e($job->id); ?>" style="display: none;">
                                         Please select at least one cleaner.
                                     </div>
                                 </div>
@@ -150,7 +152,7 @@
                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">
                                     <i class="entypo-cancel"></i> Cancel
                                 </button>
-                                <button type="submit" class="btn btn-primary" id="assignSubmitBtn{{ $job->id }}">
+                                <button type="submit" class="btn btn-primary" id="assignSubmitBtn<?php echo e($job->id); ?>">
                                     <i class="entypo-check"></i> Assign Cleaners
                                 </button>
                             </div>
@@ -158,12 +160,12 @@
                     </div>
                 </div>
             </div>
-        @endif
-    @endforeach
+        <?php endif; ?>
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script>
 $(document).ready(function() {
     console.log('Document ready - initializing cancel job functionality');
@@ -227,4 +229,6 @@ $(document).ready(function() {
         </div>
     </div>
 </div>
-@endpush
+<?php $__env->stopPush(); ?>
+
+<?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /opt/lampp/htdocs/cleaning_service_management_system/resources/views/admin/jobs/tracking.blade.php ENDPATH**/ ?>

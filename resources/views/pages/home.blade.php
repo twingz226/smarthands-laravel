@@ -18,6 +18,9 @@
     body {
       font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     }
+    #totalInitialPriceAlert {
+      display: none !important;
+    }
     .modal-title, h1, h2, h3, h4, h5, h6 {
       font-weight: 600;
     }
@@ -186,27 +189,34 @@
 
     /* Detailed Services Section Styles */
     #detailed-services .desktop-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
       gap: 30px;
       margin-bottom: 30px;
     }
 
     #detailed-services .card {
       border: none;
-      border-radius: 10px;
-      background-color: rgba(254, 254, 254, 0.95);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+      border-radius: 8px;
+      background-color: #f8f9fa;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
       padding: 25px;
       transition: all 0.3s ease;
       position: relative;
-      overflow: hidden;
+      overflow: visible;
       z-index: 1;
+      width: 100%;
+      max-width: 400px;
+      min-width: 250px;
+      min-height: 250px;
+      display: flex;
+      flex-direction: column;
     }
 
     #detailed-services .card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 15px 25px rgba(0, 0, 0, 0.1);
+      transform: translateY(-10px);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
     }
 
     #detailed-services .card h4 {
@@ -234,11 +244,15 @@
       background-color: rgba(255, 255, 255, 0.85);
       padding: 15px;
       border-radius: 8px;
+      margin: 0;
+      flex-grow: 1;
+      overflow-y: auto;
     }
 
     #detailed-services .card ul li {
       position: relative;
       z-index: 2;
+      margin-bottom: 8px;
       text-shadow: 0 0 1px rgba(255, 255, 255, 0.9);
       margin-bottom: 8px;
     }
@@ -266,6 +280,7 @@
     }
   </style>
 
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
   <!-- Navbar -->
@@ -370,7 +385,7 @@
 
     <!-- Services Section -->
     <section id="services" class="services-section">
-      <h2 class="services-tagline">Book Your Service <i class="bi bi-arrow-down d-block mt-2"></i></h2>
+      <h2 class="services-tagline">Book Our Service <i class="bi bi-arrow-down d-block mt-2"></i></h2>
 
       <div class="services-grid">
         @if($servicesMedia->isNotEmpty())
@@ -494,7 +509,7 @@
       <!-- Desktop cards -->
       <div class="desktop-cards">
         @forelse($services as $service)
-          <div class="card">
+            <div class="card" style="background-color: #cbf3f0;">
             <h4>{{ $service->name }}</h4>
             <ul class="list-unstyled">
               <li>
@@ -619,7 +634,7 @@
                 </div>
                 <div class="rating-value">{{ number_format($serviceRating['average_rating'], 1) }} / 5</div>
                 <div class="service-name">{{ $serviceRating['service_name'] }}</div>
-                <div class="text-muted mb-2" style="font-size: 0.9rem;">
+                <div class="text-muted mb-2" style="font-size: 0.9rem; display: none;">
                   <small>{{ $serviceRating['customer_name'] }}’s average across {{ $serviceRating['rating_count'] }} rating{{ $serviceRating['rating_count'] > 1 ? 's' : '' }}</small>
                 </div>
                 <div class="rating-comment">
@@ -633,7 +648,7 @@
                     Professional cleaning service with excellent customer satisfaction.
                   @endif
                 </div>
-                <div class="rating-footer">
+                <div class="rating-footer" style="display: none;">
                   <div class="customer-names">
                     <small>Rated by: {{ $serviceRating['customer_name'] }}</small>
                   </div>
@@ -658,13 +673,13 @@
         <h2 class="section-title">About Smarthands</h2>
         <div class="row justify-content-center">
           <div class="col-lg-8">
-            <div class="info-card mb-4">
+            <div class="info-card mb-4" style="background-color: #cbf3f0;">
               <div class="about-content">
                 {{ $contactInfo->about_content ?? 'Welcome to Smarthands Cleaning Services, your trusted partner in professional cleaning solutions.' }}
               </div>
             </div>
 
-            <div class="info-card mb-4">
+            <div class="info-card mb-4" style="background-color: #cbf3f0;">
               <h3 class="mb-4">Our Mission</h3>
               <div class="mission-content">
                 {{ $contactInfo->mission ?? 'At SMARTHANDS, our mission is to bring world-class cleaning standards and on-call service systems inspired by our experience in Middle East  not just in Bacolod City but also in nearby areas within our service coverage.
@@ -675,7 +690,7 @@ We dream of helping build a happy, clean, and growing community.
               </div>
             </div>
 
-            <div class="info-card mb-4">
+            <div class="info-card mb-4" style="background-color: #cbf3f0;">
               <h3 class="mb-4">Our Vision</h3>
               <div class="vision-content">
                 {{ $contactInfo->vision ?? 'Our vision is to be a leading cleaning service in Bacolod and nearby cities  known not only for excellence and trust but also for our heart to uplift others.
@@ -686,7 +701,7 @@ With SmartHands, we don’t just clean spaces and homes — we aim to change liv
               </div>
             </div>
 
-            <div class="info-card">
+            <div class="info-card" style="background-color: #cbf3f0;">
               <h3 class="mb-4">Services We Offer</h3>
               <div class="services-content">
                 {{ $contactInfo->services_offered ?? 'We offer a comprehensive range of cleaning services including residential cleaning, commercial cleaning, deep cleaning, and specialized cleaning solutions.' }}
@@ -701,48 +716,11 @@ With SmartHands, we don’t just clean spaces and homes — we aim to change liv
     <section id="contact" class="contact-section">
       <div class="container">
         <h2 class="section-title">Contact Us</h2>
-        <div class="row justify-content-center align-items-stretch">
-  <!-- Left: Contact Info -->
-  <div class="col-lg-5 d-flex flex-column justify-content-center h-100">
-    <div class="contact-card h-100 d-flex flex-column justify-content-center mb-4 mb-lg-0">
-      <div class="contact-item">
-        <strong>Email:</strong>
-        {{ $contactInfo->email ?? 'smarthandsbcd@gmail.com' }}
-      </div>
-      <div class="contact-item">
-        <strong>Phone:</strong>
-        {{ $contactInfo->phone ?? '0953 957 4130' }}
-      </div>
-      <div class="contact-item">
-        <strong>Address:</strong>
-        {{ $contactInfo->address ?? 'Site 3 Blk 3 Lot 33, Brgy. 13 Villa Victorias, Victorias City, Negros Occidental, Philippines' }}
-      </div>
-      <div class="contact-item">
-        <strong>Service Area:</strong>
-        {{ $contactInfo->service_area ?? 'Bacolod City, Bago City, Binalbagan, Cadiz City, E.B. Magalona, Escalante City, Hinigaran, Manapla, Pontevedra, Pulupandan, Sagay City, San Enrique, Silay City, Talisay City, Valladolid, and Victorias City, Philippines' }}
-      </div>
-      <div class="contact-item">
-        <strong>Business Hours:</strong>
-        {{ $contactInfo->business_hours ?? 'Always open' }}
-      </div>
-      <div class="social-links" style="display: none;">
-        @if($contactInfo && $contactInfo->facebook_url)
-          <a href="{{ $contactInfo->facebook_url }}" target="_blank">Facebook Page</a>
-        @endif
-        @if($contactInfo && $contactInfo->google_business_url)
-          <a href="{{ $contactInfo->google_business_url }}" target="_blank">Google Business</a>
-        @endif
-      </div>
-    </div>
-  </div>
-  <!-- Center: Or Divider -->
-  <div class="col-lg-1 d-flex align-items-center justify-content-center">
-    <div class="or-divider text-center fw-bold" style="font-size: 1.5rem; color: #2c3e50;">Or</div>
-  </div>
+        <div class="row justify-content-center">
   <!-- Right: Message Us Form -->
-  <div class="col-lg-6 d-flex flex-column justify-content-center">
+  <div class="col-lg-8 d-flex flex-column justify-content-center">
     <div class="contact-card h-100 d-flex flex-column justify-content-center">
-      <h4 class="mb-3">Message Us</h4>
+      
       <form method="POST" action="{{ route('contact.message.store') }}" id="messageUsForm">
         @csrf
         <div class="mb-3">
@@ -760,6 +738,12 @@ With SmartHands, we don’t just clean spaces and homes — we aim to change liv
         <div class="mb-3">
           <label for="contact_message" class="form-label">Message *</label>
           <textarea class="form-control" id="contact_message" name="message" rows="4" required></textarea>
+        </div>
+        <div class="mb-3">
+          <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.key') }}"></div>
+          @if($errors->has('g-recaptcha-response'))
+            <div class="text-danger small mt-1">{{ $errors->first('g-recaptcha-response') }}</div>
+          @endif
         </div>
         <button type="submit" class="btn btn-success w-100" id="sendMessageBtn">Send Message</button>
       </form>
@@ -1371,23 +1355,29 @@ With SmartHands, we don’t just clean spaces and homes — we aim to change liv
           })
           .then(data => {
             if (data.success) {
-              // Show success message and redirect after a short delay
+              // Show success message and reset form without page reload
               successMessageContainer.innerHTML = `<div class="alert alert-success mt-3">${data.message}</div>`;
-              setTimeout(() => {
-                window.location.href = window.location.href;
-              }, 1500);
+              messageForm.reset();
+              
+              // Reset reCAPTCHA
+              if (typeof grecaptcha !== 'undefined') {
+                grecaptcha.reset();
+              }
+              
+              // Keep user at current scroll position
+              window.scrollTo({
+                top: window.pageYOffset,
+                behavior: 'instant'
+              });
             } else {
               // Show error message
-              successMessageContainer.innerHTML = `<div class="alert alert-danger mt-3">${data.message || 'An error occurred. Please try again.'}</div>`;
+              successMessageContainer.innerHTML = `<div class="alert alert-danger mt-3">${data.message || 'Please complete the reCAPTCHA verification and try again.'}</div>`;
             }
           })
           .catch(error => {
             console.error('Error:', error);
-            // If AJAX fails, try regular form submission
-            isSubmitting = false;
-            submitButton.disabled = false;
-            submitButton.textContent = originalButtonText;
-            messageForm.submit();
+            // Show error message without page reload
+            successMessageContainer.innerHTML = `<div class="alert alert-danger mt-3">Please complete the reCAPTCHA verification and try again.</div>`;
           })
           .finally(() => {
             isSubmitting = false;
