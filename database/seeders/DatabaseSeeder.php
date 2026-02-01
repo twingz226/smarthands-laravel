@@ -29,7 +29,6 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ServicesTableSeeder::class,
             EmployeeSeeder::class,
-            JobSeeder::class,
             HomeMediaSeeder::class,
             ServiceMediaSeeder::class,
             ContactInfoSeeder::class,
