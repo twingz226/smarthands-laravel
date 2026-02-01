@@ -6,6 +6,34 @@
         <h1 class="h2">Customer Retention Report</h1>
     </div>
 
+    <!-- Filters Section -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label for="start_date" class="form-label">From Date</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" 
+                            value="{{ $request->start_date }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="end_date" class="form-label">To Date</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" 
+                            value="{{ $request->end_date }}">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <a href="{{ request()->url() }}" class="btn btn-danger w-100 text-white">
+                            <i class="fas fa-undo"></i> Reset Filters
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show">
             {{ session('success') }}
@@ -100,28 +128,12 @@
         </div>
     </div>
 
-    <!-- Export Dropdown -->
+    <!-- Export Button -->
     <div class="row mb-3">
         <div class="col-md-12 text-right">
-            <div class="dropdown">
-                <button class="btn btn-lg btn-secondary dropdown-toggle" type="button" id="exportDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <i class="fas fa-download"></i> Export
-                </button>
-                <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="exportDropdown">
-                    <li><a href="#" onclick="window.print(); return false;">
-                        <i class="fas fa-print text-secondary"></i> Print
-                    </a></li>
-                    <li><a href="{{ route('reports.customers.export.retention.pdf') }}">
-                        <i class="fas fa-file-pdf text-danger"></i> PDF
-                    </a></li>
-                    <li><a href="{{ route('reports.customers.export.retention.excel') }}">
-                        <i class="fas fa-file-excel text-success"></i> Excel
-                    </a></li>
-                    <li><a href="{{ route('reports.customers.export.retention.csv') }}">
-                        <i class="fas fa-file-csv text-primary"></i> CSV
-                    </a></li>
-                </ul>
-            </div>
+            <a href="{{ route('reports.customers.export.retention.pdf', request()->query()) }}" class="btn btn-lg btn-secondary">
+                <i class="fas fa-file-pdf"></i> Export PDF
+            </a>
         </div>
     </div>
 
@@ -265,6 +277,14 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit form when date inputs change
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    dateInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            this.closest('form').submit();
+        });
+    });
+
     // Job Count Distribution Chart
     const jobCountCtx = document.getElementById('jobCountChart').getContext('2d');
     const jobCountChart = new Chart(jobCountCtx, {

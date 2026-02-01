@@ -13,6 +13,8 @@
 
     <!-- Core CSS -->
     <link rel="stylesheet" href="<?php echo e(mix('css/app.css')); ?>">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
     <link rel="stylesheet" href="<?php echo e(asset('js/jquery-ui/css/no-theme/jquery-ui-1.10.3.custom.min.css')); ?>">
     <link rel="stylesheet" href="<?php echo e(asset('css/font-icons/entypo/css/entypo.css')); ?>">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Noto+Sans:400,700,400italic">

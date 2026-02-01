@@ -1,11 +1,35 @@
+@php
+use App\Models\Setting;
+$companyLogo = Setting::getValue('company_logo');
+$logoUrl = $companyLogo ? asset('storage/' . $companyLogo) : asset('images/Smarthands.png');
+@endphp
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="description" content="Professional cleaning services in Bacolod. Smarthands Cleaning Services offers reliable, affordable, and thorough cleaning solutions for homes and offices.">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>Smarthands Cleaning Services</title>
-  <link rel="icon" href="{{ asset('images/Smarthands.png') }}" />
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ url()->current() }}">
+  <meta property="og:title" content="Smarthands Cleaning Services | Professional Cleaning in Bacolod">
+  <meta property="og:description" content="Professional cleaning services in Bacolod. Reliable, affordable, and thorough cleaning solutions for your home or office.">
+  <meta property="og:image" content="{{ asset('images/og-image.jpg') }}">
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Smarthands Cleaning Services | Professional Cleaning in Bacolod">
+  <meta name="twitter:description" content="Professional cleaning services in Bacolod. Reliable, affordable, and thorough cleaning solutions for your home or office.">
+  <meta name="twitter:image" content="{{ asset('images/og-image.jpg') }}">
+
+  <!-- Canonical URL -->
+  <link rel="canonical" href="{{ url()->current() }}" />
+  
+  <title>Smarthands Cleaning Services | Professional Cleaning in Bacolod</title>
+  <link rel="icon" href="{{ asset('images/Smarthands.png') }}" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -281,28 +305,100 @@
   </style>
 
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {!! json_encode([
+    '@context' => 'https://schema.org',
+    '@type' => 'LocalBusiness',
+    'name' => 'Smarthands Cleaning Services',
+    'image' => asset('images/Smarthands.png'),
+    '@id' => url('/'),
+    'url' => url('/'),
+    'telephone' => '+639123456789',
+    'priceRange' => '$$',
+    'address' => [
+      '@type' => 'PostalAddress',
+      'streetAddress' => '123 Clean Street',
+      'addressLocality' => 'Bacolod',
+      'addressRegion' => 'Negros Occidental',
+      'postalCode' => '6100',
+      'addressCountry' => 'PH'
+    ],
+    'geo' => [
+      '@type' => 'GeoCoordinates',
+      'latitude' => 10.6716,
+      'longitude' => 122.9569
+    ],
+    'openingHoursSpecification' => [
+      [
+        '@type' => 'OpeningHoursSpecification',
+        'dayOfWeek' => [
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday'
+        ],
+        'opens' => '08:00',
+        'closes' => '18:00'
+      ]
+    ],
+    'sameAs' => [
+      'https://www.facebook.com/smarthandscleaning',
+      'https://www.instagram.com/smarthandscleaning'
+    ]
+  ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+  </script>
 </head>
 <body>
+  <!-- Skip to main content link for screen readers -->
+  <a href="#main-content" class="visually-hidden-focusable position-absolute top-0 start-0 p-2 bg-light text-dark" style="z-index: 9999;">
+    Skip to main content
+  </a>
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-light custom-navbar shadow-sm sticky-top">
     <div class="container">
-      <a class="navbar-brand" href="{{ route('home') }}">
-@php
-    use App\Models\Setting;
-    $companyLogo = Setting::getValue('company_logo');
-@endphp
-        <img src="{{ $companyLogo ? asset('storage/' . $companyLogo) : asset('images/Smarthands.png') }}" alt="Logo" onerror="this.src='https://via.placeholder.com/100'">
+      <a class="navbar-brand" href="{{ route('home') }}" aria-label="Smarthands Cleaning Services Home">
+        <img src="{{ $logoUrl }}" 
+             alt="Smarthands Cleaning Services Logo" 
+             width="200" 
+             height="60"
+             loading="lazy"
+             onerror="this.src='https://via.placeholder.com/200x60?text=Smarthands'"
+             class="img-fluid">
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="#hero">Home</a></li>
-          <li class="nav-item"><a class="nav-link" href="#detailed-services">Services</a></li>
-          <li class="nav-item"><a class="nav-link" href="#ratings">Ratings</a></li>
-          <li class="nav-item"><a class="nav-link" href="#about">About Us</a></li>
-          <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+          <li class="nav-item">
+            <a class="nav-link" href="#hero" aria-current="page">
+              <i class="bi bi-house-door d-lg-none me-2" aria-hidden="true"></i>Home
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#detailed-services">
+              <i class="bi bi-list-check d-lg-none me-2" aria-hidden="true"></i>Services
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#ratings">
+              <i class="bi bi-star-fill d-lg-none me-2" aria-hidden="true"></i>Ratings
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#about">
+              <i class="bi bi-info-circle d-lg-none me-2" aria-hidden="true"></i>About Us
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#contact">
+              <i class="bi bi-envelope d-lg-none me-2" aria-hidden="true"></i>Contact
+            </a>
+          </li>
           @if(Auth::check())
             <li class="nav-item">
   <a class="nav-link d-flex align-items-center" href="#" data-bs-toggle="modal" data-bs-target="#myBookingsModal" title="View and manage your bookings" aria-label="My Bookings">
@@ -338,7 +434,7 @@
     </div>
   </nav>
 
-  <main>
+  <main id="main-content" tabindex="-1">
     <!-- Success Message -->
     @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -356,21 +452,33 @@
     @endif
 
     <!-- Hero Section -->
-    <section id="hero" class="hero-section">
+    <section id="hero" class="hero-section" role="banner" aria-label="Main banner">
       <div class="hero-content">
-        <h1 class="main-headline">Smarthands Cleaning Services</h1>
-        <p class="tagline">Where Simplicity Meets Spotless Results</p>
+        <h1 class="main-heading display-4 fw-bold mb-3">Smarthands Cleaning Services</h1>
+        <p class="tagline lead">Where Simplicity Meets Spotless Results</p>
       </div>
       @if(isset($heroMedia) && $heroMedia)
         @if($heroMedia->media_type === 'video')
-          <video class="hero-video" autoplay loop playsinline muted @if($heroMedia->poster_url) poster="{{ $heroMedia->poster_url }}" @endif>
+          <video class="hero-video" autoplay loop playsinline muted 
+                 @if($heroMedia->poster_url) poster="{{ $heroMedia->poster_url }}" @endif
+                 aria-label="Professional cleaning service in action"
+                 width="1920" 
+                 height="1080">
             <source src="{{ $heroMedia->media_url }}" type="video/mp4">
             Your browser does not support the video tag.
           </video>
         @elseif($heroMedia->media_type === 'image')
-          <img class="hero-image" src="{{ $heroMedia->media_url }}" alt="Hero Image">
+          <img class="hero-image img-fluid" 
+               src="{{ $heroMedia->media_url }}" 
+               alt="Professional cleaning service in Bacolod"
+               width="1920"
+               height="1080"
+               loading="eager">
         @else
-          <video class="hero-video" autoplay loop playsinline muted>
+          <video class="hero-video" autoplay loop playsinline muted
+                 aria-label="Default cleaning service video"
+                 width="1920" 
+                 height="1080">
             <source src="{{ asset('clean.mp4') }}" type="video/mp4">
             Your browser does not support the video tag.
           </video>
@@ -391,7 +499,12 @@
         @if($servicesMedia->isNotEmpty())
           @foreach($servicesMedia as $service)
             <div class="service-box">
-              <img src="{{ $service->media_url }}" alt="{{ $service->title }}">
+              <img src="{{ $service->media_url }}" 
+                   alt="{{ $service->title }} service"
+                   class="img-fluid"
+                   width="400"
+                   height="300"
+                   loading="lazy">
               <div class="service-content">
                 <h3 class="service-title">{{ $service->title }}</h3>
                 <p class="service-description">{{ $service->description }}</p>
@@ -796,7 +909,7 @@ With SmartHands, we don’t just clean spaces and homes — we aim to change liv
               </div>
               <div class="mb-3">
                 <label for="name" class="form-label">Name: *</label>
-                <input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}" required>
+                <input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror" value="@auth{{ Auth::user()->name }}@else{{ old('name') }}@endauth" @auth readonly @endauth required>
                 @error('name')
                   <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -956,21 +1069,19 @@ With SmartHands, we don’t just clean spaces and homes — we aim to change liv
                   <li>The manager will contact you regarding the payment</li>
                 </ul>
               </div>
+              <div class="alert mb-3" role="alert" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; padding: 16px 20px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+                <i class="bi bi-info-circle me-2" style="color: white;"></i>
+                Your booking will be confirmed after an ocular visit by our team to ensure accurate service and pricing.
+              </div>
               <div class="d-flex justify-content-center gap-3">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="width: 150px;"><i class="bi bi-x-circle me-2"></i>Cancel</button>
-                <button type="submit" class="btn btn-success" style="width: 200px;"><strong>Confirm Booking</strong></button>
+                <button type="submit" class="btn btn-success" style="width: 200px;"><strong>Reserve Booking</strong></button>
               </div>
             </div>
           </form>
         </div>
       </div>
     </div>
-    @endauth
-    @auth
-    @php
-        $user = Auth::user();
-    @endphp
-    
     @endauth
     <!-- Add Validation Error Modal -->
     <div class="modal fade" id="validationErrorModal" tabindex="-1" aria-hidden="true">

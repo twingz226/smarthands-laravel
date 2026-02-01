@@ -63,13 +63,18 @@
                                                     <i class="entypo-user-add" style="font-size: 16px; line-height: 1;"></i>
                                                 </button>
                                             <?php elseif(in_array($job->status, ['assigned', 'in_progress'])): ?>
-                                                <form action="<?php echo e(route('jobs.update-status', $job)); ?>" method="POST" style="display: inline-block;" id="statusForm<?php echo e($job->id); ?>">
-                                                    <?php echo csrf_field(); ?> <?php echo method_field('PUT'); ?>
-                                                    <input type="hidden" name="status" value="<?php echo e($job->status === 'assigned' ? 'in_progress' : 'completed'); ?>">
-                                                    <button type="submit" class="btn <?php echo e($job->status === 'assigned' ? 'btn-success' : 'btn-primary'); ?> btn-circle" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;" data-toggle="tooltip" title="<?php echo e($job->status === 'assigned' ? 'Start Job' : 'Mark as Complete'); ?>">
-                                                        <i class="entypo-<?php echo e($job->status === 'assigned' ? 'play' : 'check'); ?>" style="font-size: 16px; line-height: 1;"></i>
+                                                <div class="d-flex" style="gap: 5px">
+                                                    <form action="<?php echo e(route('jobs.update-status', $job)); ?>" method="POST" style="display: inline-block;" id="statusForm<?php echo e($job->id); ?>">
+                                                        <?php echo csrf_field(); ?> <?php echo method_field('PUT'); ?>
+                                                        <input type="hidden" name="status" value="<?php echo e($job->status === 'assigned' ? 'in_progress' : 'completed'); ?>">
+                                                        <button type="submit" class="btn <?php echo e($job->status === 'assigned' ? 'btn-success' : 'btn-primary'); ?> btn-circle" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;" data-toggle="tooltip" title="<?php echo e($job->status === 'assigned' ? 'Start Job' : 'Mark as Complete'); ?>">
+                                                            <i class="entypo-<?php echo e($job->status === 'assigned' ? 'play' : 'check'); ?>" style="font-size: 16px; line-height: 1;"></i>
+                                                        </button>
+                                                    </form>
+                                                    <button type="button" class="btn btn-warning btn-circle update-assignment-btn" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;" data-toggle="tooltip" title="Update Assignment" data-job-id="<?php echo e($job->id); ?>" data-employee-ids="<?php echo e($job->employees->pluck('id')->implode(',')); ?>">
+                                                        <i class="entypo-pencil" style="font-size: 16px; line-height: 1;"></i>
                                                     </button>
-                                                </form>
+                                                </div>
                                             <?php else: ?>
                                                 <div style="width: 32px; height: 32px;"></div>
                                             <?php endif; ?>
@@ -125,7 +130,7 @@
                                         <i class="entypo-user"></i> Select Cleaners
                                     </label>
                                     <div class="cleaner-list" style="max-height: 300px; overflow-y: auto;">
-                                        <?php $__currentLoopData = $availableEmployees ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $employee): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php $__currentLoopData = $availableEmployeesByJob[$job->id] ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $employee): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                             <div class="form-check mb-2">
                                                 <input type="checkbox" 
                                                     class="form-check-input cleaner-checkbox" 
@@ -162,13 +167,129 @@
             </div>
         <?php endif; ?>
     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+
+    <!-- Update Assignment Modals -->
+    <?php $__currentLoopData = $jobs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $job): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <?php if(in_array($job->status, ['assigned', 'in_progress'])): ?>
+            <div class="modal fade" id="updateAssignmentModal<?php echo e($job->id); ?>" tabindex="-1" role="dialog" aria-labelledby="updateAssignmentModalLabel<?php echo e($job->id); ?>" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form action="<?php echo e(route('jobs.reassign', $job)); ?>" method="POST" id="updateAssignmentForm<?php echo e($job->id); ?>">
+                            <?php echo csrf_field(); ?>
+                            <?php echo method_field('PUT'); ?>
+                            <input type="hidden" name="job_id" value="<?php echo e($job->id); ?>">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="updateAssignmentModalLabel<?php echo e($job->id); ?>">
+                                    <i class="entypo-pencil"></i> Update Assignment for Job #<?php echo e($job->id); ?>
+
+                                </h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">
+                                        <i class="entypo-users"></i> Assigned Cleaners
+                                    </label>
+                                    <div class="cleaner-list" style="max-height: 300px; overflow-y: auto;">
+                                        <?php
+                                            $assignedEmployeeIds = $job->employees->pluck('id')->toArray();
+                                            $availableEmployees = $allEmployees->whereNotIn('id', $assignedEmployeeIds);
+                                        ?>
+                                        
+                                        <?php $__currentLoopData = $allEmployees; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $employee): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <div class="form-check mb-2">
+                                                <input type="checkbox" 
+                                                    class="form-check-input cleaner-checkbox" 
+                                                    name="employee_ids[]" 
+                                                    value="<?php echo e($employee->id); ?>"
+                                                    id="update_employee<?php echo e($job->id); ?>_<?php echo e($employee->id); ?>"
+                                                    <?php echo e(in_array($employee->id, $assignedEmployeeIds) ? 'checked' : ''); ?>
+
+                                                    data-form-id="updateAssignmentForm<?php echo e($job->id); ?>">
+                                                <label class="form-check-label" for="update_employee<?php echo e($job->id); ?>_<?php echo e($employee->id); ?>">
+                                                    <?php echo e($employee->name); ?> - <?php echo e($employee->phone); ?>
+
+                                                    <?php if(in_array($employee->id, $assignedEmployeeIds)): ?>
+                                                        <span class="badge bg-info">Currently Assigned</span>
+                                                    <?php endif; ?>
+                                                </label>
+                                            </div>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                    </div>
+                                    <div class="form-text text-muted mt-2">
+                                        <i class="entypo-info-circled"></i> Check or uncheck boxes to update assigned cleaners
+                                    </div>
+                                    <div class="alert alert-danger mt-2" id="updateError<?php echo e($job->id); ?>" style="display: none;">
+                                        Please select at least one cleaner.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                    <i class="entypo-cancel"></i> Cancel
+                                </button>
+                                <button type="submit" class="btn btn-primary" id="updateSubmitBtn<?php echo e($job->id); ?>">
+                                    <i class="entypo-check"></i> Update Assignment
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 </div>
+
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startPush('scripts'); ?>
 <script>
 $(document).ready(function() {
-    console.log('Document ready - initializing cancel job functionality');
+    console.log('Document ready - initializing job tracking functionality');
+    
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+    
+    // Handle update assignment button click
+    $(document).on('click', '.update-assignment-btn', function(e) {
+        e.preventDefault();
+        var jobId = $(this).data('job-id');
+        console.log('Opening update assignment modal for job:', jobId);
+        var $modal = $('#updateAssignmentModal' + jobId);
+        
+        // Initialize modal if not already initialized
+        if ($modal.length) {
+            $modal.modal('show');
+        } else {
+            console.error('Modal not found for job ID:', jobId);
+        }
+    });
+
+    // Form validation for update assignment
+    $(document).on('submit', 'form[id^="updateAssignmentForm"]', function(e) {
+        var formId = $(this).attr('id');
+        var jobId = formId.replace('updateAssignmentForm', '');
+        var checkedBoxes = $('#' + formId + ' input[type="checkbox"]:checked');
+        
+        if (checkedBoxes.length === 0) {
+            e.preventDefault();
+            $('#updateError' + jobId).show();
+            return false;
+        }
+        
+        // Show loading state
+        $('#updateSubmitBtn' + jobId).prop('disabled', true).html('<i class="entypo-hourglass"></i> Updating...');
+    });
+
+    // Reset error message when modal is hidden
+    $(document).on('hidden.bs.modal', '.modal', function() {
+        $(this).find('.alert-danger').hide();
+        $(this).find('button[type="submit"]').prop('disabled', false).html('<i class="entypo-check"></i> Update Assignment');
+    });
+    
+    // Cancel job functionality
 
     var cancelTargetForm = null;
     var $modal = $('#cancelJobModal');

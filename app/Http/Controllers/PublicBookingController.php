@@ -86,10 +86,13 @@ class PublicBookingController extends Controller
                 return response()->json(['success' => false, 'errors' => ['cleaning_date' => 'Daily booking limit reached for this date.']], 422);
             }
 
-            // Check hourly booking limit
-            if (!Booking::hasAvailableHourlySlot($cleaningDateTimeUTC, $validated['service_id'])) {
-                Log::warning('Hourly booking limit reached for ' . $cleaningDateTimeUTC->toDateTimeString());
-                return response()->json(['success' => false, 'errors' => ['cleaning_time' => 'Hourly booking limit reached for this time slot.']], 422);
+            // Check cleaner availability for the selected time slot
+            $availableSlots = Booking::getAvailableSlotsWithCleanerCount($cleaningDateTimeUTC->toDateString());
+            $timeSlot = $cleaningDateTimeUTC->format('H:i');
+            
+            if (isset($availableSlots[$timeSlot]) && !$availableSlots[$timeSlot]['available']) {
+                Log::warning('Insufficient cleaners available for ' . $timeSlot . ' on ' . $cleaningDateTimeUTC->toDateString());
+                return response()->json(['success' => false, 'errors' => ['cleaning_time' => 'Insufficient cleaners available for this time slot.']], 422);
             }
 
             Log::debug('Validated booking data:', $validated);
@@ -202,7 +205,8 @@ class PublicBookingController extends Controller
             'check_daily_limit' => 'boolean' // New parameter
         ]);
 
-        $cleaningDateTime = Carbon::parse($validated['cleaning_date'] . ' ' . ($validated['cleaning_time'] ?? '00:00'));
+        $cleaningDateTime = Carbon::parse($validated['cleaning_date'] . ' ' . ($validated['cleaning_time'] ?? '00:00'), config('app.timezone'));
+        $cleaningDateTimeUTC = $cleaningDateTime->copy()->setTimezone('UTC');
 
         // If check_daily_limit is true, only check daily slots
         if ($request->input('check_daily_limit')) {
@@ -217,10 +221,68 @@ class PublicBookingController extends Controller
             return response()->json(['available' => false, 'message' => 'Daily booking limit reached for this date.']);
         }
 
-        if (!Booking::hasAvailableHourlySlot($cleaningDateTime, $validated['service_id'])) {
+        if (!Booking::hasAvailableHourlySlot($cleaningDateTimeUTC, $validated['service_id'])) {
             return response()->json(['available' => false, 'message' => 'Hourly booking limit reached for this time slot.']);
         }
 
         return response()->json(['available' => true, 'message' => 'Date and time available!']);
+    }
+
+    /**
+     * Check real-time availability for a specific time slot
+     */
+    public function checkTimeSlotAvailability(Request $request)
+    {
+        $validated = $request->validate([
+            'cleaning_date' => 'required|date',
+            'cleaning_time' => 'required|date_format:H:i',
+            'service_id' => 'required|exists:services,id'
+        ]);
+
+        // Get detailed cleaner availability information
+        $availableSlots = Booking::getAvailableSlotsWithCleanerCount($validated['cleaning_date']);
+        $timeSlot = $validated['cleaning_time'];
+        
+        if (isset($availableSlots[$timeSlot])) {
+            $slotInfo = $availableSlots[$timeSlot];
+            if (!$slotInfo['available']) {
+                $message = 'Time slot unavailable.';
+                $reason = 'unavailable';
+                
+                // Provide specific messages based on the reason
+                switch ($slotInfo['reason']) {
+                    case 'temporary_booking':
+                        $message = 'Time slot temporarily unavailable - waiting for cleaner assignment.';
+                        $reason = 'temporary_booking';
+                        break;
+                    case 'insufficient_assignments':
+                        $message = 'Time slot unavailable - more bookings than cleaner assignments.';
+                        $reason = 'insufficient_assignments';
+                        break;
+                    case 'insufficient_cleaners':
+                        $message = 'Time slot unavailable - insufficient cleaners available.';
+                        $reason = 'insufficient_cleaners';
+                        break;
+                    default:
+                        $message = 'Time slot unavailable.';
+                        $reason = 'unavailable';
+                }
+                
+                return response()->json([
+                    'available' => false,
+                    'message' => $message,
+                    'reason' => $reason,
+                    'available_cleaners' => $slotInfo['available_cleaners'],
+                    'assigned_cleaners' => $slotInfo['assigned_cleaners'] ?? 0,
+                    'booking_count' => $slotInfo['booking_count'] ?? 0
+                ]);
+            }
+        }
+
+        return response()->json([
+            'available' => true,
+            'message' => 'Time slot available!',
+            'reason' => 'available'
+        ]);
     }
 }

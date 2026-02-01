@@ -89,7 +89,10 @@
                     <li class="<?php echo e(in_array($currentRoute, ['jobs.tracking', 'jobs.show', 'jobs.assign', 'jobs.complete', 'jobs.update-status', 'jobs.reassign']) ? 'active' : ''); ?>">
                         <a href="<?php echo e(route('jobs.tracking')); ?>"><span class="title">Job Tracking</span></a>
                     </li>
-                    <li class="<?php echo e(Str::startsWith($currentRoute, 'checklists.') ? 'active' : ''); ?>">
+                    <li class="<?php echo e($currentRoute == 'jobs.daily_schedule' ? 'active' : ''); ?>">
+                        <a href="<?php echo e(route('jobs.daily_schedule')); ?>"><span class="title">Daily Schedule</span></a>
+                    </li>
+                    <li class="<?php echo e(Str::startsWith($currentRoute, 'checklists.') ? 'active' : ''); ?>" style="display: none;">
                         <a href="<?php echo e(route('checklists.index')); ?>"><span class="title">Checklists</span></a>
                     </li>
                 </ul>

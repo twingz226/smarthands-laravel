@@ -13,6 +13,11 @@ use App\Mail\CleanerAssigned;
 use App\Mail\JobStarted;
 use App\Mail\BookingStatusUpdate;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class JobController extends Controller
 {
@@ -30,7 +35,12 @@ class JobController extends Controller
     {
         $job->load(['customer', 'service', 'employees']);
         
-        $availableEmployees = Employee::get();
+        // Get available employees for the job's scheduled date
+        if ($job->scheduled_date) {
+            $availableEmployees = Employee::availableAt($job->scheduled_date)->get();
+        } else {
+            $availableEmployees = Employee::currentlyAvailable()->get();
+        }
         
         return view('admin.jobs.show', compact('job', 'availableEmployees'));
     }
@@ -57,6 +67,14 @@ class JobController extends Controller
                     return [$id => ['assigned_at' => $now]];
                 })
             );
+
+            // Mark employees as unavailable for the job duration
+            foreach ($request->employee_ids as $employeeId) {
+                $employee = Employee::find($employeeId);
+                if ($employee) {
+                    $employee->markUnavailableForJob($job);
+                }
+            }
 
             // Update job status
             $job->update([
@@ -129,12 +147,31 @@ class JobController extends Controller
             
             $now = now();
             
+            // Get old employee IDs before reassigning
+            $oldEmployeeIds = $job->employees()->pluck('employee_id')->toArray();
+            
+            // Clear availability for old employees
+            foreach ($oldEmployeeIds as $employeeId) {
+                $employee = Employee::find($employeeId);
+                if ($employee) {
+                    $employee->clearAvailabilityForJob($job);
+                }
+            }
+            
             // Sync the new employees with the job
             $job->employees()->sync(
                 collect($request->employee_ids)->mapWithKeys(function ($id) use ($now) {
                     return [$id => ['assigned_at' => $now]];
                 })
             );
+
+            // Mark new employees as unavailable for the job duration
+            foreach ($request->employee_ids as $employeeId) {
+                $employee = Employee::find($employeeId);
+                if ($employee) {
+                    $employee->markUnavailableForJob($job);
+                }
+            }
             
             $job->update([
                 'reassigned_at' => $now,
@@ -190,6 +227,34 @@ class JobController extends Controller
         }
     }
 
+    // Daily schedule view - shows assigned jobs for the current day
+    public function dailySchedule(\Illuminate\Http\Request $request)
+    {
+        $date = $request->input('date')
+            ? \Carbon\Carbon::parse($request->input('date'))
+            : \Carbon\Carbon::today();
+
+        $assignedJobs = Job::with(['customer', 'service', 'employees'])
+            ->whereDate('scheduled_date', $date)
+            ->whereIn('status', [Job::STATUS_ASSIGNED, Job::STATUS_IN_PROGRESS])
+            ->orderBy('scheduled_date', 'asc')
+            ->get();
+
+        $pendingJobs = Job::with(['customer', 'service', 'employees'])
+            ->whereDate('scheduled_date', $date)
+            ->where('status', Job::STATUS_PENDING)
+            ->orderBy('scheduled_date', 'asc')
+            ->get();
+
+        $completedJobs = Job::with(['customer', 'service', 'employees'])
+            ->whereDate('scheduled_date', $date)
+            ->where('status', Job::STATUS_COMPLETED)
+            ->orderBy('scheduled_date', 'desc')
+            ->get();
+
+        return view('admin.jobs.daily_schedule', compact('assignedJobs', 'pendingJobs', 'completedJobs', 'date'));
+    }
+
     // Job tracking view
     public function tracking()
     {
@@ -212,9 +277,47 @@ class JobController extends Controller
             ->orderBy('scheduled_date', 'asc')
             ->get();
 
-        $availableEmployees = Employee::get();
+        // Get all employees
+        $allEmployees = Employee::get();
+        $availableEmployeesByJob = [];
+        
+        foreach ($jobs as $job) {
+            // Get employees who are already assigned to other jobs at the same date and time
+            $assignedEmployeeIds = [];
+            
+            // Convert job time to local timezone for comparison
+            $jobLocalTime = $job->scheduled_date->copy()->setTimezone(config('app.timezone'));
+            $jobStartHour = $jobLocalTime->copy()->startOfHour();
+            $jobEndHour = $jobLocalTime->copy()->endOfHour();
+            
+            // Find jobs that overlap with this job's scheduled date/time (same hour)
+            $overlappingJobs = Job::where('id', '!=', $job->id)
+                ->where('scheduled_date', '>=', $jobStartHour->setTimezone('UTC'))
+                ->where('scheduled_date', '<=', $jobEndHour->setTimezone('UTC'))
+                ->whereHas('employees', function ($query) {
+                    $query->whereNotNull('employee_id');
+                })
+                ->with('employees')
+                ->get();
+            
+            // Collect all employee IDs from overlapping jobs
+            foreach ($overlappingJobs as $overlappingJob) {
+                foreach ($overlappingJob->employees as $employee) {
+                    $assignedEmployeeIds[] = $employee->id;
+                }
+            }
+            
+            // Also include employees already assigned to this job
+            foreach ($job->employees as $employee) {
+                $assignedEmployeeIds[] = $employee->id;
+            }
+            
+            // Filter out assigned employees
+            $availableEmployees = $allEmployees->whereNotIn('id', array_unique($assignedEmployeeIds));
+            $availableEmployeesByJob[$job->id] = $availableEmployees;
+        }
 
-        return view('admin.jobs.tracking', compact('jobs', 'availableEmployees'));
+        return view('admin.jobs.tracking', compact('jobs', 'allEmployees', 'availableEmployeesByJob'));
     }
 
     public function reschedule(Job $job)
@@ -229,6 +332,12 @@ class JobController extends Controller
             
             // Update job status
             $job->update(['status' => Job::STATUS_CANCELLED]);
+            
+            // Clear employee availability for this cancelled job
+            $job->load('employees');
+            foreach ($job->employees as $employee) {
+                $employee->clearAvailabilityForJob($job);
+            }
             
             // Reload the job with relationships for email
             $job->load(['customer', 'service', 'employees']);
@@ -342,6 +451,11 @@ class JobController extends Controller
 
             if ($request->status === Job::STATUS_COMPLETED) {
                 $job->markAsCompleted();
+                
+                // Clear employee availability for this completed job
+                foreach ($job->employees as $employee) {
+                    $employee->clearAvailabilityForJob($job);
+                }
             } else {
                 $updates = ['status' => $request->status];
                 
@@ -464,12 +578,31 @@ class JobController extends Controller
                 'employee_ids' => $request->employee_ids
             ]);
 
-            DB::commit();
-            return back()->with('success', 'Job tracking updated successfully and customer notified.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Failed to update job tracking: ' . $e->getMessage());
-            return back()->with('error', 'Failed to update job tracking. Please try again.');
-        }
+        DB::commit();
+        return back()->with('success', 'Job tracking updated successfully and customer notified.');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Failed to update job tracking: ' . $e->getMessage());
+        return back()->with('error', 'Failed to update job tracking: ' . $e->getMessage());
+    }
+}
+
+    // Export Daily Schedule to PDF
+    public function exportDailySchedulePDF(Request $request)
+    {
+    $today = Carbon::today();
+    
+    $assignedJobs = Job::with(['customer', 'service', 'employees'])
+        ->whereDate('scheduled_date', $today)
+        ->whereIn('status', [Job::STATUS_ASSIGNED, Job::STATUS_IN_PROGRESS])
+        ->orderBy('scheduled_date', 'asc')
+        ->get();
+
+    $pdf = Pdf::loadView('admin.jobs.exports.daily_schedule_pdf', [
+        'assignedJobs' => $assignedJobs,
+        'date' => $today->format('F j, Y')
+    ]);
+
+    return $pdf->download('daily_schedule_' . $today->format('Y-m-d') . '.pdf');
     }
 }

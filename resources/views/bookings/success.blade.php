@@ -142,8 +142,8 @@
   <section class="success-section">
     <div class="success-card">
       <i class="bi bi-check-circle-fill success-icon"></i>
-      <h1 class="success-title">Booking Successful!</h1>
-      <p class="success-message">Thank you for choosing SmartHands Cleaning Services! We have received your booking request and will send you a confirmation email shortly with all the details.</p>
+      <h1 class="success-title">We have successfully scheduled your ocular visit.</h1>
+      <p class="success-message">To proceed, confirm your booking on the My Bookings page and agree to the Privacy Policy and Terms and Conditions.</p>
       <a href="{{ route('home') }}" class="return-btn">Return to Home</a>
     </div>
   </section>

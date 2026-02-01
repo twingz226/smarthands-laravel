@@ -6,26 +6,41 @@
         <div class="col-md-12 text-center">
             <h1 class="h2 pt-3 pb-2 mb-3 border-bottom">Customer List Report</h1>
         </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label for="start_date" class="form-label">From Date</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" 
+                            value="{{ $request->start_date }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="end_date" class="form-label">To Date</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" 
+                            value="{{ $request->end_date }}">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <a href="{{ request()->url() }}" class="btn btn-danger w-100 text-white">
+                            <i class="fas fa-undo"></i> Reset Filters
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
         <div class="col-md-12 text-right">
-            <div class="dropdown">
-                <button class="btn btn-lg btn-secondary dropdown-toggle" type="button" id="exportDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <i class="fas fa-print"></i> Export
-                </button>
-                <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="exportDropdown">
-                    <li><a href="#" onclick="window.print(); return false;">
-                        <i class="fas fa-print text-secondary"></i> Print
-                    </a></li>
-                    <li><a href="{{ route('reports.customers.export.pdf') }}">
-                        <i class="fas fa-file-pdf text-danger"></i> PDF
-                    </a></li>
-                    <li><a href="{{ route('reports.customers.export.excel') }}">
-                        <i class="fas fa-file-excel text-success"></i> Excel
-                    </a></li>
-                    <li><a href="{{ route('reports.customers.export.csv') }}">
-                        <i class="fas fa-file-csv text-primary"></i> CSV
-                    </a></li>
-                </ul>
-            </div>
+            <a href="{{ route('reports.customers.export.pdf', request()->query()) }}" class="btn btn-lg btn-secondary">
+                <i class="fas fa-file-pdf"></i> Export PDF
+            </a>
         </div>
     </div>
 
@@ -39,6 +54,7 @@
                             <th>Email</th>
                             <th>Contact</th>
                             <th>Total Jobs</th>
+                            <th>Last Service Date</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -48,6 +64,7 @@
                             <td>{{ $customer->email }}</td>
                             <td>{{ $customer->contact }}</td>
                             <td>{{ $customer->jobs_count }}</td>
+                            <td>{{ $customer->jobs_max_scheduled_date ? \Carbon\Carbon::parse($customer->jobs_max_scheduled_date)->format('M d, Y') : 'N/A' }}</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -59,19 +76,37 @@
 
 <style>
 @media print {
-    .btn-toolbar {
-        display: none !important;
+    body * {
+        visibility: hidden;
     }
     
-    .container-fluid {
-        margin: 0;
-        padding: 0;
-        max-width: 100%;
+    .h2, .h2 *, .card-body, .card-body * {
+        visibility: visible;
     }
     
-    .card {
-        border: none;
-        box-shadow: none;
+    .h2 {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 10px 20px 0 20px;
+        box-sizing: border-box;
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+        border-bottom: 2px solid #333 !important;
+        margin-bottom: 0;
+        z-index: 10;
+    }
+    
+    .card-body {
+        position: absolute;
+        left: 0;
+        top: 40px;
+        width: 100%;
+        padding: 5px 20px 20px 20px;
+        box-sizing: border-box;
+        z-index: 5;
     }
     
     .table-responsive {
@@ -80,13 +115,64 @@
     
     body {
         font-size: 12px;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .table {
+        width: 100%;
+        margin: 0 auto;
+        border-collapse: collapse;
+    }
+    
+    .table th, .table td {
+        padding: 8px 12px;
+        text-align: left;
+        border: 1px solid #ddd;
     }
     
     .table th {
         background-color: #f5f5f5 !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+        font-weight: bold;
+    }
+    
+    .table td {
+        vertical-align: top;
+    }
+    
+    @page {
+        margin: 0.3in;
+        size: auto;
+    }
+    
+    @page :header {
+        display: none;
+    }
+    
+    @page :footer {
+        display: none;
+    }
+    
+    header, footer {
+        display: none !important;
     }
 }
 </style>
+
+@push('scripts')
+<script>
+    // Auto-submit form when date inputs change
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInputs = document.querySelectorAll('input[type="date"]');
+        dateInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                this.closest('form').submit();
+            });
+        });
+    });
+</script>
+@endpush
+
 @endsection

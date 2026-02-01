@@ -160,6 +160,30 @@
                             </div>
                             @endif
 
+                            <!-- Cancellation Reason -->
+                            @if($booking->status === 'cancelled')
+                            <div class="card mb-4">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-times-circle text-danger mr-2"></i>
+                                        Cancellation Reason
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    @if($booking->cancellation_reason)
+                                        <div class="p-3 bg-light rounded">
+                                            {!! nl2br(e($booking->cancellation_reason)) !!}
+                                        </div>
+                                    @else
+                                        <div class="text-muted">
+                                            <i class="fas fa-info-circle mr-2"></i>
+                                            No cancellation reason provided by customer.
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            @endif
+
                             <!-- Admin Notes -->
                             @if($booking->admin_notes)
                             <div class="card">

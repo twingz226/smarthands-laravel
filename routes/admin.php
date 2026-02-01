@@ -71,6 +71,7 @@ Route::middleware(['web','auth', 'role:admin'])->group(function () {
         Route::put('/{booking}', [AdminBookingController::class, 'update'])->name('update');
         Route::patch('/{booking}/confirm', [AdminBookingController::class, 'confirm'])->name('confirm');
         Route::patch('/{booking}/cancel', [AdminBookingController::class, 'cancel'])->name('admin.cancel');
+        Route::patch('/{booking}/input-price', [AdminBookingController::class, 'inputPrice'])->name('input-price');
         Route::delete('/{booking}', [AdminBookingController::class, 'destroy'])->name('destroy');
         Route::get('/{booking}/admin-reschedule', [AdminBookingController::class, 'reschedule'])->name('admin.reschedule');
         Route::patch('/{booking}/admin-reschedule', [AdminBookingController::class, 'updateReschedule'])->name('admin.update-reschedule');
@@ -88,6 +89,7 @@ Route::middleware(['web','auth', 'role:admin'])->group(function () {
 
     Route::prefix('admin/jobs')->name('jobs.')->group(function () {
         Route::get('/tracking', [JobController::class, 'tracking'])->name('tracking');
+        Route::get('/daily-schedule', [JobController::class, 'dailySchedule'])->name('daily_schedule');
         Route::put('/tracking', [JobController::class, 'updateTracking'])->name('update-tracking');
         Route::get('/{job}', [JobController::class, 'show'])->name('show');
         Route::post('/{job}/assign', [JobController::class, 'assign'])->name('assign');
@@ -97,6 +99,9 @@ Route::middleware(['web','auth', 'role:admin'])->group(function () {
         Route::get('/{job}/reschedule', [JobController::class, 'reschedule'])->name('reschedule');
         Route::put('/{job}/reschedule', [JobController::class, 'updateReschedule'])->name('update-reschedule');
         Route::patch('/{job}/cancel', [JobController::class, 'cancel'])->name('cancel');
+        
+        // Daily Schedule PDF Export Route
+        Route::get('/daily-schedule/export/pdf', [JobController::class, 'exportDailySchedulePDF'])->name('daily_schedule.export.pdf');
     });
 
     Route::prefix('admin/employees')->name('employees.')->group(function () {

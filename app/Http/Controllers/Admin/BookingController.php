@@ -22,14 +22,10 @@ class BookingController extends Controller
     public function index()
     {
         $bookings = Booking::with(['user', 'service'])
-            ->orderByRaw("CASE 
-                WHEN status = 'pending' THEN 1
-                WHEN status = 'confirmed' THEN 2
-                WHEN status = 'rescheduled' THEN 3
-                WHEN status = 'completed' THEN 4
-                WHEN status = 'cancelled' THEN 5
-                ELSE 6
-            END")
+            ->where(function($query) {
+                $query->where('status', 'confirmed')
+                      ->orWhere('status', 'pending'); // Pending bookings are treated as reserved
+            })
             ->orderBy('cleaning_date', 'asc')
             ->get()
             ->map(function ($booking) {
@@ -38,14 +34,14 @@ class BookingController extends Controller
                 return $booking;
             });
 
-        Log::debug('Bookings loaded:', [
+        Log::debug('Confirmed bookings loaded:', [
             'count' => $bookings->count(),
             'timezone' => config('app.timezone'),
             'first_booking_time' => $bookings->first()?->cleaning_date
         ]);
 
-        // Define what constitutes 'fully booked' - e.g., 3 or more bookings on a single day
-        $fullyBookedThreshold = 3; // consider moving to config/settings if needed
+        // Define what constitutes 'fully booked' - e.g., 10 or more bookings on a single day
+        $fullyBookedThreshold = 10; // consider moving to config/settings if needed
 
         // Centralized calculation (excludes cancelled automatically)
         $fullyBookedDates = Booking::getFullyBookedDatesWithCounts($fullyBookedThreshold);
@@ -157,7 +153,7 @@ class BookingController extends Controller
             'user_id' => 'required|exists:users,id',
             'service_id' => 'required|exists:services,id',
             'cleaning_date' => 'required|date|after:now',
-            'status' => 'required|in:pending,confirmed,completed,cancelled',
+            'status' => 'required|in:pending,confirmed,completed,cancelled,reserved',
             'special_instructions' => 'nullable|string',
             'admin_notes' => 'nullable|string',
         ]);
@@ -218,7 +214,7 @@ class BookingController extends Controller
     public function fullyBookedDates()
     {
         // Use application timezone day buckets to compute counts accurately
-        $fullyBookedThreshold = 3;
+        $fullyBookedThreshold = 10;
         $start = now()->timezone(config('app.timezone'))->startOfDay();
         $end = now()->timezone(config('app.timezone'))->addDays(60)->endOfDay();
         $fullyBookedDates = Booking::getFullyBookedDatesWithCountsByAppTimezone($start, $end, $fullyBookedThreshold);
@@ -229,7 +225,7 @@ class BookingController extends Controller
 
     public function getFullyBookedDatesJson()
     {
-        $fullyBookedThreshold = 3;
+        $fullyBookedThreshold = 10;
         $start = now()->timezone(config('app.timezone'))->startOfDay();
         $end = now()->timezone(config('app.timezone'))->addDays(60)->endOfDay();
         $fullyBookedDates = Booking::getFullyBookedDatesWithCountsByAppTimezone($start, $end, $fullyBookedThreshold);
@@ -430,6 +426,60 @@ class BookingController extends Controller
             DB::rollBack();
             Log::error('Booking cancellation failed: ' . $e->getMessage());
             return back()->with('error', 'Failed to cancel booking. Please try again.');
+        }
+    }
+
+    public function inputPrice(Request $request, Booking $booking)
+    {
+        // Only allow price input for pending bookings (treated as reserved)
+        if ($booking->status !== Booking::STATUS_PENDING) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'message' => 'Price can only be set for pending (reserved) bookings.'
+                ], 422);
+            }
+            return back()->with('error', 'Price can only be set for pending (reserved) bookings.');
+        }
+
+        $validated = $request->validate([
+            'price' => 'required|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/',
+        ], [
+            'price.required' => 'Price is required.',
+            'price.numeric' => 'Price must be a number.',
+            'price.min' => 'Price must be at least 0.',
+            'price.regex' => 'Price must have at most 2 decimal places.',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $booking->update([
+                'price' => $validated['price']
+            ]);
+
+            DB::commit();
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Price saved successfully.',
+                    'price' => $booking->price
+                ]);
+            }
+
+            return back()->with('success', 'Price saved successfully.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Price input failed: ' . $e->getMessage());
+            
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'message' => 'Failed to save price. Please try again.'
+                ], 500);
+            }
+            
+            return back()->with('error', 'Failed to save price. Please try again.');
         }
     }
 

@@ -44,9 +44,17 @@
                             <td>
                                 <span class="badge badge-<?php echo e($booking->status == 'confirmed' ? 'success' :
                                     ($booking->status == 'cancelled' ? 'danger' :
-                                    ($booking->status == 'completed' ? 'primary' : 'warning'))); ?>">
-                                    <?php echo e(ucfirst($booking->status)); ?>
+                                    ($booking->status == 'completed' ? 'primary' : 
+                                    ($booking->status == 'pending' && $booking->customer_confirmed && $booking->price && $booking->price > 0 ? 'warning' :
+                                    ($booking->status == 'pending' ? 'info' : 'warning'))))); ?>">
+                                    <?php if($booking->status == 'pending' && $booking->customer_confirmed && $booking->price && $booking->price > 0): ?>
+                                        Pending
+                                    <?php elseif($booking->status == 'pending'): ?>
+                                        Reserved
+                                    <?php else: ?>
+                                        <?php echo e(ucfirst($booking->status)); ?>
 
+                                    <?php endif; ?>
                                 </span>
                             </td>
                             <td>
@@ -58,8 +66,53 @@
                                        title="View">
                                         <i class="entypo-eye"></i>
                                     </a>
-                                    <?php if($booking->status == 'pending' || $booking->status == 'rescheduled'): ?>
-                                        <form action="<?php echo e(route('bookings.confirm', $booking->id)); ?>" method="POST" class="d-inline">
+                                    <?php if($booking->status == 'pending' && $booking->customer_confirmed && $booking->price && $booking->price > 0): ?>
+                                        
+                                        <form action="/admin/bookings/<?php echo e($booking->id); ?>/confirm" method="POST" class="d-inline">
+                                            <?php echo csrf_field(); ?>
+                                            <?php echo method_field('PATCH'); ?>
+                                            <button type="submit"
+                                                    class="btn btn-success rounded-circle"
+                                                    data-toggle="tooltip"
+                                                    data-placement="top"
+                                                    title="Confirm"
+                                                    onclick="console.log('Confirm button clicked for booking <?php echo e($booking->id); ?>')">
+                                                <i class="entypo-thumbs-up"></i>
+                                            </button>
+                                        </form>
+                                        <form action="<?php echo e(route('bookings.admin.cancel', $booking->id)); ?>" method="POST" class="d-inline">
+                                            <?php echo csrf_field(); ?>
+                                            <?php echo method_field('PATCH'); ?>
+                                            <button type="button"
+                                                    class="btn btn-danger rounded-circle cancel-booking-btn"
+                                                    data-toggle="tooltip"
+                                                    data-placement="top"
+                                                    title="Cancel"
+                                                    data-booking-id="<?php echo e($booking->id); ?>">
+                                                <i class="entypo-block"></i>
+                                            </button>
+                                        </form>
+                                        <a href="<?php echo e(route('bookings.admin.reschedule', ['booking' => $booking->id])); ?>"
+                                           class="btn btn-warning rounded-circle"
+                                           data-toggle="tooltip"
+                                           data-placement="top"
+                                           title="Reschedule">
+                                            <i class="entypo-back-in-time"></i>
+                                        </a>
+                                    <?php elseif($booking->status == 'pending'): ?>
+                                        
+                                        <button type="button"
+                                                class="btn btn-primary rounded-circle input-price-btn"
+                                                data-toggle="tooltip"
+                                                data-placement="top"
+                                                title="Input Price"
+                                                data-booking-id="<?php echo e($booking->id); ?>"
+                                                data-booking-price="<?php echo e($booking->price ?? ''); ?>">
+                                            <i class="entypo-credit-card"></i>
+                                        </button>
+                                    <?php elseif($booking->status == 'rescheduled'): ?>
+                                        
+                                        <form action="/admin/bookings/<?php echo e($booking->id); ?>/confirm" method="POST" class="d-inline">
                                             <?php echo csrf_field(); ?>
                                             <?php echo method_field('PATCH'); ?>
                                             <button type="submit"
@@ -162,6 +215,11 @@
     border-color: #007bff;
     color: white;
 }
+
+.btn-primary.rounded-circle:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
 </style>
 <?php $__env->stopPush(); ?>
 
@@ -186,6 +244,43 @@
                     <i class="entypo-block"></i> Yes, Cancel Booking
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Input Price Modal -->
+<div class="modal fade" id="inputPriceModal" tabindex="-1" role="dialog" aria-labelledby="inputPriceModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="inputPriceModalLabel">Input Price for Booking</h4>
+            </div>
+            <form id="inputPriceForm" method="POST">
+                <?php echo csrf_field(); ?>
+                <?php echo method_field('PATCH'); ?>
+                <div class="modal-body">
+                    <div id="inputPriceAlert" class="alert" style="display: none;"></div>
+                    <div class="form-group">
+                        <label for="booking_price">Price (₱)</label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="booking_price" 
+                               name="price" 
+                               step="0.01" 
+                               min="0" 
+                               placeholder="Enter price"
+                               required>
+                        <small class="form-text text-muted">Enter the final price for this booking after inspection.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="submitPriceBtn">
+                        <i class="entypo-check"></i> Save Price
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -395,6 +490,77 @@
             // Preload the modal content so it's up to date even before opening
             loadFullyBookedDates(false);
         }
+
+        // Input Price Modal Handler
+        $(document).on('click', '.input-price-btn', function(e) {
+            e.preventDefault();
+            var bookingId = $(this).data('booking-id');
+            var currentPrice = $(this).data('booking-price') || '';
+            
+            // Set the form action
+            $('#inputPriceForm').attr('action', '/admin/bookings/' + bookingId + '/input-price');
+            
+            // Set the current price if it exists
+            $('#booking_price').val(currentPrice);
+            
+            // Clear any previous alerts
+            $('#inputPriceAlert').hide().removeClass('alert-success alert-danger').text('');
+            
+            // Show the modal
+            $('#inputPriceModal').modal('show');
+        });
+
+        // Handle price form submission
+        $('#inputPriceForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            var form = $(this);
+            var submitBtn = $('#submitPriceBtn');
+            var alertDiv = $('#inputPriceAlert');
+            var originalBtnText = submitBtn.html();
+            
+            // Disable submit button and show loading state
+            submitBtn.prop('disabled', true).html('<i class="entypo-hourglass"></i> Saving...');
+            
+            // Clear previous alerts
+            alertDiv.hide().removeClass('alert-success alert-danger').text('');
+            
+            $.ajax({
+                url: form.attr('action'),
+                method: form.attr('method'),
+                data: form.serialize(),
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    alertDiv.removeClass('alert-danger')
+                             .addClass('alert-success')
+                             .html('<i class="entypo-check"></i> Price saved successfully!')
+                             .show();
+                    
+                    // Reload page after a short delay to show updated data
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1000);
+                },
+                error: function(xhr) {
+                    var errorMessage = 'An error occurred while saving the price.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        var errors = xhr.responseJSON.errors;
+                        errorMessage = Object.values(errors).flat().join('<br>');
+                    }
+                    
+                    alertDiv.removeClass('alert-success')
+                             .addClass('alert-danger')
+                             .html('<i class="entypo-warning"></i> ' + errorMessage)
+                             .show();
+                    
+                    submitBtn.prop('disabled', false).html(originalBtnText);
+                }
+            });
+        });
     });
 </script>
 <?php $__env->stopPush(); ?>

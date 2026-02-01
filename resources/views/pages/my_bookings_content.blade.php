@@ -158,6 +158,19 @@
                                 <td>{{ $booking->service->name ?? 'N/A' }}</td>
                                 <td><span class="badge bg-warning">Pending</span></td>
                                 <td>
+                                    @if ($booking->status === \App\Models\Booking::STATUS_PENDING && !$booking->customer_confirmed)
+                                    <button type="button" class="btn btn-sm btn-success me-2 confirm-booking-btn" 
+                                            data-booking-id="{{ $booking->id }}" 
+                                            data-booking-token="{{ $booking->booking_token }}" 
+                                            data-service-name="{{ $booking->service->name ?? 'N/A' }}"
+                                            data-booking-price="{{ $booking->price ?? '' }}">
+                                        <i class="bi bi-check-circle me-1"></i>Confirm Booking
+                                    </button>
+                                    @elseif ($booking->customer_confirmed && $booking->status === \App\Models\Booking::STATUS_PENDING)
+                                        <span class="badge bg-info me-2">
+                                            <i class="bi bi-clock me-1"></i>Awaiting Admin Confirmation
+                                        </span>
+                                    @endif
                                     @if ($booking->customer_reschedule_count < 3)
                                          <button type="button" class="btn btn-sm btn-outline-info me-2 reschedule-btn" 
                                                  data-booking-id="{{ $booking->id }}" 
@@ -511,6 +524,88 @@
     </div>
 </div>
 
+<!-- Confirm Booking Modal -->
+<div class="modal fade" id="confirmBookingModal" tabindex="-1" aria-labelledby="confirmBookingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title" id="confirmBookingModalLabel"><i class="bi bi-check-circle me-2"></i>Confirm Booking</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="confirmBookingForm" method="POST">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" id="confirm_booking_id" name="booking_id">
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Are you sure you want to confirm this booking?</strong>
+                        <br><small class="text-muted">Your booking will remain pending until admin confirmation.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Service:</label>
+                        <p id="confirmServiceName" class="text-muted mb-1"></p>
+                        <p id="confirmServicePrice" class="text-success fw-bold" style="display: none;">
+                            <i class="bi bi-currency-dollar me-1"></i>Price: ₱<span id="confirmPriceAmount">0.00</span>
+                        </p>
+                        <p id="confirmServicePriceNotSet" class="text-muted small" style="display: none;">
+                            <i class="bi bi-info-circle me-1"></i>Price will be set by admin after inspection
+                        </p>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="confirmTerms" name="confirm_terms" required>
+                            <style>
+                                #confirmTerms {
+                                    border-color: black !important;
+                                    background-color: white !important;
+                                }
+                                #confirmTerms:checked {
+                                    background-color: black !important;
+                                    border-color: black !important;
+                                }
+                                #confirmTerms:checked::after {
+                                    background-color: white !important;
+                                }
+                            </style>
+                            <label class="form-check-label" for="confirmTerms">
+                                I have read and agree to the <a href="/terms-and-conditions" target="_blank">Terms and Conditions</a> and <a href="/privacy-policy" target="_blank">Privacy Policy</a>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="alert alert-success">
+                        <small><i class="bi bi-check-circle me-1"></i>Once confirmed, your booking will appear in our system and be scheduled for service.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Back</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle me-1"></i>Confirm Booking
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Booking Confirmation Success Modal -->
+<div class="modal fade" id="confirmSuccessModal" tabindex="-1" aria-labelledby="confirmSuccessModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="confirmSuccessModalLabel"><i class="bi bi-check-circle me-2"></i>Booking Received!</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p class="mb-0 fs-5">Your booking has been received and is awaiting admin confirmation.<br><small class="text-muted">You will be notified once it's approved.</small></p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Helper function to format time
@@ -811,6 +906,96 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             });
     
+    // Handle confirm booking button clicks
+    document.querySelectorAll('.confirm-booking-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const bookingId = this.getAttribute('data-booking-id');
+            const bookingToken = this.getAttribute('data-booking-token');
+            const serviceName = this.getAttribute('data-service-name');
+            const bookingPrice = this.getAttribute('data-booking-price');
+            
+            // Populate confirm modal
+            document.getElementById('confirmServiceName').textContent = serviceName;
+            document.getElementById('confirmBookingForm').action = `/bookings/${bookingToken}/confirm`;
+            document.getElementById('confirm_booking_id').value = bookingId;
+            
+            // Display price if available
+            const priceElement = document.getElementById('confirmServicePrice');
+            const priceNotSetElement = document.getElementById('confirmServicePriceNotSet');
+            const priceAmountElement = document.getElementById('confirmPriceAmount');
+            
+            if (bookingPrice && bookingPrice.trim() !== '' && parseFloat(bookingPrice) > 0) {
+                // Format price with 2 decimal places
+                const formattedPrice = parseFloat(bookingPrice).toFixed(2);
+                priceAmountElement.textContent = formattedPrice;
+                priceElement.style.display = 'block';
+                priceNotSetElement.style.display = 'none';
+            } else {
+                priceElement.style.display = 'none';
+                priceNotSetElement.style.display = 'block';
+            }
+            
+            // Show modal
+            new bootstrap.Modal(document.getElementById('confirmBookingModal')).show();
+        });
+    });
+
+    // Handle confirm booking form submission
+    document.getElementById('confirmBookingForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const form = this;
+        
+        // Check if terms checkbox is checked
+        const termsCheckbox = document.getElementById('confirmTerms');
+        if (!termsCheckbox.checked) {
+            alert('You must agree to the Terms and Conditions and Privacy Policy to confirm your booking.');
+            return;
+        }
+        
+        const formData = new FormData(form);
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('confirmBookingModal')).hide();
+                new bootstrap.Modal(document.getElementById('confirmSuccessModal')).show();
+                // Reload the page after a short delay to allow success modal to be seen
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                throw new Error(data.message || 'Failed to confirm booking');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            let errorMessage = 'An error occurred while confirming the booking';
+
+            if (error.message) {
+                errorMessage = error.message;
+            }
+
+            if (error.errors) {
+                errorMessage = Object.values(error.errors).flat().join('\n');
+            }
+        });
+    });
+
     const rescheduleModalElement = document.getElementById('rescheduleModal');
     if (rescheduleModalElement) {
         rescheduleModalElement.addEventListener('hidden.bs.modal', function () {

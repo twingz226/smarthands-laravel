@@ -114,8 +114,12 @@ class BookingController extends Controller
         try {
             DB::beginTransaction();
 
+            // Get cancellation reason from request
+            $cancellationReason = $request->input('reason');
+
             $booking->update([
-                'status' => Booking::STATUS_CANCELLED
+                'status' => Booking::STATUS_CANCELLED,
+                'cancellation_reason' => $cancellationReason
             ]);
 
             // If a job exists for this booking, cancel it as well
@@ -126,7 +130,8 @@ class BookingController extends Controller
             ActivityLog::create([
                 'user_id' => Auth::id(),
                 'description' => 'Cancelled booking for ' . $booking->service->name . 
-                    ' scheduled for ' . $booking->cleaning_date->format('F j, Y g:i A')
+                    ' scheduled for ' . $booking->cleaning_date->format('F j, Y g:i A') .
+                    ($cancellationReason ? '. Reason: ' . $cancellationReason : '')
             ]);
 
             if (config('mail_settings.enabled', false) && $booking->user && $booking->user->email) {
@@ -147,6 +152,80 @@ class BookingController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to cancel booking. Please try again.'
+            ], 500);
+        }
+    }
+
+    public function confirmBooking(Request $request, $bookingToken)
+    {
+        try {
+            $booking = Booking::where('booking_token', $bookingToken)->firstOrFail();
+            $booking->load('user', 'service');
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Booking not found.'
+            ], 404);
+        }
+
+        // Check if booking is already confirmed
+        if ($booking->status === Booking::STATUS_CONFIRMED) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This booking is already confirmed.'
+            ], 400);
+        }
+
+        // Check if booking is cancelled
+        if ($booking->status === Booking::STATUS_CANCELLED || $booking->trashed()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This booking has been cancelled and cannot be confirmed.'
+            ], 400);
+        }
+
+        // Verify user owns the booking
+        if ($booking->user_id !== Auth::id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized action.'
+            ], 403);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Customer confirmation - keep status as pending
+            // Pending bookings are treated as reserved and appear in Online Bookings menu
+            $booking->update([
+                'customer_confirmed' => true
+            ]);
+
+            ActivityLog::create([
+                'user_id' => Auth::id(),
+                'description' => 'Confirmed booking for ' . $booking->service->name . 
+                    ' scheduled for ' . $booking->cleaning_date->format('F j, Y g:i A')
+            ]);
+
+            // Send email notification for confirmed booking
+            if (config('mail_settings.enabled', false) && $booking->user && $booking->user->email) {
+                Mail::to($booking->user->email)
+                    ->queue(new BookingStatusUpdate($booking));
+            }
+
+            DB::commit();
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'message' => 'Booking confirmed successfully!']);
+            } else {
+                return redirect()->route('customer.my_bookings')->with('success', 'Booking confirmed successfully!');
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Booking confirmation failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to confirm booking. Please try again.'
             ], 500);
         }
     }

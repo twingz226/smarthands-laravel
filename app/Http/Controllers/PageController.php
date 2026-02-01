@@ -286,8 +286,11 @@ class PageController extends Controller
                     $fullyBookedDates[] = $dateString;
                 } else {
                     // Provide time slot availability info for dates that are not fully booked
-                    $availableSlots = Booking::getAvailableSlots($dateString);
-                    $fullyBookedTimes[$dateString] = array_keys(array_filter($availableSlots, function($slot) { return !$slot; }));
+                    // Use new method that checks cleaner availability
+                    $availableSlots = Booking::getAvailableSlotsWithCleanerCount($dateString);
+                    $fullyBookedTimes[$dateString] = array_keys(array_filter($availableSlots, function($slot) { 
+                        return !$slot['available']; 
+                    }));
                 }
             }
             // Merge disabled dates

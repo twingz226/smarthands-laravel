@@ -26,7 +26,9 @@ class Employee extends Model
         'photo_expires_at',
         'photo_consent_given',
         'photo_consent_date',
-        'photo_notes'
+        'photo_notes',
+        'availability_status',
+        'availability_notes',
     ];
 
     protected $casts = [
@@ -54,6 +56,14 @@ class Employee extends Model
     public function ratings(): HasMany
     {
         return $this->hasMany(Rating::class);
+    }
+
+    /**
+     * Get all availability records for the employee
+     */
+    public function availability(): HasMany
+    {
+        return $this->hasMany(EmployeeAvailability::class);
     }
 
     /**
@@ -159,5 +169,70 @@ class Employee extends Model
             $q->whereNull('photo_approved_at')
               ->orWhere('photo_expires_at', '<', now());
         });
+    }
+
+    /**
+     * Check if employee is available at a specific datetime
+     */
+    public function isAvailableAt($datetime)
+    {
+        return EmployeeAvailability::isAvailableAt($this, $datetime);
+    }
+
+    /**
+     * Check if employee is currently available
+     */
+    public function isCurrentlyAvailable()
+    {
+        return $this->isAvailableAt(now());
+    }
+
+    /**
+     * Mark employee as unavailable for a job
+     */
+    public function markUnavailableForJob(Job $job)
+    {
+        // Create availability record
+        EmployeeAvailability::markUnavailableForJob($this, $job);
+        
+        // Update employee status
+        $this->update(['availability_status' => 'unavailable']);
+    }
+
+    /**
+     * Clear availability for a specific job (when job is cancelled/completed)
+     */
+    public function clearAvailabilityForJob(Job $job)
+    {
+        EmployeeAvailability::clearForJob($job);
+        
+        // Update employee status if no other active assignments
+        $hasActiveAssignments = $this->availability()
+                                    ->where('end_datetime', '>', now())
+                                    ->exists();
+        
+        if (!$hasActiveAssignments) {
+            $this->update(['availability_status' => 'available']);
+        }
+    }
+
+    /**
+     * Scope for available employees at a specific datetime
+     */
+    public function scopeAvailableAt($query, $datetime)
+    {
+        $unavailableEmployeeIds = EmployeeAvailability::activeAt($datetime)
+                                                        ->pluck('employee_id')
+                                                        ->toArray();
+        
+        return $query->whereNotIn('id', $unavailableEmployeeIds);
+    }
+
+    /**
+     * Scope for currently available employees
+     */
+    public function scopeCurrentlyAvailable($query)
+    {
+        return $this->scopeAvailableAt($query, now());
     }
 }

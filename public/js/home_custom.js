@@ -201,7 +201,8 @@
                 if (loadingDates) loadingDates.style.display = 'none';
             }
         }
-        // Build/refresh time options for the selected date.
+
+        // Build/refresh time options for the selected date based on cleaner availability
         function populateTimeOptions(dateStr) {
             const timeSelect = document.getElementById('cleaning_time');
             if (!timeSelect) return;
@@ -240,6 +241,96 @@
             }
         }
 
+        // Real-time time slot availability checker
+        async function checkTimeSlotAvailability(dateStr, timeStr) {
+            const serviceId = document.getElementById('service_id')?.value;
+            if (!dateStr || !timeStr || !serviceId) return true;
+
+            try {
+                const response = await fetch('/booking/check-timeslot', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        cleaning_date: dateStr,
+                        cleaning_time: timeStr,
+                        service_id: serviceId
+                    })
+                });
+
+                if (!response.ok) return true; // Assume available if request fails
+                
+                const data = await response.json();
+                return data.available;
+            } catch (error) {
+                logDebug('Error checking time slot availability:', error);
+                return true; // Assume available if request fails
+            }
+        }
+
+        // Get detailed availability information for a time slot
+        async function getTimeSlotDetails(dateStr, timeStr) {
+            const serviceId = document.getElementById('service_id')?.value;
+            if (!dateStr || !timeStr || !serviceId) return null;
+
+            try {
+                const response = await fetch('/booking/check-timeslot', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        cleaning_date: dateStr,
+                        cleaning_time: timeStr,
+                        service_id: serviceId
+                    })
+                });
+
+                if (!response.ok) return null; // Assume available if request fails
+                
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                logDebug('Error getting time slot details:', error);
+                return null; // Assume available if request fails
+            }
+        }
+
+        // Update individual time slot availability in real-time
+        async function updateTimeSlotAvailability(dateStr) {
+            const timeSelect = document.getElementById('cleaning_time');
+            if (!timeSelect || !dateStr) return;
+
+            const options = timeSelect.querySelectorAll('option[value]');
+            
+            for (const option of options) {
+                if (option.value === '') continue; // Skip placeholder
+                
+                const isAvailable = await checkTimeSlotAvailability(dateStr, option.value);
+                
+                if (!isAvailable) {
+                    option.disabled = true;
+                    // Update text to show unavailability
+                    const currentText = option.textContent;
+                    // Remove any existing unavailable text first
+                    const cleanText = currentText.replace(/ \(Unavailable[^\)]*\)/, '');
+                    
+                    if (!cleanText.includes(' (Unavailable)')) {
+                        option.textContent = cleanText + ' (Unavailable)';
+                    }
+                } else {
+                    option.disabled = false;
+                    // Remove any unavailable text
+                    option.textContent = option.textContent.replace(/ \(Unavailable[^\)]*\)/, '');
+                }
+            }
+        }
+
         // Helper to format 24h "HH:MM" into 12h label and annotate if booked
         function formatTimeLabel(time24, isBooked) {
             try {
@@ -247,11 +338,12 @@
                 const ampm = h >= 12 ? 'PM' : 'AM';
                 const h12 = (h % 12) || 12;
                 const label = `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
-                return isBooked ? `${label} (Booked)` : label;
+                return isBooked ? `${label} (Unavailable)` : label;
             } catch (e) {
-                return isBooked ? `${time24} (Booked)` : time24;
+                return isBooked ? `${time24} (Unavailable)` : time24;
             }
         }
+
         // Helper to (re)initialize Flatpickr with the latest fullyBookedDates
         function setupFlatpickrWithDisabledDates() {
             if (flatpickrInstance) {
@@ -281,20 +373,7 @@
                         dayElem.classList.add('fully-booked-date');
                     }
                 },
-                onValueUpdate: function(selectedDates, dateStr, instance) {
-                    if (fullyBookedDates.includes(dateStr)) {
-                        instance.clear();
-                        if (fullyBookedAlert) fullyBookedAlert.style.display = 'block';
-                    }
-                    // Update times on any value update
-                    if (dateStr && !fullyBookedDates.includes(dateStr)) {
-                        populateTimeOptions(dateStr);
-                    } else {
-                        populateTimeOptions(null);
-                    }
-                },
                 onChange: function(selectedDates, dateStr, instance) {
-                    if (fullyBookedAlert) fullyBookedAlert.style.display = 'none';
                     if (fullyBookedDates.includes(dateStr)) {
                         instance.clear();
                         if (fullyBookedAlert) fullyBookedAlert.style.display = 'block';
@@ -304,6 +383,8 @@
                     // Refresh available time options whenever date changes
                     if (dateStr && !fullyBookedDates.includes(dateStr)) {
                         populateTimeOptions(dateStr);
+                        // Also check real-time availability for all time slots
+                        setTimeout(() => updateTimeSlotAvailability(dateStr), 100);
                     } else {
                         populateTimeOptions(null);
                     }
@@ -324,25 +405,59 @@
             setupFlatpickrWithDisabledDates();
         });
 
+        // Add real-time validation for time selection changes
+        const timeSelect = document.getElementById('cleaning_time');
+        if (timeSelect) {
+            timeSelect.addEventListener('change', async function() {
+                const dateInput = document.getElementById('cleaning_date');
+                const dateStr = dateInput?.value;
+                const timeStr = this.value;
+                
+                if (dateStr && timeStr) {
+                    const isAvailable = await checkTimeSlotAvailability(dateStr, timeStr);
+                    if (!isAvailable) {
+                        // Show warning and reset selection
+                        this.value = '';
+                        alert('This time slot has insufficient cleaners available. Please select a different time.');
+                    }
+                }
+            });
+        }
+
         // Prevent form submission if date is fully booked
         const bookingForm = document.getElementById('bookingForm');
         if (bookingForm) {
-            bookingForm.addEventListener('submit', function(e) {
+            bookingForm.addEventListener('submit', async function(e) {
+                // Prevent submit if date is fully booked
                 const dateVal = cleaningDateInput.value;
                 if (fullyBookedDates.includes(dateVal)) {
                     e.preventDefault();
                     cleaningDateInput.value = '';
                     if (fullyBookedAlert) fullyBookedAlert.style.display = 'block';
+                    return;
                 }
-                // Prevent submit if chosen timeslot is disabled/booked
+
+                // Check real-time availability of selected time slot
                 const timeSelect = document.getElementById('cleaning_time');
+                if (timeSelect && timeSelect.value) {
+                    const isAvailable = await checkTimeSlotAvailability(dateVal, timeSelect.value);
+                    if (!isAvailable) {
+                        e.preventDefault();
+                        timeSelect.value = '';
+                        alert('The selected time slot has insufficient cleaners available. Please choose a different time.');
+                        return;
+                    }
+                }
+
+                // Prevent submit if chosen timeslot is disabled/booked
                 if (timeSelect && timeSelect.value) {
                     const selectedOption = timeSelect.querySelector(`option[value="${timeSelect.value}"]`);
                     if (selectedOption && selectedOption.disabled) {
                         e.preventDefault();
                         // Clear invalid selection to force user to choose another
                         timeSelect.value = '';
-                        // Optionally, you can show a lightweight alert or shake the select
+                        alert('Please select a different time slot. The selected time has insufficient cleaner availability.');
+                        return;
                     }
                 }
             });

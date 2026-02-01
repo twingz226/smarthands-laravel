@@ -89,7 +89,10 @@
                     <li class="{{ in_array($currentRoute, ['jobs.tracking', 'jobs.show', 'jobs.assign', 'jobs.complete', 'jobs.update-status', 'jobs.reassign']) ? 'active' : '' }}">
                         <a href="{{ route('jobs.tracking') }}"><span class="title">Job Tracking</span></a>
                     </li>
-                    <li class="{{ Str::startsWith($currentRoute, 'checklists.') ? 'active' : '' }}">
+                    <li class="{{ $currentRoute == 'jobs.daily_schedule' ? 'active' : '' }}">
+                        <a href="{{ route('jobs.daily_schedule') }}"><span class="title">Daily Schedule</span></a>
+                    </li>
+                    <li class="{{ Str::startsWith($currentRoute, 'checklists.') ? 'active' : '' }}" style="display: none;">
                         <a href="{{ route('checklists.index') }}"><span class="title">Checklists</span></a>
                     </li>
                 </ul>

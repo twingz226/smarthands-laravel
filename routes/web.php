@@ -142,6 +142,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{booking:booking_token}/cancel', [App\Http\Controllers\BookingController::class, 'cancelBooking'])
             ->name('cancel')
             ->withTrashed();
+
+        Route::patch('/{booking:booking_token}/confirm', [App\Http\Controllers\BookingController::class, 'confirmBooking'])
+            ->name('confirm')
+            ->withTrashed();
     });
 });
 

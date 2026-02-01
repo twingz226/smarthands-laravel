@@ -147,28 +147,12 @@
         </div>
     </div>
 
-    <!-- Export Dropdown -->
+    <!-- Export Button -->
     <div class="row mb-3">
         <div class="col-md-12 text-right">
-            <div class="dropdown">
-                <button class="btn btn-lg btn-secondary dropdown-toggle" type="button" id="exportDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <i class="fas fa-download"></i> Export
-                </button>
-                <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="exportDropdown">
-                    <li><a href="#" onclick="window.print(); return false;">
-                        <i class="fas fa-print text-secondary"></i> Print
-                    </a></li>
-                    <li><a href="{{ route('reports.customers.export.feedback.pdf', request()->query()) }}">
-                        <i class="fas fa-file-pdf text-danger"></i> PDF
-                    </a></li>
-                    <li><a href="{{ route('reports.customers.export.feedback.excel', request()->query()) }}">
-                        <i class="fas fa-file-excel text-success"></i> Excel
-                    </a></li>
-                    <li><a href="{{ route('reports.customers.export.feedback.csv', request()->query()) }}">
-                        <i class="fas fa-file-csv text-primary"></i> CSV
-                    </a></li>
-                </ul>
-            </div>
+            <a href="{{ route('reports.customers.export.feedback.pdf', request()->query()) }}" class="btn btn-lg btn-secondary">
+                <i class="fas fa-file-pdf"></i> Export PDF
+            </a>
         </div>
     </div>
 

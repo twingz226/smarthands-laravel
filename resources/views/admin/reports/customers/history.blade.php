@@ -7,26 +7,41 @@
             <div class="col-md-12 text-center">
                 <h1 class="h2 pt-3 pb-2 mb-3 border-bottom">Cleaning History Report</h1>
             </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Filters</h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label for="start_date" class="form-label">From Date</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" 
+                                value="{{ $request->start_date }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="end_date" class="form-label">To Date</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" 
+                                value="{{ $request->end_date }}">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <a href="{{ request()->url() }}" class="btn btn-danger w-100 text-white">
+                                <i class="fas fa-undo"></i> Reset Filters
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row">
             <div class="col-md-12 text-right">
-                <div class="dropdown">
-                    <button class="btn btn-lg btn-secondary dropdown-toggle" type="button" id="exportDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="fas fa-print"></i> Export
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="exportDropdown">
-                        <li><a href="#" onclick="window.print(); return false;">
-                            <i class="fas fa-print text-secondary"></i> Print
-                        </a></li>
-                        <li><a href="{{ route('reports.customers.export.cleaning-history.pdf') }}">
-                            <i class="fas fa-file-pdf text-danger"></i> PDF
-                        </a></li>
-                        <li><a href="{{ route('reports.customers.export.cleaning-history.excel') }}">
-                            <i class="fas fa-file-excel text-success"></i> Excel
-                        </a></li>
-                        <li><a href="{{ route('reports.customers.export.cleaning-history.csv') }}">
-                            <i class="fas fa-file-csv text-primary"></i> CSV
-                        </a></li>
-                    </ul>
-                </div>
+                <a href="{{ route('reports.customers.export.cleaning-history.pdf', request()->query()) }}" class="btn btn-lg btn-secondary">
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                </a>
             </div>
         </div>
 
@@ -82,4 +97,19 @@
         @endif
     </div>
 </div>
+
+@push('scripts')
+<script>
+    // Auto-submit form when date inputs change
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInputs = document.querySelectorAll('input[type="date"]');
+        dateInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                this.closest('form').submit();
+            });
+        });
+    });
+</script>
+@endpush
+
 @endsection

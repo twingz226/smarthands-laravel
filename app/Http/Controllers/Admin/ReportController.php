@@ -16,28 +16,50 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class ReportController extends Controller
 {
     // Customer List Report
-    public function customerList()
+    public function customerList(Request $request)
     {
-        $customers = Customer::withCount('jobs')
-            ->withMax('jobs', 'scheduled_date')
-            ->orderBy('name')
-            ->get();
+        $query = Customer::withCount('jobs')
+            ->withMax('jobs', 'scheduled_date');
             
-        return view('admin.reports.customers.list', compact('customers'));
+        // Apply filters based on job dates
+        if ($request->filled('start_date') || $request->filled('end_date')) {
+            $query->whereHas('jobs', function($jobQuery) use ($request) {
+                if ($request->filled('start_date')) {
+                    $jobQuery->where('scheduled_date', '>=', $request->start_date);
+                }
+                if ($request->filled('end_date')) {
+                    $jobQuery->where('scheduled_date', '<=', $request->end_date);
+                }
+            });
+        }
+        
+        $customers = $query->orderBy('name')->get();
+            
+        return view('admin.reports.customers.list', compact('customers', 'request'));
     }
     
     
     // Customer Cleaning History Report
-    public function customerHistory()
+    public function customerHistory(Request $request)
     {
-        $customers = Customer::has('jobs')
-            ->with(['jobs' => function($query) {
-                $query->where('status', 'completed')
+        $query = Customer::has('jobs')
+            ->with(['jobs' => function($jobQuery) use ($request) {
+                $jobQuery->where('status', 'completed')
                     ->with(['service', 'employees']);
-            }])
-            ->paginate(10);
+                    
+                // Apply date filters to jobs
+                if ($request->filled('start_date')) {
+                    $jobQuery->where('created_at', '>=', $request->start_date);
+                }
+                
+                if ($request->filled('end_date')) {
+                    $jobQuery->where('created_at', '<=', $request->end_date);
+                }
+            }]);
             
-        return view('admin.reports.customers.history', compact('customers'));
+        $customers = $query->paginate(10);
+            
+        return view('admin.reports.customers.history', compact('customers', 'request'));
     }
     
     // Customer Feedback/Ratings Report
@@ -76,27 +98,49 @@ class ReportController extends Controller
     }
     
     // Customer Retention Report
-    public function customerRetention()
+    public function customerRetention(Request $request)
     {
+        // Base customer query with date filters
+        $customerQuery = Customer::query();
+        
+        // Apply date filters to customer creation
+        if ($request->filled('start_date')) {
+            $customerQuery->where('created_at', '>=', $request->start_date);
+        }
+        
+        if ($request->filled('end_date')) {
+            $customerQuery->where('created_at', '<=', $request->end_date);
+        }
+        
         // Calculate retention metrics
-        $totalCustomers = Customer::count();
-        $repeatCustomers = Customer::has('jobs', '>', 1)->count();
-        $newCustomersLastMonth = Customer::where('created_at', '>=', now()->subMonth())->count();
+        $totalCustomers = $customerQuery->count();
+        $repeatCustomers = $customerQuery->clone()->has('jobs', '>', 1)->count();
+        $newCustomersLastMonth = $customerQuery->clone()->where('created_at', '>=', now()->subMonth())->count();
         
         // Customer jobs distribution
         $customersByJobCount = [
-            '1 job' => Customer::has('jobs', '=', 1)->count(),
-            '2-5 jobs' => Customer::has('jobs', '>', 1)->has('jobs', '<=', 5)->count(),
-            '6+ jobs' => Customer::has('jobs', '>', 5)->count(),
+            '1 job' => $customerQuery->clone()->has('jobs', '=', 1)->count(),
+            '2-5 jobs' => $customerQuery->clone()->has('jobs', '>', 1)->has('jobs', '<=', 5)->count(),
+            '6+ jobs' => $customerQuery->clone()->has('jobs', '>', 5)->count(),
         ];
         
         // Get top repeat customers with their booking info
-        $topCustomers = Customer::withCount('jobs')
+        $topCustomers = $customerQuery->clone()
+            ->withCount('jobs')
             ->has('jobs', '>', 1)
             ->with([
-                'jobs' => function($query) {
+                'jobs' => function($query) use ($request) {
                     $query->select('customer_id', 'created_at')
                         ->orderBy('created_at');
+                        
+                    // Apply date filters to jobs as well
+                    if ($request->filled('start_date')) {
+                        $query->where('created_at', '>=', $request->start_date);
+                    }
+                    
+                    if ($request->filled('end_date')) {
+                        $query->where('created_at', '<=', $request->end_date);
+                    }
                 }
             ])
             ->orderBy('jobs_count', 'desc')
@@ -113,7 +157,8 @@ class ReportController extends Controller
             'repeatCustomers',
             'newCustomersLastMonth',
             'customersByJobCount',
-            'topCustomers'
+            'topCustomers',
+            'request'
         ));
     }
     
@@ -159,24 +204,48 @@ class ReportController extends Controller
     }
     
     // Export Customer List to PDF
-    public function exportCustomerListPDF()
+    public function exportCustomerListPDF(Request $request)
     {
-        $customers = Customer::withCount('jobs')
-            ->withMax('jobs', 'scheduled_date')
-            ->orderBy('name')
-            ->get();
+        $query = Customer::withCount('jobs')
+            ->withMax('jobs', 'scheduled_date');
+            
+        // Apply filters based on job dates
+        if ($request->filled('start_date') || $request->filled('end_date')) {
+            $query->whereHas('jobs', function($jobQuery) use ($request) {
+                if ($request->filled('start_date')) {
+                    $jobQuery->where('scheduled_date', '>=', $request->start_date);
+                }
+                if ($request->filled('end_date')) {
+                    $jobQuery->where('scheduled_date', '<=', $request->end_date);
+                }
+            });
+        }
+        
+        $customers = $query->orderBy('name')->get();
             
         $pdf = PDF::loadView('admin.reports.customers.pdf', compact('customers'));
         return $pdf->download('customer-list-' . date('Y-m-d') . '.pdf');
     }
     
     // Export Customer List to CSV
-    public function exportCustomerListCSV(): StreamedResponse
+    public function exportCustomerListCSV(Request $request): StreamedResponse
     {
-        $customers = Customer::withCount('jobs')
-            ->withMax('jobs', 'scheduled_date')
-            ->orderBy('name')
-            ->get();
+        $query = Customer::withCount('jobs')
+            ->withMax('jobs', 'scheduled_date');
+            
+        // Apply filters based on job dates
+        if ($request->filled('start_date') || $request->filled('end_date')) {
+            $query->whereHas('jobs', function($jobQuery) use ($request) {
+                if ($request->filled('start_date')) {
+                    $jobQuery->where('scheduled_date', '>=', $request->start_date);
+                }
+                if ($request->filled('end_date')) {
+                    $jobQuery->where('scheduled_date', '<=', $request->end_date);
+                }
+            });
+        }
+        
+        $customers = $query->orderBy('name')->get();
             
         $headers = [
             'Content-Type' => 'text/csv',
@@ -207,30 +276,48 @@ class ReportController extends Controller
     }
     
     // Export Customer List to Excel (CSV format that Excel can open)
-    public function exportCustomerListExcel(): StreamedResponse
+    public function exportCustomerListExcel(Request $request): StreamedResponse
     {
-        return $this->exportCustomerListCSV();
+        return $this->exportCustomerListCSV($request);
     }
 
     // Export Cleaning History to PDF
-    public function exportCleaningHistoryPDF()
+    public function exportCleaningHistoryPDF(Request $request)
     {
-        $jobs = Job::with(['customer', 'service', 'employees'])
-            ->where('status', 'completed')
-            ->orderBy('completed_at', 'desc')
-            ->get();
+        $query = Job::with(['customer', 'service', 'employees'])
+            ->where('status', 'completed');
+            
+        // Apply date filters
+        if ($request->filled('start_date')) {
+            $query->where('created_at', '>=', $request->start_date);
+        }
+        
+        if ($request->filled('end_date')) {
+            $query->where('created_at', '<=', $request->end_date);
+        }
+        
+        $jobs = $query->orderBy('completed_at', 'desc')->get();
             
         $pdf = PDF::loadView('admin.reports.cleaning-history-pdf', compact('jobs'));
         return $pdf->download('cleaning-history-' . date('Y-m-d') . '.pdf');
     }
     
     // Export Cleaning History to CSV
-    public function exportCleaningHistoryCSV(): StreamedResponse
+    public function exportCleaningHistoryCSV(Request $request): StreamedResponse
     {
-        $jobs = Job::with(['customer', 'service', 'employees'])
-            ->where('status', 'completed')
-            ->orderBy('completed_at', 'desc')
-            ->get();
+        $query = Job::with(['customer', 'service', 'employees'])
+            ->where('status', 'completed');
+            
+        // Apply date filters
+        if ($request->filled('start_date')) {
+            $query->where('created_at', '>=', $request->start_date);
+        }
+        
+        if ($request->filled('end_date')) {
+            $query->where('created_at', '<=', $request->end_date);
+        }
+        
+        $jobs = $query->orderBy('completed_at', 'desc')->get();
             
         $headers = [
             'Content-Type' => 'text/csv',
@@ -262,9 +349,9 @@ class ReportController extends Controller
     }
     
     // Export Cleaning History to Excel
-    public function exportCleaningHistoryExcel(): StreamedResponse
+    public function exportCleaningHistoryExcel(Request $request): StreamedResponse
     {
-        return $this->exportCleaningHistoryCSV();
+        return $this->exportCleaningHistoryCSV($request);
     }
 
     // Export Customer Feedback to CSV
@@ -349,14 +436,36 @@ class ReportController extends Controller
     }
 
     // Export Customer Retention to CSV
-    public function exportCustomerRetentionCSV(): StreamedResponse
+    public function exportCustomerRetentionCSV(Request $request): StreamedResponse
     {
-        $topCustomers = Customer::withCount('jobs')
+        // Base customer query with date filters
+        $customerQuery = Customer::query();
+        
+        // Apply date filters to customer creation
+        if ($request->filled('start_date')) {
+            $customerQuery->where('created_at', '>=', $request->start_date);
+        }
+        
+        if ($request->filled('end_date')) {
+            $customerQuery->where('created_at', '<=', $request->end_date);
+        }
+        
+        $topCustomers = $customerQuery->clone()
+            ->withCount('jobs')
             ->has('jobs', '>', 1)
             ->with([
-                'jobs' => function($query) {
+                'jobs' => function($query) use ($request) {
                     $query->select('customer_id', 'created_at')
                         ->orderBy('created_at');
+                        
+                    // Apply date filters to jobs as well
+                    if ($request->filled('start_date')) {
+                        $query->where('created_at', '>=', $request->start_date);
+                    }
+                    
+                    if ($request->filled('end_date')) {
+                        $query->where('created_at', '<=', $request->end_date);
+                    }
                 }
             ])
             ->orderBy('jobs_count', 'desc')
@@ -405,14 +514,36 @@ class ReportController extends Controller
     }
 
     // Export Customer Retention to PDF
-    public function exportCustomerRetentionPDF()
+    public function exportCustomerRetentionPDF(Request $request)
     {
-        $topCustomers = Customer::withCount('jobs')
+        // Base customer query with date filters
+        $customerQuery = Customer::query();
+        
+        // Apply date filters to customer creation
+        if ($request->filled('start_date')) {
+            $customerQuery->where('created_at', '>=', $request->start_date);
+        }
+        
+        if ($request->filled('end_date')) {
+            $customerQuery->where('created_at', '<=', $request->end_date);
+        }
+        
+        $topCustomers = $customerQuery->clone()
+            ->withCount('jobs')
             ->has('jobs', '>', 1)
             ->with([
-                'jobs' => function($query) {
+                'jobs' => function($query) use ($request) {
                     $query->select('customer_id', 'created_at')
                         ->orderBy('created_at');
+                        
+                    // Apply date filters to jobs as well
+                    if ($request->filled('start_date')) {
+                        $query->where('created_at', '>=', $request->start_date);
+                    }
+                    
+                    if ($request->filled('end_date')) {
+                        $query->where('created_at', '<=', $request->end_date);
+                    }
                 }
             ])
             ->orderBy('jobs_count', 'desc')
@@ -429,9 +560,9 @@ class ReportController extends Controller
     }
 
     // Export Customer Retention to Excel
-    public function exportCustomerRetentionExcel(): StreamedResponse
+    public function exportCustomerRetentionExcel(Request $request): StreamedResponse
     {
-        return $this->exportCustomerRetentionCSV();
+        return $this->exportCustomerRetentionCSV($request);
     }
 
     // Export Job Completion to CSV

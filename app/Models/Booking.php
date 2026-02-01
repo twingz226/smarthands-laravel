@@ -24,6 +24,7 @@ class Booking extends Model
     const STATUS_CANCELLED = 'cancelled';
     const STATUS_COMPLETED = 'completed';
     const STATUS_RESCHEDULED = 'rescheduled';
+    const STATUS_RESERVED = 'reserved';
 
     protected $fillable = [
         'customer_id',
@@ -36,6 +37,7 @@ class Booking extends Model
         'status',
         'special_instructions',
         'admin_notes',
+        'cancellation_reason',
         'booking_token',
         'rescheduled_at',
         'reschedule_reason',
@@ -45,7 +47,8 @@ class Booking extends Model
         'customer_name',
         'customer_email',
         'customer_contact',
-        'customer_address'
+        'customer_address',
+        'customer_confirmed'
     ];
 
     protected $casts = [
@@ -55,7 +58,8 @@ class Booking extends Model
         'rescheduled_at' => 'datetime',
         'deleted_at' => 'datetime',
         'price' => 'decimal:2',
-        'is_admin_reschedule' => 'boolean'
+        'is_admin_reschedule' => 'boolean',
+        'customer_confirmed' => 'boolean'
     ];
 
     /**
@@ -194,7 +198,7 @@ class Booking extends Model
             ->whereNotIn('status', ['cancelled'])
             ->count();
             
-        return $bookingsCount < 3;
+        return $bookingsCount < 10;
     }
 
     public static function getAvailableSlots($date)
@@ -230,13 +234,92 @@ class Booking extends Model
     }
 
     /**
+     * Get available time slots based on cleaner availability and booking status
+     * Rules:
+     * 1. If a time slot has bookings but no cleaners assigned → UNAVAILABLE (temporary booking)
+     * 2. If a time slot has cleaners assigned and available cleaners >= 3 → AVAILABLE
+     * 3. If a time slot has all cleaners assigned to confirmed bookings → UNAVAILABLE
+     */
+    public static function getAvailableSlotsWithCleanerCount($date)
+    {
+        $slots = [
+            '09:00' => ['available' => true, 'available_cleaners' => 0], // 9:00 AM
+            '10:00' => ['available' => true, 'available_cleaners' => 0], // 10:00 AM
+            '11:00' => ['available' => true, 'available_cleaners' => 0], // 11:00 AM
+            '12:00' => ['available' => true, 'available_cleaners' => 0], // 12:00 PM
+            '13:00' => ['available' => true, 'available_cleaners' => 0], // 1:00 PM
+            '14:00' => ['available' => true, 'available_cleaners' => 0], // 2:00 PM
+            '15:00' => ['available' => true, 'available_cleaners' => 0], // 3:00 PM
+        ];
+
+        // Get total cleaners (all employees are considered active cleaners)
+        $totalCleaners = Employee::count();
+        
+        // Get jobs and their assigned cleaners for each time slot
+        foreach ($slots as $time => &$slotData) {
+            $dateTime = Carbon::parse($date . ' ' . $time, config('app.timezone'));
+            $startOfHour = $dateTime->copy()->startOfHour()->setTimezone('UTC');
+            $endOfHour = $dateTime->copy()->endOfHour()->setTimezone('UTC');
+            
+            // Count assigned cleaners for this time slot (from actual job assignments)
+            $assignedCleaners = Job::where('scheduled_date', '>=', $startOfHour)
+                ->where('scheduled_date', '<=', $endOfHour)
+                ->withCount('employees')
+                ->get()
+                ->sum('employees_count');
+            
+            // Count existing bookings for this time slot
+            $bookingCount = self::where('cleaning_date', '>=', $startOfHour)
+                ->where('cleaning_date', '<=', $endOfHour)
+                ->whereNotIn('status', ['cancelled'])
+                ->count();
+            
+            // Calculate available cleaners based on actual assignments
+            $availableCleaners = $totalCleaners - $assignedCleaners;
+            
+            $slotData['available_cleaners'] = max(0, $availableCleaners);
+            $slotData['assigned_cleaners'] = $assignedCleaners;
+            $slotData['booking_count'] = $bookingCount;
+            
+            // Apply temporary booking logic
+            $cleanersNeededPerBooking = 2; // Assume 2 cleaners per booking
+            $totalCleanersNeeded = $bookingCount * $cleanersNeededPerBooking;
+            $unassignedBookings = max(0, $bookingCount - ($assignedCleaners / $cleanersNeededPerBooking));
+            
+            if ($bookingCount > 0 && $assignedCleaners == 0) {
+                // Rule 1: Has bookings but no cleaners assigned → UNAVAILABLE (temporary booking)
+                $slotData['available'] = false;
+                $slotData['reason'] = 'temporary_booking';
+            } elseif ($totalCleanersNeeded > $assignedCleaners) {
+                // Rule 1b: Need more cleaners than currently assigned → UNAVAILABLE (need more cleaners)
+                $slotData['available'] = false;
+                $slotData['reason'] = 'insufficient_assignments';
+            } elseif ($assignedCleaners > 0 && $availableCleaners >= 3) {
+                // Rule 2: Has cleaners assigned and sufficient available cleaners → AVAILABLE
+                $slotData['available'] = true;
+                $slotData['reason'] = 'cleaners_assigned';
+            } elseif ($availableCleaners < 3) {
+                // Rule 3: All cleaners assigned or insufficient cleaners → UNAVAILABLE
+                $slotData['available'] = false;
+                $slotData['reason'] = 'insufficient_cleaners';
+            } else {
+                // Default: No bookings, no assignments → AVAILABLE
+                $slotData['available'] = true;
+                $slotData['reason'] = 'available';
+            }
+        }
+
+        return $slots;
+    }
+
+    /**
      * Get dates that are considered fully booked based on the given threshold.
      * Returns a collection of objects with booking_date and booking_count.
      *
      * A date is fully booked when the number of bookings on that date (excluding cancelled)
      * is greater than or equal to the threshold.
      */
-    public static function getFullyBookedDatesWithCounts(int $fullyBookedThreshold = 3)
+    public static function getFullyBookedDatesWithCounts(int $fullyBookedThreshold = 10)
     {
         return self::selectRaw('DATE(cleaning_date) as booking_date, COUNT(*) as booking_count')
             ->whereNotIn('status', [self::STATUS_CANCELLED])
@@ -264,7 +347,7 @@ class Booking extends Model
      * Compute fully booked dates across a range using application timezone day buckets.
      * Returns a collection of objects: (booking_date => Y-m-d, booking_count => int)
      */
-    public static function getFullyBookedDatesWithCountsByAppTimezone(Carbon $start, Carbon $end, int $fullyBookedThreshold = 3)
+    public static function getFullyBookedDatesWithCountsByAppTimezone(Carbon $start, Carbon $end, int $fullyBookedThreshold = 10)
     {
         $results = collect();
         for ($date = $start->copy()->startOfDay(); $date->lte($end); $date->addDay()) {
