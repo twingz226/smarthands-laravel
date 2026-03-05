@@ -58,7 +58,8 @@ RUN apk add --no-cache \
 COPY . /var/www/html
 
 # Copy built assets from assets stage
-COPY --from=assets /app/public/build /var/www/html/public/build
+COPY --from=assets /app/public/css /var/www/html/public/css
+COPY --from=assets /app/public/js /var/www/html/public/js
 COPY --from=assets /app/public/mix-manifest.json /var/www/html/public/mix-manifest.json
 
 # Copy vendor dependencies from vendor stage
