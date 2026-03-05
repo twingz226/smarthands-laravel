@@ -17,17 +17,18 @@ COPY webpack.mix.js ./
 RUN npm run production
 
 # Build stage for PHP dependencies
-FROM php:8.2-cli-alpine AS vendor
+FROM php:8.3-cli-alpine AS vendor
 
 WORKDIR /app
 
-# Install system dependencies for GD
+# Install system dependencies for GD and zip
 RUN apk add --no-cache \
     libpng-dev \
     libjpeg-turbo-dev \
     freetype-dev \
+    libzip-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd
+    && docker-php-ext-install gd zip
 
 # Install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
@@ -39,7 +40,7 @@ COPY composer.* ./
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Final production image
-FROM php:8.2-fpm-alpine
+FROM php:8.3-fpm-alpine
 
 # Install system dependencies
 RUN apk add --no-cache \
