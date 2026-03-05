@@ -17,9 +17,20 @@ COPY webpack.mix.js ./
 RUN npm run production
 
 # Build stage for PHP dependencies
-FROM composer:latest AS vendor
+FROM php:8.2-cli-alpine AS vendor
 
 WORKDIR /app
+
+# Install system dependencies for GD
+RUN apk add --no-cache \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd
+
+# Install composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Copy composer files
 COPY composer.* ./
