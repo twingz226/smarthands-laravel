@@ -73,6 +73,9 @@ WORKDIR /var/www/html
 # Create .env file from example
 RUN cp .env.example .env
 
+# Clear caches to avoid loading dev-only providers
+RUN php artisan cache:clear && php artisan config:clear && php artisan route:clear && php artisan view:clear
+
 # Generate application key
 RUN php artisan key:generate --force
 
