@@ -26,7 +26,7 @@ body {
     flex-direction: row;
 }
 
-/* Make sidebar fixed */
+/* Make sidebar fixed and styled scrollbar */
 .page-container .sidebar-menu {
     position: fixed;
     top: 0;
@@ -35,6 +35,29 @@ body {
     z-index: 1000;
     width: 220px;
     overflow-y: auto;
+    background: #274c77 !important;
+    /* Firefox support */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(30, 58, 95, 0.5);
+}
+
+/* Custom scrollbar for sidebar - fixes the 'black scrollbar' issue */
+.page-container .sidebar-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.page-container .sidebar-menu::-webkit-scrollbar-track {
+    background: rgba(30, 58, 95, 0.5); /* Slightly darker than sidebar */
+}
+
+.page-container .sidebar-menu::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2); /* Subtle white thumb */
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+.page-container .sidebar-menu::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4); /* Brighter on hover */
 }
 
 /* Make main content scrollable */
