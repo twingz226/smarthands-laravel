@@ -32,4 +32,3 @@
     <div class="main-content">
         @include('admin.partials.topbar')
 
-        <hr />

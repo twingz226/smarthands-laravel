@@ -233,16 +233,74 @@
 <body class="page-body page-left-in" data-url="http://neon.dev">
 
 <div class="page-container">
+    <!-- Mobile Sidebar Toggle Button -->
+    <button class="mobile-sidebar-toggle" id="mobileSidebarToggle" aria-label="Toggle sidebar menu">
+        <i class="entypo-menu"></i>
+    </button>
+    <!-- Backdrop overlay for sidebar on mobile -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
     @include('admin.partials.sidebar')
 
     <div class="main-content">
         @include('admin.partials.topbar')
 
-        <hr />
-
         @yield('content')
     </div>
 </div>
+
+<!-- Mobile Sidebar Toggle Script -->
+<script>
+(function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        var toggleBtn = document.getElementById('mobileSidebarToggle');
+        var backdrop = document.getElementById('sidebarBackdrop');
+        var pageContainer = document.querySelector('.page-container');
+
+        if (!toggleBtn || !pageContainer) return;
+
+        function openSidebar() {
+            pageContainer.classList.add('sidebar-open');
+        }
+
+        function closeSidebar() {
+            pageContainer.classList.remove('sidebar-open');
+        }
+
+        toggleBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (pageContainer.classList.contains('sidebar-open')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        });
+
+        if (backdrop) {
+            backdrop.addEventListener('click', function() {
+                closeSidebar();
+            });
+        }
+
+        // Close sidebar when a sidebar link is clicked (mobile navigation)
+        var sidebarLinks = document.querySelectorAll('.sidebar-menu a[href]:not(.menu-toggle)');
+        sidebarLinks.forEach(function(link) {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 991) {
+                    closeSidebar();
+                }
+            });
+        });
+
+        // Close sidebar on window resize if going to desktop
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 991) {
+                closeSidebar();
+            }
+        });
+    });
+})();
+</script>
 
 <!-- Scripts -->
 <script src="{{ asset('js/gsap/TweenMax.min.js') }}"></script>

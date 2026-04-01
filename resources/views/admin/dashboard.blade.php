@@ -16,7 +16,7 @@
     <div class="col-sm-12">
         <!-- Summary Cards -->
         <div class="row g-3 mb-4">
-            <div class="col-lg-3 col-md-6">
+            <div class="col-sm-6 col-md-3">
                 <div class="card text-white h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);">
                     <div class="card-body d-flex flex-column">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -29,7 +29,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-sm-6 col-md-3">
                 <div class="card text-white h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #10B981 0%, #34D399 100%);">
                     <div class="card-body d-flex flex-column">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -42,7 +42,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-sm-6 col-md-3">
                 <div class="card text-white h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);">
                     <div class="card-body d-flex flex-column">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -55,7 +55,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-sm-6 col-md-3">
                 <div class="card text-white h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);">
                     <div class="card-body d-flex flex-column">
                         <div class="d-flex justify-content-between align-items-center mb-3">
