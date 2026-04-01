@@ -64,7 +64,7 @@
                                 <i class="fas fa-calendar-alt"></i>
                             </div>
                         </div>
-                        <h2 class="display-5 fw-bold mb-0">{{ number_format($pendingBookingCount) }}</h2>
+                        <h2 id="pendingBookingsCount" class="display-5 fw-bold mb-0">{{ number_format($pendingBookingCount) }}</h2>
                     </div>
                 </div>
             </div>
@@ -218,31 +218,51 @@
 </div>
 
 </div> <!-- Close container-fluid -->
+
+@php
+    $dashboardData = [
+        'jobStatusCounts' => $jobStatusCounts,
+        'bookingStatusCounts' => $bookingStatusCounts,
+        'cleanerRatings' => [
+            'names' => $cleanerRatings->pluck('name')->toArray(),
+            'ratings' => $cleanerRatings->pluck('ratings_avg_rating')->toArray(),
+            'debug' => $cleanerRatings->pluck('name', 'ratings_avg_rating')->toArray()
+        ],
+        'topCustomers' => [
+            'names' => $topCustomersByJobs->pluck('name')->toArray(),
+            'counts' => $topCustomersByJobs->pluck('jobs_count')->toArray()
+        ],
+        'cleaningHistory' => [
+            'names' => $completedJobsByCustomer->pluck('name')->toArray(),
+            'counts' => $completedJobsByCustomer->pluck('jobs_count')->toArray()
+        ]
+    ];
+@endphp
+
+<script id="dashboard-data" type="application/json">
+    @json($dashboardData)
+</script>
+
 @endsection
 
 @push('scripts')
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+<!-- Toastify -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Debug: Check if data is available
-        console.log('Job Status Counts:', {
-            pending: '{{ $jobStatusCounts['pending'] }}',
-            assigned: '{{ $jobStatusCounts['assigned'] }}',
-            in_progress: '{{ $jobStatusCounts['in_progress'] }}',
-            completed: '{{ $jobStatusCounts['completed'] }}',
-            cancelled: '{{ $jobStatusCounts['cancelled'] }}'
-        });
-
-        console.log('Cleaner Ratings Data:', {!! json_encode($cleanerRatings->pluck('name', 'ratings_avg_rating')->toArray()) !!});
+        // Read data from the JSON script tag
+        const dashboardData = JSON.parse(document.getElementById('dashboard-data').textContent);
+        const jobStatusCounts = dashboardData.jobStatusCounts;
+        const bookingStatusCounts = dashboardData.bookingStatusCounts;
         
-        console.log('Booking Status Counts:', {
-            pending: '{{ $bookingStatusCounts['pending'] }}',
-            confirmed: '{{ $bookingStatusCounts['confirmed'] }}',
-            rescheduled: '{{ $bookingStatusCounts['rescheduled'] }}',
-            completed: '{{ $bookingStatusCounts['completed'] }}',
-            cancelled: '{{ $bookingStatusCounts['cancelled'] }}'
-        });
+        // Debug: Check if data is available
+        console.log('Job Status Counts:', jobStatusCounts);
+        console.log('Cleaner Ratings Data:', dashboardData.cleanerRatings.debug);
+        console.log('Booking Status Counts:', bookingStatusCounts);
 
         // Online Booking Status Chart
         const bookingStatusCtx = document.getElementById('bookingStatusChart');
@@ -253,11 +273,11 @@
                     labels: ['Pending', 'Confirmed', 'Rescheduled', 'Completed', 'Cancelled'],
                     datasets: [{
                         data: [
-                            parseInt('{{ $bookingStatusCounts['pending'] }}') || 0,
-                            parseInt('{{ $bookingStatusCounts['confirmed'] }}') || 0,
-                            parseInt('{{ $bookingStatusCounts['rescheduled'] }}') || 0,
-                            parseInt('{{ $bookingStatusCounts['completed'] }}') || 0,
-                            parseInt('{{ $bookingStatusCounts['cancelled'] }}') || 0
+                            parseInt(bookingStatusCounts.pending) || 0,
+                            parseInt(bookingStatusCounts.confirmed) || 0,
+                            parseInt(bookingStatusCounts.rescheduled) || 0,
+                            parseInt(bookingStatusCounts.completed) || 0,
+                            parseInt(bookingStatusCounts.cancelled) || 0
                         ],
                         backgroundColor: [
                             '#ffc107',  // Pending
@@ -297,11 +317,11 @@
                     labels: ['Pending', 'Assigned', 'In Progress', 'Completed', 'Cancelled'],
                     datasets: [{
                         data: [
-                            parseInt('{{ $jobStatusCounts['pending'] }}') || 0,
-                            parseInt('{{ $jobStatusCounts['assigned'] }}') || 0,
-                            parseInt('{{ $jobStatusCounts['in_progress'] }}') || 0,
-                            parseInt('{{ $jobStatusCounts['completed'] }}') || 0,
-                            parseInt('{{ $jobStatusCounts['cancelled'] }}') || 0
+                            parseInt(jobStatusCounts.pending) || 0,
+                            parseInt(jobStatusCounts.assigned) || 0,
+                            parseInt(jobStatusCounts.in_progress) || 0,
+                            parseInt(jobStatusCounts.completed) || 0,
+                            parseInt(jobStatusCounts.cancelled) || 0
                         ],
                         backgroundColor: [
                             '#ffc107',  // Warning - Pending
@@ -335,8 +355,8 @@
         // Cleaner Ratings Chart
         const cleanerRatingsCtx = document.getElementById('cleanerRatingsChart');
         if (cleanerRatingsCtx) {
-            const names = {!! json_encode($cleanerRatings->pluck('name')->toArray()) !!};
-            const ratings = {!! json_encode($cleanerRatings->pluck('ratings_avg_rating')->toArray()) !!};
+            const names = dashboardData.cleanerRatings.names;
+            const ratings = dashboardData.cleanerRatings.ratings;
 
             console.log('Chart Names:', names);
             console.log('Chart Ratings:', ratings);
@@ -443,8 +463,8 @@
         // Top Customers by Jobs Chart
         const topCustomersCtx = document.getElementById('topCustomersChart');
         if (topCustomersCtx) {
-            const customerNames = {!! json_encode($topCustomersByJobs->pluck('name')->toArray()) !!};
-            const jobCounts = {!! json_encode($topCustomersByJobs->pluck('jobs_count')->toArray()) !!};
+            const customerNames = dashboardData.topCustomers.names;
+            const jobCounts = dashboardData.topCustomers.counts;
 
             console.log('Top Customers:', customerNames);
             console.log('Job Counts:', jobCounts);
@@ -541,8 +561,8 @@
         // Cleaning History Chart (Completed Jobs by Customer)
         const cleaningHistoryCtx = document.getElementById('cleaningHistoryChart');
         if (cleaningHistoryCtx) {
-            const historyCustomerNames = {!! json_encode($completedJobsByCustomer->pluck('name')->toArray()) !!};
-            const completedJobCounts = {!! json_encode($completedJobsByCustomer->pluck('jobs_count')->toArray()) !!};
+            const historyCustomerNames = dashboardData.cleaningHistory.names;
+            const completedJobCounts = dashboardData.cleaningHistory.counts;
 
             console.log('Cleaning History Customers:', historyCustomerNames);
             console.log('Completed Job Counts:', completedJobCounts);
@@ -635,22 +655,28 @@
                 cleaningHistoryCtx.getContext('2d').fillText('No cleaning history data available', cleaningHistoryCtx.width / 2, cleaningHistoryCtx.height / 2);
             }
         }
+        // Live updates using Pusher (free tier)
+        if (typeof Echo !== 'undefined' && Echo.channel) {
+            Echo.channel('bookings')
+                .listen('NewBooking', (booking) => {
+                    if (typeof Toastify === 'function') {
+                        Toastify({
+                            text: `New booking from ${booking.customer.name}`,
+                            duration: 5000,
+                            newWindow: true,
+                            gravity: "top",
+                            position: "right",
+                            backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+                            onClick: () => window.location.href = `/admin/bookings/${booking.id}`
+                        }).showToast();
+                    }
+                    
+                    // Update counter
+                    const counter = document.getElementById('pendingBookingsCount');
+                    if (counter) {
+                        counter.innerText = (parseInt(counter.innerText) || 0) + 1;
+                    }
+                });
+        }
     });
-</script>
-
-<script>
-    // Live updates using Pusher (free tier)
-    Echo.channel('bookings')
-        .listen('NewBooking', (booking) => {
-            Toastify({
-                text: `New booking from ${booking.customer.name}`,
-                duration: 5000,
-                newWindow: true,
-                onClick: () => window.location.href = `/admin/bookings/${booking.id}`
-            }).showToast();
-            
-            // Update counter
-            const counter = document.getElementById('pendingBookingsCount');
-            counter.innerText = parseInt(counter.innerText) + 1;
-        });
 </script>

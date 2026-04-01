@@ -223,9 +223,9 @@
         });
         
         // Make CSRF token available to JavaScript
-        window.Laravel = {!! json_encode([
-            'csrfToken' => csrf_token(),
-        ]) !!};
+        window.Laravel = {
+            csrfToken: $('meta[name="csrf-token"]').attr('content')
+        };
     </script>
 
     @stack('styles')
