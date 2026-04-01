@@ -1281,7 +1281,8 @@ body .page-container .main-content {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
+    padding: 0 12px !important; /* Reduced internal padding */
+    margin: -20px -20px 20px -20px !important; /* Move to edges of .main-content */
     height: 56px;
     background: linear-gradient(135deg, #1e3a5f 0%, #274c77 40%, #2d5f8a 100%);
     position: sticky;
@@ -1556,7 +1557,7 @@ body .page-container .main-content {
    ===================================================== */
 @media (max-width: 991px) {
     .topbar {
-        padding: 0 12px 0 60px; /* 60px left padding clears the hamburger */
+        padding: 0 12px 0 60px !important; /* 60px left padding clears the hamburger */
         height: 52px;
     }
 
