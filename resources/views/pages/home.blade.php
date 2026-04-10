@@ -1467,7 +1467,11 @@ With SmartHands, we don’t just clean spaces and homes — we aim to change liv
           .then(data => {
             if (data.success) {
               // Show success message and reset form without page reload
-              successMessageContainer.innerHTML = `<div class="alert alert-success mt-3">${data.message}</div>`;
+              successMessageContainer.innerHTML = '';
+              const successDiv = document.createElement('div');
+              successDiv.className = 'alert alert-success mt-3';
+              successDiv.textContent = data.message;
+              successMessageContainer.appendChild(successDiv);
               messageForm.reset();
               
               // Reset reCAPTCHA
@@ -1482,13 +1486,21 @@ With SmartHands, we don’t just clean spaces and homes — we aim to change liv
               });
             } else {
               // Show error message
-              successMessageContainer.innerHTML = `<div class="alert alert-danger mt-3">${data.message || 'Please complete the reCAPTCHA verification and try again.'}</div>`;
+              successMessageContainer.innerHTML = '';
+              const errorDiv = document.createElement('div');
+              errorDiv.className = 'alert alert-danger mt-3';
+              errorDiv.textContent = data.message || 'Please complete the reCAPTCHA verification and try again.';
+              successMessageContainer.appendChild(errorDiv);
             }
           })
           .catch(error => {
             console.error('Error:', error);
             // Show error message without page reload
-            successMessageContainer.innerHTML = `<div class="alert alert-danger mt-3">Please complete the reCAPTCHA verification and try again.</div>`;
+            successMessageContainer.innerHTML = '';
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger mt-3';
+            errorDiv.textContent = 'Please complete the reCAPTCHA verification and try again.';
+            successMessageContainer.appendChild(errorDiv);
           })
           .finally(() => {
             isSubmitting = false;

@@ -109,9 +109,9 @@ class HomeMediaController extends Controller
                 'is_active' => $request->has('is_active')
             ]);
 
-            // Redirect back to originating page if provided
+            // Redirect back to originating page if provided (relative paths only to prevent open redirect)
             $returnTo = $request->input('return_to');
-            if ($returnTo && filter_var($returnTo, FILTER_VALIDATE_URL)) {
+            if ($returnTo && str_starts_with($returnTo, '/') && !str_starts_with($returnTo, '//')) {
                 return redirect()->to($returnTo)
                     ->with('success', 'All set! Your media has been uploaded successfully.');
             }

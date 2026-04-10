@@ -40,7 +40,7 @@ class LoginController extends Controller
             ]);
 
             throw ValidationException::withMessages([
-                'email' => 'The provided email does not exist in our records.',
+                'email' => 'Invalid email or password.',
             ]);
         }
 
@@ -81,7 +81,7 @@ class LoginController extends Controller
             }
 
             throw ValidationException::withMessages([
-                'password' => 'The provided password is incorrect.',
+                'email' => 'Invalid email or password.',
             ]);
         }
 

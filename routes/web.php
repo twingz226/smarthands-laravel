@@ -11,10 +11,7 @@ use App\Http\Controllers\Customer\JobController;
 use App\Models\Job;
 use Illuminate\Support\Facades\DB;
 
-// Debug route at the top
-Route::get('debug-password/{token}', function($token) {
-    return "Token: " . $token;
-});
+
 
 // Booking form POST route
 
@@ -24,35 +21,7 @@ Route::get('/booking/success', function () {
     return view('bookings.success');
 })->name('bookings.success');
 
-// Test route for debugging
-Route::get('/test-db', function () {
-    try {
-        // Test database connection
-        DB::connection()->getPdo();
-        
-        // Test jobs table
-        $jobsTable = DB::select('SHOW CREATE TABLE jobs');
-        
-        // Test job_queue table
-        $jobQueueTable = DB::select("SHOW TABLES LIKE 'job_queue'");
-        
-        // Test Job model
-        $jobCount = Job::count();
-        
-        return [
-            'database_connection' => 'OK',
-            'jobs_table' => $jobsTable ? 'Exists' : 'Missing',
-            'job_queue_table' => !empty($jobQueueTable) ? 'Exists' : 'Missing',
-            'job_model_count' => $jobCount,
-            'jobs_table_structure' => DB::select('DESCRIBE jobs'),
-        ];
-    } catch (\Exception $e) {
-        return [
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ];
-    }
-});
+
 
 // Home route
 Route::get('/', function () {
@@ -192,9 +161,6 @@ Route::middleware(['auth'])->prefix('customer')->name('customer.')->group(functi
 });
 
 // Google OAuth routes removed to disable social login
-
-// Phone Registration
-Route::post('/register/phone', [App\Http\Controllers\Auth\RegisterController::class, 'registerWithPhone'])->name('register.phone');
 
 // Public Rating Routes (use a unique parameter name to avoid global 'token' binding)
 Route::get('/rate/{ratingToken}', [PublicRatingController::class, 'showForm'])->name('public.rating.form');

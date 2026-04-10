@@ -493,10 +493,22 @@ function editMedia(id) {
 
       // Preview
       const container = document.getElementById('currentMediaContainer');
+      container.innerHTML = '';
       if (data.media_type === 'video') {
-        container.innerHTML = `<video controls style="max-width: 200px; max-height: 150px;"><source src="${data.media_url}" type="video/mp4"></video>`;
+        const video = document.createElement('video');
+        video.controls = true;
+        video.style.cssText = 'max-width: 200px; max-height: 150px;';
+        const source = document.createElement('source');
+        source.src = data.media_url;
+        source.type = 'video/mp4';
+        video.appendChild(source);
+        container.appendChild(video);
       } else {
-        container.innerHTML = `<img src="${data.media_url}" alt="${data.title}" style="max-width: 200px; max-height: 150px; object-fit: cover; border-radius: 8px;">`;
+        const img = document.createElement('img');
+        img.src = data.media_url;
+        img.alt = data.title || '';
+        img.style.cssText = 'max-width: 200px; max-height: 150px; object-fit: cover; border-radius: 8px;';
+        container.appendChild(img);
       }
 
       // Set selected service in dropdown (if present)

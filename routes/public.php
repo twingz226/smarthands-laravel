@@ -11,8 +11,8 @@ Route::get('/about', [PageController::class, 'about'])->name('about');
 
 // Public booking routes (no authentication required)
 Route::get('/booking', [PublicBookingController::class, 'create'])->name('public.bookings.create');
-Route::post('/booking', [PublicBookingController::class, 'store'])->name('public.bookings.store');
-Route::post('/book', [PublicBookingController::class, 'store'])->name('bookings.store.public');
+Route::post('/booking', [PublicBookingController::class, 'store'])->middleware(['throttle:10,1', 'recaptcha'])->name('public.bookings.store');
+Route::post('/book', [PublicBookingController::class, 'store'])->middleware(['throttle:10,1', 'recaptcha'])->name('bookings.store.public');
 
 // Booking availability check routes
 Route::get('/booking/check-availability', [PublicBookingController::class, 'checkAvailability'])->name('booking.check.availability');
@@ -44,5 +44,3 @@ Route::get('/booking/success', function() {
     return view('bookings.success');
 })->name('bookings.success');
 
-// Public booking submission route
-Route::post('/bookings', [App\Http\Controllers\PublicBookingController::class, 'store'])->name('public.bookings.store');
