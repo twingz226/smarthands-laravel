@@ -79,12 +79,64 @@
   padding: 60px 5%;
   background-color: #cbf3f0;
 }
+/* Services Header */
+.services-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+.services-label {
+  display: inline-block;
+  background: linear-gradient(135deg, #ff9f1c, #ff6b35);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 6px 18px;
+  border-radius: 50px;
+  margin-bottom: 16px;
+}
 .services-tagline {
   font-size: 2rem;
   font-weight: 700;
-  color: #000;
-  text-align: center;
-  margin-bottom: 40px;
+  color: #1a1a2e;
+  margin: 0 0 12px;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+.services-divider {
+  width: 60px;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #ff9f1c, #2ec4b6);
+  margin: 0 auto 16px;
+}
+.services-subtitle {
+  font-size: 1rem;
+  color: #5a6a72;
+  font-weight: 400;
+  margin: 0 0 20px;
+}
+.scroll-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid rgba(26, 26, 46, 0.15);
+  color: #1a1a2e;
+  font-size: 1rem;
+  animation: gentleBounce 2s ease-in-out infinite;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+.scroll-indicator:hover {
+  opacity: 1;
+}
+@keyframes gentleBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
 }
 .services-grid {
   display: flex;
@@ -304,8 +356,13 @@
     font-size: 1.3rem;
   }
   .services-tagline {
-    font-size: 2.5rem;
-    margin-bottom: 60px;
+    font-size: 2.8rem;
+  }
+  .services-header {
+    margin-bottom: 64px;
+  }
+  .services-subtitle {
+    font-size: 1.1rem;
   }
   .service-box {
     width: 45%;

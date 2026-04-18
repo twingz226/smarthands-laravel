@@ -3,7 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cookie Policy - Smarthands</title>
+  <meta name="description" content="Cookie Policy for Smarthands Cleaning Services. Learn how we use cookies to improve your browsing experience on our website.">
+  <meta name="robots" content="noindex, follow">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <!-- Canonical URL -->
+  <link rel="canonical" href="{{ url()->current() }}" />
+
+  <title>Cookie Policy | Smarthands Cleaning Services</title>
   <link rel="icon" href="{{ asset('images/Smarthands.png') }}" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
@@ -23,9 +30,44 @@
     .main-headline { font-size: 2.5rem; font-weight: 700; }
     .policy-card { background-color: rgba(254, 254, 254, 0.95); border-radius: 10px; padding: 30px; box-shadow: 0 8px 20px rgba(0,0,0,.06); }
     .policy-card h3 { font-weight: 600; }
+
+    /* Floating Book Now Button */
+    .floating-book-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: linear-gradient(135deg, #ff9f1c, #ff6b35);
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 6px 20px rgba(255, 159, 28, 0.4);
+      transition: all 0.3s ease;
+      z-index: 1050;
+    }
+    .floating-book-btn:hover {
+      background: linear-gradient(135deg, #ff6b35, #ff9f1c);
+      color: #fff;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(255, 159, 28, 0.5);
+    }
+    @media (max-width: 768px) {
+      .floating-book-btn span { display: none; }
+      .floating-book-btn { padding: 14px; border-radius: 50%; }
+      .floating-book-btn i { font-size: 1.3rem; }
+    }
   </style>
 </head>
 <body>
+  <!-- Skip to main content link for screen readers -->
+  <a href="#main-content" class="visually-hidden-focusable position-absolute top-0 start-0 p-2 bg-light text-dark" style="z-index: 9999;">
+    Skip to main content
+  </a>
   <nav class="navbar navbar-expand-lg navbar-light custom-navbar shadow-sm sticky-top">
     <div class="container">
 @php
@@ -33,7 +75,7 @@
     $companyLogo = Setting::getValue('company_logo');
 @endphp
       <a class="navbar-brand" href="{{ route('home') }}">
-        <img src="{{ $companyLogo ? asset('storage/' . $companyLogo) : asset('images/Smarthands.png') }}" alt="Logo" onerror="this.src='https://via.placeholder.com/100'">
+        <img src="{{ $companyLogo ? asset('storage/' . $companyLogo) : asset('images/Smarthands.png') }}" alt="Smarthands Cleaning Services Logo" width="200" height="60" loading="lazy" onerror="this.src='https://via.placeholder.com/100'">
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
@@ -80,6 +122,7 @@
     </div>
   </nav>
 
+  <main id="main-content" tabindex="-1">
   <section class="hero-section">
     <h1 class="main-headline">Cookie Policy</h1>
   </section>
@@ -105,6 +148,7 @@
       </div>
     </div>
   </section>
+  </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <x-footer :contactInfo="$contactInfo" />
@@ -286,5 +330,10 @@
       }
     });
   </script>
+<!-- Floating Book Now Button -->
+<a href="{{ route('home') }}#services" class="floating-book-btn" title="Book a cleaning service" aria-label="Book Now">
+  <i class="bi bi-calendar-check"></i>
+  <span>Book Now</span>
+</a>
 </body>
 </html>

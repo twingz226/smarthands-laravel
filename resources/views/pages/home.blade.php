@@ -28,7 +28,7 @@ $logoUrl = $companyLogo ? asset('storage/' . $companyLogo) : asset('images/Smart
   <!-- Canonical URL -->
   <link rel="canonical" href="{{ url()->current() }}" />
   
-  <title>Smarthands Cleaning Services | Professional Cleaning in Bacolod</title>
+  <title>Smarthands Cleaning Services | Cleaning Services in Negros Occ. Philippines</title>
   <link rel="icon" href="{{ asset('images/Smarthands.png') }}" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -302,6 +302,37 @@ $logoUrl = $companyLogo ? asset('storage/' . $companyLogo) : asset('images/Smart
         display: block;
       }
     }
+
+    /* Floating Book Now Button */
+    .floating-book-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: linear-gradient(135deg, #ff9f1c, #ff6b35);
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 6px 20px rgba(255, 159, 28, 0.4);
+      transition: all 0.3s ease;
+      z-index: 1050;
+    }
+    .floating-book-btn:hover {
+      background: linear-gradient(135deg, #ff6b35, #ff9f1c);
+      color: #fff;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(255, 159, 28, 0.5);
+    }
+    @media (max-width: 768px) {
+      .floating-book-btn span { display: none; }
+      .floating-book-btn { padding: 14px; border-radius: 50%; }
+      .floating-book-btn i { font-size: 1.3rem; }
+    }
   </style>
 
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
@@ -493,7 +524,15 @@ $logoUrl = $companyLogo ? asset('storage/' . $companyLogo) : asset('images/Smart
 
     <!-- Services Section -->
     <section id="services" class="services-section">
-      <h2 class="services-tagline">Book Our Service <i class="bi bi-arrow-down d-block mt-2"></i></h2>
+      <div class="services-header" id="services-header">
+        <span class="services-label">Our Services</span>
+        <h2 class="services-tagline">Book Our Service</h2>
+        <div class="services-divider"></div>
+        <p class="services-subtitle">Choose from our professional cleaning packages below</p>
+        <div class="scroll-indicator" aria-hidden="true">
+          <i class="bi bi-chevron-down"></i>
+        </div>
+      </div>
 
       <div class="services-grid">
         @if($servicesMedia->isNotEmpty())
@@ -1529,7 +1568,7 @@ With SmartHands, we don’t just clean spaces and homes — we aim to change liv
           loadingDates.style.display = 'block';
         }
         try {
-          const response = await fetch('{{ route('fully.booked.dates') }}?context=home');
+          const response = await fetch('{{ route("fully.booked.dates") }}?context=home');
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
@@ -1666,5 +1705,10 @@ With SmartHands, we don’t just clean spaces and homes — we aim to change liv
     });
   </script>
   @endif
+<!-- Floating Book Now Button -->
+<a href="#services" class="floating-book-btn" title="Book a cleaning service" aria-label="Book Now">
+  <i class="bi bi-calendar-check"></i>
+  <span>Book Now</span>
+</a>
 </body>
 </html>

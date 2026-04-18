@@ -3,7 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Our Services - Smarthands</title>
+  <meta name="description" content="Explore Smarthands professional cleaning services in Bacolod — deep cleaning, apartment cleaning, post-construction cleanup, and more. Affordable rates with free cleaning materials.">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ url()->current() }}">
+  <meta property="og:title" content="Our Services | Smarthands Cleaning Services">
+  <meta property="og:description" content="Explore Smarthands professional cleaning services in Bacolod — deep cleaning, apartment cleaning, post-construction cleanup, and more.">
+  <meta property="og:image" content="{{ asset('images/og-image.jpg') }}">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Our Services | Smarthands Cleaning Services">
+  <meta name="twitter:description" content="Explore Smarthands professional cleaning services in Bacolod — deep cleaning, apartment cleaning, post-construction cleanup, and more.">
+  <meta name="twitter:image" content="{{ asset('images/og-image.jpg') }}">
+
+  <!-- Canonical URL -->
+  <link rel="canonical" href="{{ url()->current() }}" />
+
+  <title>Our Services | Smarthands Cleaning Services in Bacolod</title>
   <link rel="icon" href="{{ asset('images/Smarthands.png') }}" />
 
   <!-- Bootstrap CSS -->
@@ -150,9 +169,44 @@
         display: block;
       }
     }
+
+    /* Floating Book Now Button */
+    .floating-book-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: linear-gradient(135deg, #ff9f1c, #ff6b35);
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 6px 20px rgba(255, 159, 28, 0.4);
+      transition: all 0.3s ease;
+      z-index: 1050;
+    }
+    .floating-book-btn:hover {
+      background: linear-gradient(135deg, #ff6b35, #ff9f1c);
+      color: #fff;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(255, 159, 28, 0.5);
+    }
+    @media (max-width: 768px) {
+      .floating-book-btn span { display: none; }
+      .floating-book-btn { padding: 14px; border-radius: 50%; }
+      .floating-book-btn i { font-size: 1.3rem; }
+    }
   </style>
 </head>
 <body>
+  <!-- Skip to main content link for screen readers -->
+  <a href="#main-content" class="visually-hidden-focusable position-absolute top-0 start-0 p-2 bg-light text-dark" style="z-index: 9999;">
+    Skip to main content
+  </a>
 
   <nav class="navbar navbar-expand-lg navbar-light custom-navbar shadow-sm sticky-top">
     <div class="container">
@@ -161,7 +215,7 @@
             use App\Models\Setting;
             $companyLogo = Setting::getValue('company_logo');
         @endphp
-        <img src="{{ $companyLogo ? asset('storage/' . $companyLogo) : asset('images/Smarthands.png') }}" alt="Logo" onerror="this.src='https://via.placeholder.com/100'" class="img-fluid">
+        <img src="{{ $companyLogo ? asset('storage/' . $companyLogo) : asset('images/Smarthands.png') }}" alt="Smarthands Cleaning Services Logo" width="200" height="60" loading="lazy" onerror="this.src='https://via.placeholder.com/100'" class="img-fluid">
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
@@ -208,6 +262,7 @@
     </div>
   </nav>
 
+  <main id="main-content" tabindex="-1">
   <section class="hero-section">
     <h1 class="main-headline">Cleaning Services</h1>
     <p class="tagline">Where Simplicity Meets Spotless Results</p>
@@ -302,6 +357,39 @@
       <p class="fw-bold text-danger">Note: For areas outside Bacolod, a ₱300 fuel charge applies.</p>
     </div>
   </section>
+  </main>
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {!! json_encode([
+    '@context' => 'https://schema.org',
+    '@type' => 'ItemList',
+    'name' => 'Smarthands Cleaning Services',
+    'description' => 'Professional cleaning services offered by Smarthands in Bacolod City',
+    'url' => url()->current(),
+    'numberOfItems' => $services->count(),
+    'itemListElement' => $services->map(function($service, $index) {
+      return [
+        '@type' => 'ListItem',
+        'position' => $index + 1,
+        'item' => [
+          '@type' => 'Service',
+          'name' => $service->name,
+          'description' => $service->description ?? '',
+          'provider' => [
+            '@type' => 'LocalBusiness',
+            'name' => 'Smarthands Cleaning Services'
+          ],
+          'offers' => [
+            '@type' => 'Offer',
+            'price' => $service->price,
+            'priceCurrency' => 'PHP'
+          ]
+        ]
+      ];
+    })->values()->toArray()
+  ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+  </script>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -491,5 +579,10 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 </script>
 
+<!-- Floating Book Now Button -->
+<a href="{{ route('home') }}#services" class="floating-book-btn" title="Book a cleaning service" aria-label="Book Now">
+  <i class="bi bi-calendar-check"></i>
+  <span>Book Now</span>
+</a>
 </body>
 </html>
