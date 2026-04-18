@@ -1558,6 +1558,10 @@ With SmartHands, we don’t just clean spaces and homes — we aim to change liv
       const loadingDates = document.getElementById('loadingDates');
       const bookingModal = document.getElementById('bookingModal'); // Get the modal element
 
+      // Guard: only proceed if the cleaning date input exists on the page
+      // (it won't exist for guest/unauthenticated users who don't see the booking modal)
+      if (!cleaningDateInput) return;
+
       let fullyBookedDates = [];
       let fpInstance; // Declare flatpickr instance globally within this scope
       let fullyBookedTimes = {};
