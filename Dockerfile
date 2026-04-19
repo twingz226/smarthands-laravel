@@ -91,8 +91,8 @@ chown -R www-data:www-data storage bootstrap/cache\n\
 chmod -R 775 storage bootstrap/cache\n\
 \n\
 # Run migrations and cache config\n\
-# We run these as root to ensure they have access, Laravel will drop to www-data for the web server\n\
-php artisan migrate --force --no-interaction || echo "Migration warning"\n\
+# Run migrations (Force fresh if you want to wipe and restart)\n\
+php artisan migrate:fresh --force --seed --no-interaction || php artisan migrate --force --no-interaction || echo "Migration warning"\n\
 php artisan config:cache\n\
 php artisan route:cache\n\
 php artisan view:cache\n\
