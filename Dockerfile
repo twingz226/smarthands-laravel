@@ -86,13 +86,14 @@ set -e\n\
 echo "==> Preparing environment..."\n\
 cd /var/www/html\n\
 \n\
+echo "Checking Database Connection: $DB_CONNECTION on $DB_HOST"\n\
+\n\
 # Final check on permissions\n\
 chown -R www-data:www-data storage bootstrap/cache\n\
 chmod -R 775 storage bootstrap/cache\n\
 \n\
 # Run migrations and cache config\n\
-# Run migrations (Force fresh if you want to wipe and restart)\n\
-php artisan migrate:fresh --force --seed --no-interaction || php artisan migrate --force --no-interaction || echo "Migration warning"\n\
+php artisan migrate --force --no-interaction || echo "Migration failed - check DB variables"\n\
 php artisan config:cache\n\
 php artisan route:cache\n\
 php artisan view:cache\n\
