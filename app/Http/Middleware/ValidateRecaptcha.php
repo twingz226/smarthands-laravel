@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class ValidateRecaptcha
 {
@@ -21,6 +22,11 @@ class ValidateRecaptcha
         
         // Skip reCAPTCHA validation in local environment if not configured
         if (app()->environment('local') && !config('services.recaptcha.secret')) {
+            return $next($request);
+        }
+
+        // Skip reCAPTCHA validation if user is authenticated
+        if (Auth::check()) {
             return $next($request);
         }
         
@@ -40,6 +46,7 @@ class ValidateRecaptcha
             'remoteip' => $request->ip(),
         ]);
         
+        /** @var \Illuminate\Http\Client\Response $response */
         $result = $response->json();
         
         if (!$result['success']) {

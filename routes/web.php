@@ -98,10 +98,6 @@ Route::get('/fully-booked-dates', [PageController::class, 'fullyBookedDates'])->
 
 // Customer Portal Routes
 Route::middleware(['auth'])->group(function () {
-    Route::get('/booking', [App\Http\Controllers\BookingController::class, 'create'])->name('public.bookings.create');
-    Route::post('/booking', [App\Http\Controllers\BookingController::class, 'store'])->name('public.bookings.store.web');
-    Route::post('/book', [App\Http\Controllers\BookingController::class, 'store'])->name('bookings.store.alt');
-    
     // Customer booking management routes
     Route::prefix('bookings')->name('bookings.')->group(function () {
         Route::post('/{booking:booking_token}/reschedule', [App\Http\Controllers\BookingController::class, 'reschedule'])

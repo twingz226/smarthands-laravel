@@ -24,7 +24,7 @@ class PublicBookingController extends Controller
     public function create()
     {
         $services = Service::all();
-        return view('public.bookings.create', compact('services'));
+        return view('bookings.create', compact('services'));
     }
 
     public function store(Request $request)
@@ -33,157 +33,162 @@ class PublicBookingController extends Controller
         
         try {
             Log::debug('Received booking request:', $request->all());
-            Log::info('Booking token received: ' . $request->input('booking_token'));
-            Log::info('Service ID received: ' . $request->input('service_id'));
-            Log::info('Cleaning Date received: ' . $request->input('cleaning_date'));
-            Log::debug('Request data before validation:', $request->all());
             
-            // Validate the request data
-            $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|max:255',
-                'contact' => 'required|string|max:20',
-                'block' => 'nullable|string|max:255',
-                'lot' => 'nullable|string|max:255',
-                'street' => 'required|string|max:500',
-                'subdivision' => 'nullable|string|max:255',
-                'barangay' => 'required|string|max:255',
-                'city' => 'required|string|max:255',
-                'zip_code' => 'required|string|max:20',
-                'service_id' => 'required|exists:services,id',
-                'cleaning_date' => 'required|date|after_or_equal:today',
-                'cleaning_time' => 'required|date_format:H:i',
-                'client_timezone_offset' => 'required|integer',
-                'booking_token' => 'required|string'
-            ]);
-            Log::debug('Validated cleaning_date and cleaning_time:', [
-                'cleaning_date' => $validated['cleaning_date'],
-                'cleaning_time' => $validated['cleaning_time']
-            ]);
-
-            // Parse the cleaning date and time in the application timezone
+            $validated = $this->validateBookingRequest($request);
+            
+            // Parse and convert to UTC
             $cleaningDateTime = Carbon::parse(
                 $validated['cleaning_date'] . ' ' . $validated['cleaning_time'], 
                 config('app.timezone')
             );
+            $cleaningDateTimeUTC = $cleaningDateTime->copy()->setTimezone('UTC');
 
-            // Reject if the selected date is administratively disabled
-            try {
-                $disabled = DisabledDate::query()->active()->whereDate('date', $cleaningDateTime->toDateString())->exists();
-            } catch (\Throwable $e) {
-                $disabled = false; // table may not exist yet
+            // Availability checks
+            $availabilityError = $this->checkBookingAvailability($cleaningDateTime, $cleaningDateTimeUTC);
+            if ($availabilityError) {
+                return $availabilityError;
             }
-            if ($disabled) {
-                return response()->json(['success' => false, 'errors' => ['cleaning_date' => 'This date is unavailable for booking. Please choose another date.']], 422);
-            }
-
-            // Convert to UTC for storage
-            $cleaningDateTimeUTC = $cleaningDateTime->setTimezone('UTC');
-
-            // Check daily booking limit
-            if (!Booking::hasAvailableSlots($cleaningDateTimeUTC)) {
-                Log::warning('Daily booking limit reached for ' . $cleaningDateTimeUTC->toDateString());
-                return response()->json(['success' => false, 'errors' => ['cleaning_date' => 'Daily booking limit reached for this date.']], 422);
-            }
-
-            // Check cleaner availability for the selected time slot
-            $availableSlots = Booking::getAvailableSlotsWithCleanerCount($cleaningDateTimeUTC->toDateString());
-            $timeSlot = $cleaningDateTimeUTC->format('H:i');
-            
-            if (isset($availableSlots[$timeSlot]) && !$availableSlots[$timeSlot]['available']) {
-                Log::warning('Insufficient cleaners available for ' . $timeSlot . ' on ' . $cleaningDateTimeUTC->toDateString());
-                return response()->json(['success' => false, 'errors' => ['cleaning_time' => 'Insufficient cleaners available for this time slot.']], 422);
-            }
-
-            Log::debug('Validated booking data:', $validated);
 
             // Get the service
             $service = Service::findOrFail($validated['service_id']);
-            Log::debug('Service found:', $service->toArray());
 
-            // Create or update customer
-            $customer = Customer::updateOrCreate(
-                ['email' => strtolower($validated['email'])],
-                [
-                    'name' => $validated['name'],
-                    'contact' => $validated['contact'],
-                    'registered_date' => now()
-                ]
-            );
+            // Customer creation/update
+            $customer = $this->getOrCreateCustomer($validated);
 
-            // Customer model automatically dispatches NewCustomerRegistered event
-            // No need for manual event dispatch here
-
-            Log::debug('Customer found/updated:', $customer->toArray());
-            
             // Assign user_id if authenticated
             $userId = Auth::check() ? Auth::id() : null;
-            Log::debug('User ID for booking:', ['user_id' => $userId]);
 
-            // Prevent double booking by checking for existing booking_token
+            // Prevent double booking and create booking
             $booking = Booking::where('booking_token', $validated['booking_token'])->first();
-            Log::debug('Booking token check result:', ['booking_token' => $validated['booking_token'], 'found' => (bool)$booking]);
             if ($booking) {
                 Log::info('Duplicate booking prevented: booking_token already exists.');
             } else {
-                $booking = new Booking([
-                    'user_id' => $userId,
-                    'service_id' => $validated['service_id'],
-                    'cleaning_date' => $cleaningDateTimeUTC, // Store in UTC
-                    'status' => 'pending',
-                    'customer_name' => $validated['name'],
-                    'customer_email' => $validated['email'],
-                    'customer_contact' => $validated['contact'],
-                    'customer_address' => implode(', ', array_filter([
-                        $validated['block'] ? 'Block: ' . $validated['block'] : null,
-                        $validated['lot'] ? 'Lot: ' . $validated['lot'] : null,
-                        $validated['street'] ? 'Street: ' . $validated['street'] : null,
-                        $validated['subdivision'] ? 'Subdivision: ' . $validated['subdivision'] : null,
-                        $validated['barangay'] ? 'Barangay: ' . $validated['barangay'] : null,
-                        $validated['city'] ? 'City: ' . $validated['city'] : null,
-                        $validated['zip_code'] ? 'Zip: ' . $validated['zip_code'] : null,
-                    ])),
-                    'booking_token' => $validated['booking_token'],
-                    'customer_id' => $customer->id // Add this line
-                ]);
-                $booking->save(); // Save the new booking to the database
-                
-                // BookingCreated event is dispatched centrally in Booking::boot() on created
-                // to avoid duplicate notifications
+                $booking = $this->createNewBooking($validated, $customer, $cleaningDateTimeUTC, $userId, $service);
             }
 
-            // Dispatch job to send emails (if configured)
+            // Dispatch emails
             if (config('mail.enabled')) {
                 SendBookingEmails::dispatch($booking, $customer);
             }
 
             DB::commit();
 
-            if ($request->ajax()) {
-                return response()->json(['success' => true, 'redirect_url' => route('bookings.success')]);
-            } else {
-                return redirect()->route('bookings.success');
-            }
+            return $request->ajax() 
+                ? response()->json(['success' => true, 'redirect_url' => route('bookings.success')])
+                : redirect()->route('bookings.success');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
-            Log::error("Booking validation failed: " . json_encode($request->all()) . ". Errors: " . json_encode($e->errors()));
-            Log::debug('Validation errors:', $e->errors());
-            if ($request->ajax()) {
-                return response()->json(['success' => false, 'errors' => $e->errors()], 422);
-            } else {
-                return back()->withErrors($e->errors())->withInput();
-            }
+            Log::error("Booking validation failed. Errors: " . json_encode($e->errors()));
+            return $request->ajax()
+                ? response()->json(['success' => false, 'errors' => $e->errors()], 422)
+                : back()->withErrors($e->errors())->withInput();
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Booking failed: " . $e->getMessage());
-            if ($request->ajax()) {
-                return response()->json(['success' => false, 'message' => 'Booking failed. Please try again.'], 500);
-            } else {
-                return back()->with('error', 'Booking failed. Please try again.')->withInput();
-            }
+            return $request->ajax()
+                ? response()->json(['success' => false, 'message' => 'Booking failed. Please try again.'], 500)
+                : back()->with('error', 'Booking failed. Please try again.')->withInput();
         }
+    }
+
+    private function validateBookingRequest(Request $request)
+    {
+        return $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'contact' => 'required|string|max:20',
+            'block' => 'nullable|string|max:255',
+            'lot' => 'nullable|string|max:255',
+            'street' => 'required|string|max:500',
+            'subdivision' => 'nullable|string|max:255',
+            'barangay' => 'required|string|max:255',
+            'city' => 'required|string|max:255',
+            'zip_code' => 'required|string|max:20',
+            'service_id' => 'required|exists:services,id',
+            'cleaning_date' => 'required|date|after_or_equal:today',
+            'cleaning_time' => 'required|date_format:H:i',
+            'client_timezone_offset' => 'required|integer',
+            'booking_token' => 'required|string'
+        ]);
+    }
+
+    private function checkBookingAvailability($cleaningDateTime, $cleaningDateTimeUTC)
+    {
+        // 1. Check administratively disabled dates
+        try {
+            $disabled = DisabledDate::query()->active()->whereDate('date', $cleaningDateTime->toDateString())->exists();
+        } catch (\Throwable $e) {
+            $disabled = false;
+        }
+        if ($disabled) {
+            return response()->json(['success' => false, 'errors' => ['cleaning_date' => 'This date is unavailable for booking.']], 422);
+        }
+
+        // 2. Check daily booking limit
+        if (!Booking::hasAvailableSlots($cleaningDateTimeUTC)) {
+            Log::warning('Daily booking limit reached for ' . $cleaningDateTimeUTC->toDateString());
+            return response()->json(['success' => false, 'errors' => ['cleaning_date' => 'Daily booking limit reached for this date.']], 422);
+        }
+
+        // 3. Check cleaner availability for the selected time slot
+        $availableSlots = Booking::getAvailableSlotsWithCleanerCount($cleaningDateTimeUTC->toDateString());
+        $timeSlot = $cleaningDateTimeUTC->format('H:i');
+        
+        if (isset($availableSlots[$timeSlot]) && !$availableSlots[$timeSlot]['available']) {
+            Log::warning('Insufficient cleaners available for ' . $timeSlot);
+            return response()->json(['success' => false, 'errors' => ['cleaning_time' => 'Insufficient cleaners available for this time slot.']], 422);
+        }
+
+        return null;
+    }
+
+    private function getOrCreateCustomer(array $validated)
+    {
+        return Customer::updateOrCreate(
+            ['email' => strtolower($validated['email'])],
+            [
+                'name' => $validated['name'],
+                'contact' => $validated['contact'],
+                'registered_date' => now()
+            ]
+        );
+    }
+
+    private function createNewBooking(array $validated, $customer, $cleaningDateTimeUTC, $userId, $service)
+    {
+        $booking = new Booking([
+            'user_id' => $userId,
+            'service_id' => $validated['service_id'],
+            'cleaning_date' => $cleaningDateTimeUTC,
+            'status' => 'pending',
+            'customer_name' => $validated['name'],
+            'customer_email' => $validated['email'],
+            'customer_contact' => $validated['contact'],
+            'customer_address' => implode(', ', array_filter([
+                $validated['block'] ? 'Block: ' . $validated['block'] : null,
+                $validated['lot'] ? 'Lot: ' . $validated['lot'] : null,
+                $validated['street'] ? 'Street: ' . $validated['street'] : null,
+                $validated['subdivision'] ? 'Subdivision: ' . $validated['subdivision'] : null,
+                $validated['barangay'] ? 'Barangay: ' . $validated['barangay'] : null,
+                $validated['city'] ? 'City: ' . $validated['city'] : null,
+                $validated['zip_code'] ? 'Zip: ' . $validated['zip_code'] : null,
+            ])),
+            'booking_token' => $validated['booking_token'],
+            'customer_id' => $customer->id
+        ]);
+        
+        $booking->save();
+
+        if ($userId) {
+            \App\Models\ActivityLog::create([
+                'user_id' => $userId,
+                'description' => 'Created new booking for ' . $service->name
+            ]);
+        }
+
+        return $booking;
     }
 
     private function calculatePrice($service, $data)
