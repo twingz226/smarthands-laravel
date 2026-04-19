@@ -84,19 +84,25 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 RUN printf '#!/bin/sh\n\
 set -e\n\
 \n\
-# Write Railway env vars into .env so Laravel can read them\n\
-env | grep -v "^_=" > /var/www/html/.env 2>/dev/null || true\n\
+cd /var/www/html\n\
+\n\
+# Remove build-time .env — Laravel reads from system environment in production\n\
+rm -f .env\n\
+\n\
+# Ensure storage directories exist\n\
+mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views\n\
+chmod -R 775 storage bootstrap/cache\n\
 \n\
 # Run database migrations\n\
-php artisan migrate --force || true\n\
+php artisan migrate --force 2>&1 || echo "Migration warning (may be OK on first run)"\n\
 \n\
-# Optimize for production\n\
+# Cache configuration (reads from system env vars injected by Railway)\n\
 php artisan config:cache\n\
 php artisan route:cache\n\
 php artisan view:cache\n\
 php artisan storage:link 2>/dev/null || true\n\
 \n\
-# Start supervisord (nginx + php-fpm)\n\
+echo "==> App ready, starting server..."\n\
 exec /usr/bin/supervisord -c /etc/supervisord.conf\n\
 ' > /entrypoint.sh && chmod +x /entrypoint.sh
 
