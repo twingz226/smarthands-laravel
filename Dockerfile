@@ -77,33 +77,28 @@ RUN printf 'APP_KEY=base64:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx=\nAPP_URL=ht
 # Remove cached bootstrap files to avoid loading dev providers
 RUN rm -rf bootstrap/cache/*.php
 
-# Ensure bootstrap/cache directory exists and set permissions
-RUN mkdir -p bootstrap/cache \
-    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# Ensure the web user owns the app
+RUN chown -R www-data:www-data /var/www/html
 
-# Create entrypoint script (runs at container start when Railway env vars exist)
+# Create entrypoint script
 RUN printf '#!/bin/sh\n\
 set -e\n\
 \n\
 cd /var/www/html\n\
 \n\
-# Remove build-time .env — Laravel reads from system environment in production\n\
-rm -f .env\n\
-\n\
-# Ensure storage directories exist\n\
-mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views\n\
+# Ensure storage and cache directories exist and are writable\n\
+mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache\n\
+chown -R www-data:www-data storage bootstrap/cache\n\
 chmod -R 775 storage bootstrap/cache\n\
 \n\
-# Run database migrations\n\
-php artisan migrate --force 2>&1 || echo "Migration warning (may be OK on first run)"\n\
-\n\
-# Cache configuration (reads from system env vars injected by Railway)\n\
+# Run migrations and cache config\n\
+php artisan migrate --force --no-interaction || echo "Migration skipped or failed"\n\
 php artisan config:cache\n\
 php artisan route:cache\n\
 php artisan view:cache\n\
-php artisan storage:link 2>/dev/null || true\n\
+php artisan storage:link --force || true\n\
 \n\
-echo "==> App ready, starting server..."\n\
+echo "==> Starting Supervisord..."\n\
 exec /usr/bin/supervisord -c /etc/supervisord.conf\n\
 ' > /entrypoint.sh && chmod +x /entrypoint.sh
 
