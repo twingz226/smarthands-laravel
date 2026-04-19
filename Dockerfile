@@ -74,25 +74,25 @@ WORKDIR /var/www/html
 # (Railway injects real env vars at runtime — template syntax like ${{...}} is NOT valid during build)
 RUN printf 'APP_KEY=base64:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx=\nAPP_URL=http://localhost\n' > .env
 
-# Remove cached bootstrap files to avoid loading dev providers
-RUN rm -rf bootstrap/cache/*.php
-
-# Ensure the web user owns the app
-RUN chown -R www-data:www-data /var/www/html
+# Create bootstrap/cache and set permissions during build
+RUN mkdir -p bootstrap/cache storage/framework/sessions storage/framework/views storage/framework/cache storage/logs \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 storage bootstrap/cache
 
 # Create entrypoint script
 RUN printf '#!/bin/sh\n\
 set -e\n\
 \n\
+echo "==> Preparing environment..."\n\
 cd /var/www/html\n\
 \n\
-# Ensure storage and cache directories exist and are writable\n\
-mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache\n\
+# Final check on permissions\n\
 chown -R www-data:www-data storage bootstrap/cache\n\
 chmod -R 775 storage bootstrap/cache\n\
 \n\
 # Run migrations and cache config\n\
-php artisan migrate --force --no-interaction || echo "Migration skipped or failed"\n\
+# We run these as root to ensure they have access, Laravel will drop to www-data for the web server\n\
+php artisan migrate --force --no-interaction || echo "Migration warning"\n\
 php artisan config:cache\n\
 php artisan route:cache\n\
 php artisan view:cache\n\
