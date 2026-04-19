@@ -77,8 +77,9 @@ RUN printf 'APP_KEY=base64:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx=\nAPP_URL=ht
 # Remove cached bootstrap files to avoid loading dev providers
 RUN rm -rf bootstrap/cache/*.php
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# Ensure bootstrap/cache directory exists and set permissions
+RUN mkdir -p bootstrap/cache \
+    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Create entrypoint script (runs at container start when Railway env vars exist)
 RUN printf '#!/bin/sh\n\
