@@ -70,28 +70,38 @@ COPY supervisord.conf /etc/supervisord.conf
 # Set working directory
 WORKDIR /var/www/html
 
-# Create .env file from example
-RUN cp .env.example .env
+# Create a minimal valid .env for build time only
+# (Railway injects real env vars at runtime — template syntax like ${{...}} is NOT valid during build)
+RUN printf 'APP_KEY=base64:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx=\nAPP_URL=http://localhost\n' > .env
 
 # Remove cached bootstrap files to avoid loading dev providers
 RUN rm -rf bootstrap/cache/*.php
 
-# Clear caches to avoid loading dev-only providers
-RUN php artisan cache:clear && php artisan config:clear && php artisan route:clear && php artisan view:clear
-
-# Generate application key
-RUN php artisan key:generate --force
-
-# Optimize Laravel for production
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
-
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Create entrypoint script (runs at container start when Railway env vars exist)
+RUN printf '#!/bin/sh\n\
+set -e\n\
+\n\
+# Write Railway env vars into .env so Laravel can read them\n\
+env | grep -v "^_=" > /var/www/html/.env 2>/dev/null || true\n\
+\n\
+# Run database migrations\n\
+php artisan migrate --force || true\n\
+\n\
+# Optimize for production\n\
+php artisan config:cache\n\
+php artisan route:cache\n\
+php artisan view:cache\n\
+php artisan storage:link 2>/dev/null || true\n\
+\n\
+# Start supervisord (nginx + php-fpm)\n\
+exec /usr/bin/supervisord -c /etc/supervisord.conf\n\
+' > /entrypoint.sh && chmod +x /entrypoint.sh
 
 # Expose port
 EXPOSE 80
 
-# Start supervisord
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+# Start via entrypoint (NOT supervisord directly)
+CMD ["/entrypoint.sh"]
