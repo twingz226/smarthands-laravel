@@ -69,7 +69,7 @@ Route::middleware(['web','auth', 'role:admin'])->group(function () {
         Route::get('/{booking}', [AdminBookingController::class, 'show'])->name('show');
         Route::get('/{booking}/edit', [AdminBookingController::class, 'edit'])->name('edit');
         Route::put('/{booking}', [AdminBookingController::class, 'update'])->name('update');
-        Route::patch('/{booking}/confirm', [AdminBookingController::class, 'confirm'])->name('confirm');
+        Route::patch('/{booking}/confirm', [AdminBookingController::class, 'confirm'])->name('admin.confirm');
         Route::patch('/{booking}/cancel', [AdminBookingController::class, 'cancel'])->name('admin.cancel');
         Route::patch('/{booking}/input-price', [AdminBookingController::class, 'inputPrice'])->name('input-price');
         Route::delete('/{booking}', [AdminBookingController::class, 'destroy'])->name('destroy');
