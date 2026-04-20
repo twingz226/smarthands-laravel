@@ -548,8 +548,8 @@
                         <p id="confirmServicePrice" class="text-success fw-bold" style="display: none;">
                             <i class="bi bi-currency-dollar me-1"></i>Price: ₱<span id="confirmPriceAmount">0.00</span>
                         </p>
-                        <p id="confirmServicePriceNotSet" class="text-muted small" style="display: none;">
-                            <i class="bi bi-info-circle me-1"></i>Price will be set by admin after inspection
+                        <p id="confirmServicePriceNotSet" class="text-danger small fw-bold" style="display: none;">
+                            <i class="bi bi-exclamation-triangle me-1"></i>Price not yet set by admin. You cannot confirm this booking until a price is provided.
                         </p>
                     </div>
                     <div class="mb-3">
@@ -634,7 +634,7 @@ document.addEventListener('DOMContentLoaded', function() {
         loadingDatesReschedule.style.display = 'block';
       }
       try {
-        const response = await fetch('{{ route('fully.booked.dates', ['context' => 'reschedule']) }}');
+        const response = await fetch("{{ route('fully.booked.dates', ['context' => 'reschedule']) }}");
         console.log('Fetch response:', response);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -924,15 +924,21 @@ document.addEventListener('DOMContentLoaded', function() {
             const priceNotSetElement = document.getElementById('confirmServicePriceNotSet');
             const priceAmountElement = document.getElementById('confirmPriceAmount');
             
+            const submitBtn = document.querySelector('#confirmBookingForm button[type="submit"]');
+
             if (bookingPrice && bookingPrice.trim() !== '' && parseFloat(bookingPrice) > 0) {
                 // Format price with 2 decimal places
                 const formattedPrice = parseFloat(bookingPrice).toFixed(2);
                 priceAmountElement.textContent = formattedPrice;
                 priceElement.style.display = 'block';
                 priceNotSetElement.style.display = 'none';
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Confirm Booking';
             } else {
                 priceElement.style.display = 'none';
                 priceNotSetElement.style.display = 'block';
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="bi bi-lock me-1"></i>Awaiting Price';
             }
             
             // Show modal

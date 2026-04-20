@@ -192,6 +192,18 @@ class BookingController extends Controller
             ], 403);
         }
 
+        // Validate that price has been set by admin before allowing confirmation
+        if (is_null($booking->price) || $booking->price <= 0) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot confirm booking. Price has not been set by the admin.'
+                ], 400);
+            } else {
+                return redirect()->back()->with('error', 'Cannot confirm booking. Price has not been set by the admin.');
+            }
+        }
+
         try {
             DB::beginTransaction();
 
