@@ -171,6 +171,12 @@
     }
 
     /* Floating Book Now Button */
+    @keyframes floatingButton {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0); }
+    }
+
     .floating-book-btn {
       position: fixed;
       bottom: 30px;
@@ -188,11 +194,13 @@
       box-shadow: 0 6px 20px rgba(255, 159, 28, 0.4);
       transition: all 0.3s ease;
       z-index: 1050;
+      animation: floatingButton 3s ease-in-out infinite;
     }
     .floating-book-btn:hover {
       background: linear-gradient(135deg, #ff6b35, #ff9f1c);
       color: #fff;
-      transform: translateY(-3px);
+      animation-play-state: paused;
+      transform: translateY(-3px) scale(1.02);
       box-shadow: 0 10px 30px rgba(255, 159, 28, 0.5);
     }
     @media (max-width: 768px) {
