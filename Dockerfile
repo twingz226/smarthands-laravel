@@ -92,7 +92,8 @@ rm -f .env\n\
 echo "DB Check: Connection=$DB_CONNECTION Host=$DB_HOST Database=$DB_DATABASE"\n\
 \n\
 # Final check on permissions\n\
-mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache\n\
+mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache /run\n\
+chmod 777 /run\n\
 chown -R www-data:www-data storage bootstrap/cache\n\
 chmod -R 775 storage bootstrap/cache\n\
 \n\
