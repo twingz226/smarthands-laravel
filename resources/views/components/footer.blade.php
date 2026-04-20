@@ -107,3 +107,19 @@
         padding-left: 0;
     }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('click', function (event) {
+            const navbar = document.querySelector('.navbar');
+            const navbarCollapse = document.getElementById('navbarNav');
+            const toggler = document.querySelector('.navbar-toggler');
+            
+            if (navbarCollapse && navbarCollapse.classList.contains('show') && navbar && !navbar.contains(event.target)) {
+                if (toggler) {
+                    toggler.click();
+                }
+            }
+        });
+    });
+</script>
