@@ -18,11 +18,12 @@ class DatabaseSeeder extends Seeder
 
         // Create a default admin user if it doesn't exist
         if (!User::where('email', 'admin@example.com')->exists()) {
-            User::factory()->create([
+            User::create([
                 'name' => 'Admin User',
                 'email' => 'admin@example.com',
                 'password' => bcrypt('adminpassword123'), // Change this password after first login
                 'role' => 'admin',
+                'email_verified_at' => now(),
             ]);
         }
 
