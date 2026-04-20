@@ -71,49 +71,18 @@ COPY supervisord.conf /etc/supervisord.conf
 WORKDIR /var/www/html
 
 # Create a minimal valid .env for build time only
-# (Railway injects real env vars at runtime — template syntax like ${{...}} is NOT valid during build)
 RUN printf 'APP_KEY=base64:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx=\nAPP_URL=http://localhost\n' > .env
 
-# Create bootstrap/cache and set permissions during build
+# Create directories and set permissions
 RUN mkdir -p bootstrap/cache storage/framework/sessions storage/framework/views storage/framework/cache storage/logs \
     && chown -R www-data:www-data /var/www/html \
     && chmod -R 775 storage bootstrap/cache
 
 # Create entrypoint script
-RUN printf '#!/bin/sh\n\
-set -e\n\
-\n\
-echo "==> Preparing environment..."\n\
-cd /var/www/html\n\
-\n\
-# Remove the build-time placeholder .env to force use of Railway variables\n\
-rm -f .env\n\
-\n\
-echo "DB Check: Connection=$DB_CONNECTION Host=$DB_HOST Database=$DB_DATABASE"\n\
-\n\
-# Final check on permissions\n\
-mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache /run\n\
-chmod 777 /run\n\
-chown -R www-data:www-data storage bootstrap/cache\n\
-chmod -R 775 storage bootstrap/cache\n\
-\n\
-# Run migrations and cache config\n\
-php artisan migrate --force --no-interaction || echo "Migration failed - check your Railway Variables!"\n\
-php artisan config:cache\n\
-php artisan route:cache\n\
-php artisan view:cache\n\
-php artisan storage:link --force || true\n\
-\n\
-echo "==> Testing configurations..."\n\
-nginx -t\n\
-php-fpm -t\n\
-\n\
-echo "==> Starting Supervisord..."\n\
-exec /usr/bin/supervisord -c /etc/supervisord.conf\n\
-' > /entrypoint.sh && chmod +x /entrypoint.sh
+RUN printf '#!/bin/sh\nset -e\necho "==> Preparing environment..."\ncd /var/www/html\nrm -f .env\nLISTEN_PORT="${PORT:-80}"\necho "==> Nginx will listen on port $LISTEN_PORT"\nsed -i "s/PORT_PLACEHOLDER/$LISTEN_PORT/g" /etc/nginx/http.d/default.conf\necho "DB Check: Connection=$DB_CONNECTION Host=$DB_HOST Database=$DB_DATABASE"\nmkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache\nchown -R www-data:www-data storage bootstrap/cache\nchmod -R 775 storage bootstrap/cache\nphp artisan migrate --force --no-interaction || echo "Migration warning"\nphp artisan config:cache\nphp artisan route:cache\nphp artisan view:cache\nphp artisan storage:link --force 2>/dev/null || true\necho "==> Testing Nginx config..."\nnginx -t\necho "==> Starting Supervisord..."\nexec /usr/bin/supervisord -c /etc/supervisord.conf\n' > /entrypoint.sh \
+    && chmod +x /entrypoint.sh
 
-# Expose port
+# Expose port (Railway overrides this with PORT env var)
 EXPOSE 80
 
-# Start via entrypoint (NOT supervisord directly)
 CMD ["/entrypoint.sh"]
