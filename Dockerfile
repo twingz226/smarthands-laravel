@@ -104,6 +104,10 @@ php artisan route:cache\n\
 php artisan view:cache\n\
 php artisan storage:link --force || true\n\
 \n\
+echo "==> Testing configurations..."\n\
+nginx -t\n\
+php-fpm -t\n\
+\n\
 echo "==> Starting Supervisord..."\n\
 exec /usr/bin/supervisord -c /etc/supervisord.conf\n\
 ' > /entrypoint.sh && chmod +x /entrypoint.sh
