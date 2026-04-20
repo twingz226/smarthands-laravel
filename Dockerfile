@@ -86,14 +86,18 @@ set -e\n\
 echo "==> Preparing environment..."\n\
 cd /var/www/html\n\
 \n\
-echo "Checking Database Connection: $DB_CONNECTION on $DB_HOST"\n\
+# Remove the build-time placeholder .env to force use of Railway variables\n\
+rm -f .env\n\
+\n\
+echo "DB Check: Connection=$DB_CONNECTION Host=$DB_HOST Database=$DB_DATABASE"\n\
 \n\
 # Final check on permissions\n\
+mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache\n\
 chown -R www-data:www-data storage bootstrap/cache\n\
 chmod -R 775 storage bootstrap/cache\n\
 \n\
 # Run migrations and cache config\n\
-php artisan migrate --force --no-interaction || echo "Migration failed - check DB variables"\n\
+php artisan migrate --force --no-interaction || echo "Migration failed - check your Railway Variables!"\n\
 php artisan config:cache\n\
 php artisan route:cache\n\
 php artisan view:cache\n\
