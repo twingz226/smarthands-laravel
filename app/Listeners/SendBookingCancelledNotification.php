@@ -5,7 +5,9 @@ namespace App\Listeners;
 use App\Events\BookingCancelled;
 use App\Models\Notification;
 use App\Models\User;
+use App\Services\CustomerNotificationService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Notifications\DatabaseNotification as DBNotification;
 
 class SendBookingCancelledNotification
@@ -40,6 +42,7 @@ class SendBookingCancelledNotification
         }
 
         foreach ($admins as $admin) {
+            /** @var \App\Models\User $admin */
             // Guard against duplicate notifications within a short window
             $recentDuplicate = DBNotification::where('notifiable_id', $admin->id)
                 ->where('notifiable_type', get_class($admin))
@@ -65,5 +68,16 @@ class SendBookingCancelledNotification
                 ]
             );
         }
+
+        // Also notify the customer (User) via in-app notification
+        try {
+            app(CustomerNotificationService::class)->bookingCancelled($booking, $reason);
+        } catch (\Exception $e) {
+            Log::warning('Customer notification failed in BookingCancelled listener', [
+                'booking_id' => $booking->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }
+

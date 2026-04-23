@@ -42,10 +42,11 @@ class SendBookingRescheduledNotification
 
 
         foreach ($admins as $admin) {
+            /** @var \App\Models\User $admin */
             // Guard against duplicate notifications within a short window
             $recentDuplicate = DBNotification::where('notifiable_id', $admin->id)
                 ->where('notifiable_type', get_class($admin))
-                ->where('type', \App\Models\Notification::TYPE_BOOKING_RESCHEDULED)
+                ->where('type', Notification::TYPE_BOOKING_RESCHEDULED)
                 ->where('created_at', '>=', now()->subMinutes(5))
                 ->where('data->booking_id', $booking->id)
                 ->exists();
@@ -65,6 +66,16 @@ class SendBookingRescheduledNotification
                     'actor_role' => $actor?->role,
                 ]
             );
+        }
+
+        // Also notify the customer (User) via in-app notification
+        try {
+            app(\App\Services\CustomerNotificationService::class)->bookingRescheduled($booking, $oldDate, $newDate);
+        } catch (\Exception $e) {
+            Log::warning('Customer notification failed in BookingRescheduled listener', [
+                'booking_id' => $booking->id,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 }

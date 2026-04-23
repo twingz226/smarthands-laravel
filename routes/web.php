@@ -125,11 +125,13 @@ Route::middleware(['auth'])->prefix('customer')->name('customer.')->group(functi
     Route::put('/feedback/update/{feedback}', [App\Http\Controllers\Customer\FeedbackController::class, 'update'])->name('feedback.update');
     Route::delete('/feedback/delete/{feedback}', [App\Http\Controllers\Customer\FeedbackController::class, 'destroy'])->name('feedback.delete');
 
-    // Notifications (dummy, for now)
-    Route::post('/notifications/{id}/mark', function($id) {
-        // Mark as read logic here
-        return back();
-    })->name('notifications.mark');
+    // Customer Notifications
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [App\Http\Controllers\NotificationController::class, 'index'])->name('index');
+        Route::get('/unread-count', [App\Http\Controllers\NotificationController::class, 'unreadCount'])->name('unread_count');
+        Route::post('/{notification}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('read');
+        Route::post('/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('mark_all_read');
+    });
 
     // Support/Contact
     Route::get('/support', function() {

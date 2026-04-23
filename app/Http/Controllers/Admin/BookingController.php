@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use App\Mail\BookingStatusUpdate;
+use App\Services\CustomerNotificationService;
 use Illuminate\Validation\ValidationException;
 
 class BookingController extends Controller
@@ -341,12 +342,19 @@ class BookingController extends Controller
 
             DB::commit();
 
+            // Send customer in-app notification
+            try {
+                app(CustomerNotificationService::class)->bookingRescheduled($booking, $booking->getOriginal('cleaning_date'), $booking->cleaning_date);
+            } catch (\Exception $notifEx) {
+                Log::warning('Customer notification failed on booking reschedule', ['booking_id' => $booking->id, 'error' => $notifEx->getMessage()]);
+            }
+
             Log::info('Booking rescheduled successfully by admin', [
                 'booking_id' => $booking->id,
                 'new_cleaning_date_app_tz' => $newCleaningDateTimeAppTz->toDateTimeString(),
                 'new_cleaning_date_utc' => $newCleaningDateTimeAppTz->copy()->setTimezone('UTC')->toDateTimeString(),
                 'is_admin_reschedule' => $booking->is_admin_reschedule,
-                'customer_reschedule_count' => $booking->customer_reschedule_count, // Should remain unchanged
+                'customer_reschedule_count' => $booking->customer_reschedule_count,
                 'rescheduled_by' => $booking->rescheduled_by,
             ]);
 
@@ -380,6 +388,13 @@ class BookingController extends Controller
             }
 
             DB::commit();
+
+            // Send customer in-app notification
+            try {
+                app(CustomerNotificationService::class)->bookingConfirmed($booking);
+            } catch (\Exception $notifEx) {
+                Log::warning('Customer notification failed on booking confirm', ['booking_id' => $booking->id, 'error' => $notifEx->getMessage()]);
+            }
 
             return back()->with('success', 
                 'Booking confirmed for ' . 
@@ -415,6 +430,13 @@ class BookingController extends Controller
             }
 
             DB::commit();
+
+            // Send customer in-app notification
+            try {
+                app(CustomerNotificationService::class)->bookingCancelled($booking, $booking->cancellation_reason);
+            } catch (\Exception $notifEx) {
+                Log::warning('Customer notification failed on booking cancel', ['booking_id' => $booking->id, 'error' => $notifEx->getMessage()]);
+            }
             
             $formattedDate = $booking->cleaning_date
                 ->timezone(config('app.timezone'))
@@ -458,6 +480,13 @@ class BookingController extends Controller
             ]);
 
             DB::commit();
+
+            // Send customer in-app notification about price
+            try {
+                app(CustomerNotificationService::class)->priceSet($booking);
+            } catch (\Exception $notifEx) {
+                Log::warning('Customer notification failed on price set', ['booking_id' => $booking->id, 'error' => $notifEx->getMessage()]);
+            }
 
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([

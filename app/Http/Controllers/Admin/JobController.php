@@ -18,6 +18,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use App\Services\CustomerNotificationService;
 
 class JobController extends Controller
 {
@@ -106,6 +107,14 @@ class JobController extends Controller
             ]);
 
             DB::commit();
+
+            // Send customer in-app notification about cleaner assignment
+            try {
+                app(CustomerNotificationService::class)->cleanersAssigned($job);
+            } catch (\Exception $notifEx) {
+                Log::warning('Customer notification failed on cleaner assign', ['job_id' => $job->id, 'error' => $notifEx->getMessage()]);
+            }
+
             return back()->with('success', 'Job assigned successfully and customer notified.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -202,6 +211,13 @@ class JobController extends Controller
             ]);
             
             DB::commit();
+
+            // Send customer in-app notification about reassignment
+            try {
+                app(CustomerNotificationService::class)->cleanersAssigned($job);
+            } catch (\Exception $notifEx) {
+                Log::warning('Customer notification failed on cleaner reassign', ['job_id' => $job->id, 'error' => $notifEx->getMessage()]);
+            }
             
             if ($request->ajax()) {
                 return response()->json([
@@ -360,6 +376,16 @@ class JobController extends Controller
             }
             
             DB::commit();
+
+            // Send customer in-app notification about job cancellation
+            try {
+                if ($job->booking) {
+                    app(CustomerNotificationService::class)->bookingCancelled($job->booking, $request->input('cancellation_reason', null));
+                }
+            } catch (\Exception $notifEx) {
+                Log::warning('Customer notification failed on job cancel', ['job_id' => $job->id, 'error' => $notifEx->getMessage()]);
+            }
+
             return back()->with('success', 'Job cancelled successfully and customer has been notified.');
             
         } catch (\Exception $e) {
@@ -492,6 +518,21 @@ class JobController extends Controller
                 'new_status' => $request->status
             ]);
 
+            // Send customer in-app notification for status changes
+            if ($request->status === Job::STATUS_IN_PROGRESS && $oldStatus !== Job::STATUS_IN_PROGRESS) {
+                try {
+                    app(CustomerNotificationService::class)->jobStarted($job);
+                } catch (\Exception $notifEx) {
+                    Log::warning('Customer notification failed on job start', ['job_id' => $job->id, 'error' => $notifEx->getMessage()]);
+                }
+            } elseif ($request->status === Job::STATUS_COMPLETED) {
+                try {
+                    app(CustomerNotificationService::class)->jobCompleted($job);
+                } catch (\Exception $notifEx) {
+                    Log::warning('Customer notification failed on job complete', ['job_id' => $job->id, 'error' => $notifEx->getMessage()]);
+                }
+            }
+
             DB::commit();
             
             $message = 'Job status updated successfully.';
@@ -579,6 +620,14 @@ class JobController extends Controller
             ]);
 
         DB::commit();
+
+            // Send customer in-app notification about cleaner assignment
+            try {
+                app(CustomerNotificationService::class)->cleanersAssigned($job);
+            } catch (\Exception $notifEx) {
+                Log::warning('Customer notification failed on tracking update', ['job_id' => $job->id, 'error' => $notifEx->getMessage()]);
+            }
+
         return back()->with('success', 'Job tracking updated successfully and customer notified.');
     } catch (\Exception $e) {
         DB::rollBack();

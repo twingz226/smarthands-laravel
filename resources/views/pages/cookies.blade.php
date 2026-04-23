@@ -87,16 +87,23 @@
       </a>
       <button class="navbar-toggler position-relative" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
-        @if(Auth::check() && Auth::user()->bookings)
-          @php
-            $pendingConfirmations = Auth::user()->bookings->where('status', 'pending')->where('customer_confirmed', false)->count();
-          @endphp
-          @if($pendingConfirmations > 0)
-            <span class="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle" style="animation: pulseBadge 2s infinite; margin-left: -5px; margin-top: 5px;">
-              <span class="visually-hidden">pending confirmations</span>
-            </span>
-          @endif
-        @endif
+        @php
+          $hasPendingActions = false;
+          if (Auth::check() && Auth::user()->bookings) {
+              $userBookings = Auth::user()->bookings;
+              $pendingConfirmations = $userBookings->where('status', 'pending')->where('customer_confirmed', false)->count();
+              $pendingRatings = $userBookings->where('status', 'completed')->filter(function ($booking) {
+                  if ($booking->job && $booking->job->rating_token) {
+                      return !$booking->job->ratings()->where('customer_id', Auth::user()->customer->id ?? null)->exists();
+                  }
+                  return false;
+              })->count();
+              $hasPendingActions = ($pendingConfirmations + $pendingRatings) > 0;
+          }
+        @endphp
+        <span id="mobileBurgerNotifBadge" data-has-pending-actions="{{ $hasPendingActions ? 'true' : 'false' }}" class="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle {{ $hasPendingActions ? '' : 'd-none' }}" style="animation: pulseBadge 2s infinite; margin-left: -5px; margin-top: 5px;">
+          <span class="visually-hidden">unread notifications</span>
+        </span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
@@ -111,14 +118,22 @@
     <i class="bi bi-journal-check me-1" aria-hidden="true"></i>
     <span class="position-relative" style="padding-right: 8px;">
       My Bookings
-      @php
-        $pendingConfirmations = Auth::user()->bookings->where('status', 'pending')->where('customer_confirmed', false)->count();
-      @endphp
-      @if($pendingConfirmations > 0)
-        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem; padding: 0.25em 0.5em; animation: pulseBadge 2s infinite; box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); margin-top: 5px; margin-left: -2px;">
-          {{ $pendingConfirmations }}
-          <span class="visually-hidden">pending confirmations</span>
-        </span>
+              @php
+                $userBookings = Auth::user()->bookings;
+                $pendingConfirmations = $userBookings->where('status', 'pending')->where('customer_confirmed', false)->count();
+                $pendingRatings = $userBookings->where('status', 'completed')->filter(function ($booking) {
+                    if ($booking->job && $booking->job->rating_token) {
+                        return !$booking->job->ratings()->where('customer_id', Auth::user()->customer->id ?? null)->exists();
+                    }
+                    return false;
+                })->count();
+                $totalPendingActions = $pendingConfirmations + $pendingRatings;
+              @endphp
+              @if($totalPendingActions > 0)
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem; padding: 0.25em 0.5em; animation: pulseBadge 2s infinite; box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); margin-top: 5px; margin-left: -2px;">
+                  {{ $totalPendingActions }}
+                  <span class="visually-hidden">pending actions</span>
+                </span>
         <style>
           @keyframes pulseBadge {
             0% { transform: translate(-50%, -50%) scale(0.95); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
@@ -130,6 +145,7 @@
     </span>
   </a>
             </li>
+            @include('partials.customer_notifications')
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Account">
                 <i class="bi bi-person-circle me-1"></i>
@@ -371,5 +387,8 @@
   <i class="bi bi-calendar-check"></i>
   <span>Book Now</span>
 </a>
+@auth
+<script src="{{ asset('js/customer_notifications.js') }}"></script>
+@endauth
 </body>
 </html>

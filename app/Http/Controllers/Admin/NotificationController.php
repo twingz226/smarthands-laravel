@@ -284,6 +284,14 @@ class NotificationController extends Controller
             'booking_cancelled' => 'booking_cancelled',
             'booking_rescheduled' => 'booking_rescheduled',
             'new_customer' => 'new_customer',
+            'App\\Notifications\\CustomerBookingNotification' => 'customer_update',
+            'customer_booking_confirmed' => 'customer_booking_confirmed',
+            'customer_booking_cancelled' => 'customer_booking_cancelled',
+            'customer_booking_rescheduled' => 'customer_booking_rescheduled',
+            'customer_cleaners_assigned' => 'customer_cleaners_assigned',
+            'customer_job_started' => 'customer_job_started',
+            'customer_job_completed' => 'customer_job_completed',
+            'customer_price_set' => 'customer_price_set',
         ];
         
         return $typeMap[$fullType] ?? 'default';

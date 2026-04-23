@@ -6,6 +6,7 @@ use App\Events\BookingCreated;
 use App\Models\User;
 use App\Notifications\NewBookingNotification;
 use Illuminate\Notifications\DatabaseNotification as DBNotification;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 
 class SendBookingCreatedNotification
@@ -42,6 +43,7 @@ class SendBookingCreatedNotification
 
         // Send individually to each admin and guard against duplicates within a short window
         foreach ($admins as $admin) {
+            /** @var \App\Models\User $admin */
             $recentDuplicate = DBNotification::where('notifiable_id', $admin->id)
                 ->where('notifiable_type', get_class($admin))
                 ->where('type', NewBookingNotification::class)
@@ -63,6 +65,25 @@ class SendBookingCreatedNotification
                 'actor_name' => $actor?->name,
                 'actor_role' => $actor?->role,
             ]));
+        }
+
+        // Also notify the customer (User) via in-app notification if created by an admin
+        if ($actor && $actor->isAdmin()) {
+            try {
+                $serviceName = $booking->service->name ?? 'Cleaning Service';
+                $date = $booking->cleaning_date->format('M d, Y \a\t h:i A');
+                
+                app(\App\Services\CustomerNotificationService::class)->notifyCustomer(
+                    $booking,
+                    \App\Models\Notification::TYPE_BOOKING_CREATED,
+                    "A new booking for {$serviceName} on {$date} has been created for you by our team."
+                );
+            } catch (\Exception $e) {
+                Log::warning('Customer notification failed in BookingCreated listener', [
+                    'booking_id' => $booking->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
     }
 }

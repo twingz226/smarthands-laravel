@@ -34,6 +34,7 @@ class NotificationController extends Controller
                 return [
                     'id' => $notification->id,
                     'type' => $notification->type,
+                    'notification_type' => $data['notification_type'] ?? null,
                     'message' => $data['message'] ?? null,
                     'link' => $data['link'] ?? null,
                     'booking_id' => $data['booking_id'] ?? null,
@@ -79,6 +80,7 @@ class NotificationController extends Controller
             return [
                 'id' => $notification->id,
                 'type' => $notification->type,
+                'notification_type' => $data['notification_type'] ?? null,
                 'message' => $data['message'] ?? null,
                 'link' => $data['link'] ?? null,
                 'booking_id' => $data['booking_id'] ?? null,
